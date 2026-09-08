@@ -1,0 +1,54 @@
+{
+  "bands": [
+    {
+      "id": "onboarding",
+      "level_range": [1, 5],
+      "operations": ["add", "subtract"],
+      "digit_range": "1-digit",
+      "timer_base_sec": 8,
+      "canvas_color": "#EAF3DE",
+      "canvas_color_end": "#DCEACB",
+      "accent_color": "#639922"
+    },
+    {
+      "id": "basic",
+      "level_range": [6, 15],
+      "operations": ["add", "subtract", "multiply"],
+      "digit_range": "1-2-digit",
+      "timer_base_sec": 6,
+      "canvas_color": "#FAEEDA",
+      "canvas_color_end": "#F3E0BE",
+      "accent_color": "#BA7517"
+    },
+    {
+      "id": "intermediate",
+      "level_range": [16, 30],
+      "operations": ["add", "subtract", "multiply", "divide"],
+      "digit_range": "2-digit",
+      "timer_base_sec": 4.5,
+      "canvas_color": "#FAECE7",
+      "canvas_color_end": "#F3D9CF",
+      "accent_color": "#D85A30"
+    },
+    {
+      "id": "advanced",
+      "level_range": [31, 50],
+      "operations": ["mixed"],
+      "digit_range": "2-3-digit",
+      "timer_base_sec": 3.5,
+      "canvas_color": "#FBEAF0",
+      "canvas_color_end": "#F4D5E1",
+      "accent_color": "#D4537E"
+    },
+    {
+      "id": "expert",
+      "level_range": [51, null],
+      "operations": ["mixed_multistep"],
+      "digit_range": "3-digit",
+      "timer_base_sec": 3.0,
+      "canvas_color": "#EEEDFE",
+      "canvas_color_end": "#DCD9FC",
+      "accent_color": "#7F77DD"
+    }
+  ]
+}
