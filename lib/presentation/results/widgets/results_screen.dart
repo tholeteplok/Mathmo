@@ -220,13 +220,18 @@ class ResultsScreen extends ConsumerWidget {
                   const SizedBox(width: 14),
                   Expanded(
                     child: ChunkyButton(
-                      onPressed: () =>
-                          context.go('/game/${result.levelReached}'),
+                      onPressed: () => context.go(
+                        result.accuracy >= 0.7
+                            ? '/game/${result.levelReached + 1}'
+                            : '/game/${result.levelReached}',
+                      ),
                       backgroundColor: accentColor,
                       borderColor: AppTheme.darkBorder,
-                      child: const Text(
-                        'Main Lagi',
-                        style: TextStyle(
+                      child: Text(
+                        result.accuracy >= 0.7
+                            ? 'Level Berikutnya'
+                            : 'Coba Lagi',
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,

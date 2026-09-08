@@ -222,9 +222,9 @@ class PlayerProfile {
 
   /// Membuat [PlayerProfile] dari Map JSON.
   factory PlayerProfile.fromJson(Map<String, dynamic> json) {
-    final streakRaw = json['streak'] as Map<String, dynamic>?;
-    final streakObj = streakRaw != null
-        ? StreakState.fromJson(streakRaw)
+    final streakRaw = json['streak'];
+    final streakObj = streakRaw != null && streakRaw is Map
+        ? StreakState.fromJson(Map<String, dynamic>.from(streakRaw))
         : StreakState.initial;
 
     return PlayerProfile(

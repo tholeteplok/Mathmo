@@ -23,6 +23,37 @@ class PlayerProfileNotifier extends AsyncNotifier<PlayerProfile> {
     }
   }
 
+  /// Menyelesaikan sesi gameplay secara atomik: menambahkan XP dan menaikkan level
+  /// jika performa memenuhi syarat (akurasi >= 70% dan level yang dimainkan >= level saat ini).
+  Future<void> completeSession({
+    required int playedLevel,
+    required int xpEarned,
+    required double accuracy,
+  }) async {
+    PlayerProfile? current = state.valueOrNull;
+    if (current == null) {
+      final repo = ref.read(playerRepositoryProvider);
+      final res = await repo.getProfile();
+      if (res is RepoSuccess<PlayerProfile>) {
+        current = res.value;
+      }
+    }
+    if (current == null) return;
+
+    final shouldAdvance =
+        accuracy >= 0.7 && playedLevel >= current.currentLevel;
+    final newLevel = shouldAdvance ? playedLevel + 1 : current.currentLevel;
+
+    final updated = current.copyWith(
+      totalXp: current.totalXp + xpEarned,
+      currentLevel: newLevel,
+    );
+    state = AsyncData(updated);
+
+    final repo = ref.read(playerRepositoryProvider);
+    await repo.saveProfile(updated);
+  }
+
   /// Memperbarui level pemain dan menyimpan ke Hive.
   Future<void> updateLevel(int newLevel) async {
     final current = state.valueOrNull;

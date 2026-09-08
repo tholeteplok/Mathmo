@@ -21,12 +21,14 @@ class LevelNode extends StatelessWidget {
     required this.status,
     required this.onTap,
     this.accentColor = const Color(0xFF639922),
+    this.starCount = 0,
   });
 
   final int level;
   final LevelNodeStatus status;
   final VoidCallback onTap;
   final Color accentColor;
+  final int starCount;
 
   @override
   Widget build(BuildContext context) {
@@ -38,18 +40,62 @@ class LevelNode extends StatelessWidget {
   }
 
   Widget _buildCompletedNode() {
-    return ChunkyButton(
-      onPressed: onTap,
-      width: 58,
-      height: 58,
-      borderRadius: 29,
-      backgroundColor: const Color(0xFFDCEACB),
-      borderColor: const Color(0xFF639922),
-      padding: EdgeInsets.zero,
-      child: const Icon(
-        AppIcons.levelCompleted,
-        color: Color(0xFF639922),
-        size: 26,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ChunkyButton(
+          onPressed: onTap,
+          width: 58,
+          height: 58,
+          borderRadius: 29,
+          backgroundColor: const Color(0xFFDCEACB),
+          borderColor: const Color(0xFF639922),
+          padding: EdgeInsets.zero,
+          child: const Icon(
+            AppIcons.levelCompleted,
+            color: Color(0xFF639922),
+            size: 26,
+          ),
+        ),
+        if (starCount > 0) ...[
+          const SizedBox(height: 4),
+          _buildStarsRow(starCount),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildStarsRow(int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+        border: Border.all(
+          color: AppTheme.darkBorder,
+          width: AppTokens.borderWidthSubtle,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: AppTheme.darkBorder,
+            offset: Offset(0, 1.5),
+            blurRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(3, (index) {
+          final isEarned = index < count;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 1),
+            child: Icon(
+              isEarned ? AppIcons.starFilled : AppIcons.starEmpty,
+              size: 11,
+              color: isEarned ? const Color(0xFFFFB300) : const Color(0xFFBDBDBD),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -58,21 +104,37 @@ class LevelNode extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ChunkyButton(
-          onPressed: onTap,
-          width: 76,
-          height: 76,
-          borderRadius: 38,
-          backgroundColor: accentColor,
-          borderColor: AppTheme.darkBorder,
-          padding: EdgeInsets.zero,
-          child: const Icon(
-            AppIcons.levelActive,
-            color: Colors.white,
-            size: 36,
-          ),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 86,
+              height: 86,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: accentColor.withValues(alpha: 0.35),
+                  width: 3.5,
+                ),
+              ),
+            ),
+            ChunkyButton(
+              onPressed: onTap,
+              width: 76,
+              height: 76,
+              borderRadius: 38,
+              backgroundColor: accentColor,
+              borderColor: AppTheme.darkBorder,
+              padding: EdgeInsets.zero,
+              child: const Icon(
+                AppIcons.levelActive,
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(

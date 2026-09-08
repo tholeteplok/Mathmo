@@ -174,13 +174,13 @@ class MasteryRecord {
         [];
     final recentList = recentRaw.map((e) => e as bool).toList();
 
-    final errorCountsRaw =
-        (json['error_type_counts'] ?? json['errorTypeCounts'])
-            as Map<String, dynamic>? ??
-        {};
-    final errorCountsMap = errorCountsRaw.map(
-      (key, value) => MapEntry(key, (value as num).toInt()),
-    );
+    final rawErrorCounts =
+        json['error_type_counts'] ?? json['errorTypeCounts'];
+    final errorCountsMap = rawErrorCounts != null && rawErrorCounts is Map
+        ? rawErrorCounts.map(
+            (key, value) => MapEntry(key.toString(), (value as num).toInt()),
+          )
+        : <String, int>{};
 
     return MasteryRecord(
       factKey: (json['fact_key'] ?? json['factKey']) as String,

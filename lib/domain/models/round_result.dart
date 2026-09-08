@@ -163,8 +163,10 @@ class RoundResult {
         : null;
 
     final rawScoreBreakdown = json['score_breakdown'] ?? json['scoreBreakdown'];
-    final breakdown = rawScoreBreakdown != null
-        ? ScoreBreakdown.fromJson(rawScoreBreakdown as Map<String, dynamic>)
+    final breakdown = rawScoreBreakdown != null && rawScoreBreakdown is Map
+        ? ScoreBreakdown.fromJson(
+            Map<String, dynamic>.from(rawScoreBreakdown),
+          )
         : ScoreBreakdown.zero;
 
     return RoundResult(

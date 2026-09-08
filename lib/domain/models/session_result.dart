@@ -212,12 +212,12 @@ class SessionResult {
   factory SessionResult.fromJson(Map<String, dynamic> json) {
     final roundsRaw = (json['rounds'] as List<dynamic>?) ?? [];
     final roundsList = roundsRaw
-        .map((e) => RoundResult.fromJson(e as Map<String, dynamic>))
+        .map((e) => RoundResult.fromJson(Map<String, dynamic>.from(e as Map)))
         .toList();
 
     final xpBreakdownRaw = json['xp_breakdown'] ?? json['xpBreakdown'];
-    final xpBreakdown = xpBreakdownRaw != null
-        ? XpBreakdown.fromJson(xpBreakdownRaw as Map<String, dynamic>)
+    final xpBreakdown = xpBreakdownRaw != null && xpBreakdownRaw is Map
+        ? XpBreakdown.fromJson(Map<String, dynamic>.from(xpBreakdownRaw))
         : XpBreakdown.zero;
 
     return SessionResult(

@@ -22,6 +22,18 @@ class GameSessionArgs {
   final int level;
   final GameMode mode;
   final int totalRounds;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GameSessionArgs &&
+          runtimeType == other.runtimeType &&
+          level == other.level &&
+          mode == other.mode &&
+          totalRounds == other.totalRounds;
+
+  @override
+  int get hashCode => Object.hash(level, mode, totalRounds);
 }
 
 /// Provider StateNotifier untuk state machine sesi gameplay aktif.

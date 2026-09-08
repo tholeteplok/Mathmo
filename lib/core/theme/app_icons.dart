@@ -59,4 +59,18 @@ class AppIcons {
 
   /// Ikon kalender / daily challenge.
   static const IconData calendar = TablerIcons.calendarEvent;
+
+  // ── Adventure Map & Milestones ──────────────────────────────────
+
+  /// Ikon peti harta karun milestone.
+  static const IconData chest = TablerIcons.gift;
+
+  /// Bintang terisi (skor riil completed level).
+  static const IconData starFilled = TablerIcons.starFilled;
+
+  /// Bintang kosong.
+  static const IconData starEmpty = TablerIcons.star;
+
+  /// Sparkle efek reward.
+  static const IconData sparkles = TablerIcons.sparkles;
 }

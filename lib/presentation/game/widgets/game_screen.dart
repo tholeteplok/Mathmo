@@ -78,16 +78,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     // Dengarkan saat sesi selesai untuk navigasi otomatis ke /results
     ref.listen<GameSessionState>(gameSessionProvider(_args), (prev, next) {
       if (next is SessionEndedState) {
-        // Tambahkan XP ke profil pemain
-        ref.read(playerProfileProvider.notifier).addXp(next.result.xpEarned);
-
-        // Jika performa bagus, naikkan level
-        if (next.result.accuracy >= 0.7 &&
-            widget.level >= (profile?.currentLevel ?? 1)) {
-          ref
-              .read(playerProfileProvider.notifier)
-              .updateLevel(widget.level + 1);
-        }
+        // Simpan hasil sesi secara atomik (XP + kenaikan level)
+        ref.read(playerProfileProvider.notifier).completeSession(
+              playedLevel: widget.level,
+              xpEarned: next.result.xpEarned,
+              accuracy: next.result.accuracy,
+            );
 
         context.go('/results', extra: next.result);
       }
