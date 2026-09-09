@@ -9,7 +9,9 @@ import 'presentation/daily_challenge/widgets/daily_challenge_screen.dart';
 import 'presentation/game/widgets/game_screen.dart';
 import 'presentation/home/widgets/home_screen.dart';
 import 'presentation/results/widgets/results_screen.dart';
+import 'presentation/settings/widgets/settings_screen.dart';
 import 'presentation/shared/widgets/app_shell.dart';
+import 'presentation/splash/widgets/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,18 +19,23 @@ void main() async {
   // Inisialisasi Hive CE storage
   await Hive.initFlutter();
 
-  runApp(const ProviderScope(child: MathmoApp()));
+  runApp(const ProviderScope(child: IthungApp()));
 }
 
-/// Konfigurasi rute navigasi terpusat aplikasi Mathmo.
+/// Konfigurasi rute navigasi terpusat aplikasi iTHUNG.
 ///
 /// Mengacu pada `math-speed-game-navigation-spec.md` §1 - §5:
 /// - ShellRoute membungkus transisi antar layar agar kanvas warna tetap persisten
 /// - Guard redirect pada `/results` mencegah akses langsung tanpa hasil sesi
 /// - Mendukung deep link `/daily`
+/// - SplashScreen sebagai rute awal sebelum memasuki ShellRoute
 final GoRouter _router = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/splash',
   routes: [
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const SplashScreen(),
+    ),
     ShellRoute(
       builder: (context, state, child) => AppShell(child: child),
       routes: [
@@ -45,6 +52,10 @@ final GoRouter _router = GoRouter(
           path: '/daily',
           builder: (context, state) => const DailyChallengeScreen(),
         ),
+        GoRoute(
+          path: '/settings',
+          builder: (context, state) => const SettingsScreen(),
+        ),
       ],
     ),
     GoRoute(
@@ -59,13 +70,13 @@ final GoRouter _router = GoRouter(
   ],
 );
 
-class MathmoApp extends StatelessWidget {
-  const MathmoApp({super.key});
+class IthungApp extends StatelessWidget {
+  const IthungApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Mathmo',
+      title: 'iTHUNG',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: _router,

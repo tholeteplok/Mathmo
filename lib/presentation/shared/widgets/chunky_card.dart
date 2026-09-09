@@ -6,7 +6,7 @@ import '../../../core/theme/app_tokens.dart';
 /// Kartu bergaya "chunky playful" dengan border tegas dan solid offset shadow (tanpa blur).
 ///
 /// Komponen ini tersentralisasi untuk semua kartu soal, kartu skor, dan kontainer dialog
-/// di aplikasi Mathmo, memastikan konsistensi visual penuh antar layar tanpa hardcoding.
+/// di aplikasi iTHUNG, memastikan konsistensi visual penuh antar layar tanpa hardcoding.
 class ChunkyCard extends StatelessWidget {
   const ChunkyCard({
     super.key,

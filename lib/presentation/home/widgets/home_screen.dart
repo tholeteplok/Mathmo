@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/services/bgm_service.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../game/providers/level_band_theme_provider.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/chunky_button.dart';
+import '../../shared/widgets/exit_confirm_dialog.dart';
+import '../providers/bgm_provider.dart';
 import '../providers/level_stars_provider.dart';
 import '../providers/player_profile_provider.dart';
 import 'avatar_callout_pin.dart';
@@ -27,6 +31,13 @@ const List<Offset> kDefaultNodeAnchors = [
 /// Koordinat piksel tetap terkalibrasi untuk Peti Harta Milestone di gerbang puncak stage.
 const Offset kDefaultChestAnchor = Offset(380, 360);
 
+/// Faktor skala kedalaman perspektif 3D dari depan (bawah) ke belakang (puncak).
+/// Index 0 = Level 1 (foreground paling besar 1.25x), Index 4 = Level 5 (paling jauh 0.78x).
+const List<double> kStagePerspectiveScales = [1.25, 1.12, 1.00, 0.88, 0.78];
+
+/// Skala kedalaman untuk Peti Harta Milestone di puncak gerbang stage.
+const double kMilestoneChestPerspectiveScale = 0.80;
+
 /// Data konfigurasi satu stage zona (berisi 5 level per gambar kanvas).
 class StageData {
   const StageData({
@@ -38,6 +49,7 @@ class StageData {
     required this.icon,
     required this.assetPath,
     required this.accentColor,
+    required this.bgmAssetPath,
     this.nodeAnchors = kDefaultNodeAnchors,
     this.chestAnchor = kDefaultChestAnchor,
   });
@@ -50,12 +62,13 @@ class StageData {
   final String icon;
   final String assetPath;
   final Color accentColor;
+  final String bgmAssetPath;
   final List<Offset> nodeAnchors;
   final Offset chestAnchor;
 }
 
 /// Daftar definisi stage petualangan mencakup seluruh 5 Level Band (Level 1 hingga 60+).
-final List<StageData> kMathmoStages = [
+final List<StageData> kIthungStages = [
   // Band 1: Onboarding (Level 1–5)
   const StageData(
     stageIndex: 0,
@@ -66,6 +79,7 @@ final List<StageData> kMathmoStages = [
     icon: '🌱',
     assetPath: 'assets/images/meadow_canvas.jpg',
     accentColor: Color(0xFF639922),
+    bgmAssetPath: 'assets/sounds/musics/meadow_tone.mp3',
   ),
 
   // Band 2: Basic (Level 6–15)
@@ -78,6 +92,7 @@ final List<StageData> kMathmoStages = [
     icon: '🏜️',
     assetPath: 'assets/images/canyon_canvas.jpg',
     accentColor: Color(0xFFBA7517),
+    bgmAssetPath: 'assets/sounds/musics/canyon_tone.mp3',
   ),
   const StageData(
     stageIndex: 2,
@@ -88,6 +103,7 @@ final List<StageData> kMathmoStages = [
     icon: '🏜️',
     assetPath: 'assets/images/canyon_canvas.jpg',
     accentColor: Color(0xFFBA7517),
+    bgmAssetPath: 'assets/sounds/musics/canyon_tone.mp3',
   ),
 
   // Band 3: Intermediate (Level 16–30)
@@ -100,6 +116,7 @@ final List<StageData> kMathmoStages = [
     icon: '🍂',
     assetPath: 'assets/images/ridge_canvas.jpg',
     accentColor: Color(0xFFD85A30),
+    bgmAssetPath: 'assets/sounds/musics/ridge_tone.mp3',
   ),
   const StageData(
     stageIndex: 4,
@@ -110,6 +127,7 @@ final List<StageData> kMathmoStages = [
     icon: '🍂',
     assetPath: 'assets/images/ridge_canvas.jpg',
     accentColor: Color(0xFFD85A30),
+    bgmAssetPath: 'assets/sounds/musics/ridge_tone.mp3',
   ),
   const StageData(
     stageIndex: 5,
@@ -120,6 +138,7 @@ final List<StageData> kMathmoStages = [
     icon: '🍂',
     assetPath: 'assets/images/ridge_canvas.jpg',
     accentColor: Color(0xFFD85A30),
+    bgmAssetPath: 'assets/sounds/musics/ridge_tone.mp3',
   ),
 
   // Band 4: Advanced (Level 31–50)
@@ -132,6 +151,7 @@ final List<StageData> kMathmoStages = [
     icon: '✨',
     assetPath: 'assets/images/twilight_canvas.jpg',
     accentColor: Color(0xFFD4537E),
+    bgmAssetPath: 'assets/sounds/musics/twilight_tone.mp3',
   ),
   const StageData(
     stageIndex: 7,
@@ -142,6 +162,7 @@ final List<StageData> kMathmoStages = [
     icon: '✨',
     assetPath: 'assets/images/twilight_canvas.jpg',
     accentColor: Color(0xFFD4537E),
+    bgmAssetPath: 'assets/sounds/musics/twilight_tone.mp3',
   ),
   const StageData(
     stageIndex: 8,
@@ -152,6 +173,7 @@ final List<StageData> kMathmoStages = [
     icon: '✨',
     assetPath: 'assets/images/twilight_canvas.jpg',
     accentColor: Color(0xFFD4537E),
+    bgmAssetPath: 'assets/sounds/musics/twilight_tone.mp3',
   ),
   const StageData(
     stageIndex: 9,
@@ -162,6 +184,7 @@ final List<StageData> kMathmoStages = [
     icon: '✨',
     assetPath: 'assets/images/twilight_canvas.jpg',
     accentColor: Color(0xFFD4537E),
+    bgmAssetPath: 'assets/sounds/musics/twilight_tone.mp3',
   ),
 
   // Band 5: Expert (Level 51+)
@@ -174,6 +197,7 @@ final List<StageData> kMathmoStages = [
     icon: '🌌',
     assetPath: 'assets/images/cosmic_canvas.jpg',
     accentColor: Color(0xFF7F77DD),
+    bgmAssetPath: 'assets/sounds/musics/cosmic_tone.mp3',
   ),
   const StageData(
     stageIndex: 11,
@@ -184,6 +208,7 @@ final List<StageData> kMathmoStages = [
     icon: '🌌',
     assetPath: 'assets/images/cosmic_canvas.jpg',
     accentColor: Color(0xFF7F77DD),
+    bgmAssetPath: 'assets/sounds/musics/cosmic_tone.mp3',
   ),
 ];
 
@@ -195,20 +220,36 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
   late PageController _pageController;
+  late BgmService _bgmService;
   int _currentStageIndex = 0;
   bool _initializedPage = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pageController = PageController();
+    _bgmService = ref.read(bgmServiceProvider);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _bgmService.pause();
+    } else if (state == AppLifecycleState.resumed) {
+      _bgmService.resume();
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
+    _bgmService.pause();
     super.dispose();
   }
 
@@ -228,24 +269,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final starsMap = starsAsync.valueOrNull ?? const {};
 
     // Fokus otomatis ke stage tempat level aktif pemain berada saat pertama kali load
-    if (!_initializedPage && profileAsync.hasValue) {
+    if (!_initializedPage && (profileAsync.hasValue || profileAsync.hasError)) {
       _initializedPage = true;
       final targetStage =
-          ((currentLevel - 1) ~/ 5).clamp(0, kMathmoStages.length - 1);
+          ((currentLevel - 1) ~/ 5).clamp(0, kIthungStages.length - 1);
       _currentStageIndex = targetStage;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _pageController.hasClients) {
-          _pageController.jumpToPage(targetStage);
+        if (mounted) {
+          if (_pageController.hasClients) {
+            _pageController.jumpToPage(targetStage);
+          }
+          ref
+              .read(bgmServiceProvider)
+              .playTrack(kIthungStages[targetStage].bgmAssetPath);
         }
       });
     }
 
-    final activeStage = kMathmoStages[_currentStageIndex];
+    final activeStage = kIthungStages[_currentStageIndex];
 
-    return AnimatedContainer(
-      duration: AppTokens.canvasColorTransition,
-      color: canvasColor,
-      child: Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldExit = await showExitConfirmDialog(
+          context,
+          title: 'Keluar dari iTHUNG?',
+          message: 'Apakah kamu yakin ingin menutup aplikasi iTHUNG?',
+          confirmLabel: 'Keluar',
+          cancelLabel: 'Batal',
+        );
+        if (shouldExit && context.mounted) {
+          await SystemNavigator.pop();
+        }
+      },
+      child: AnimatedContainer(
+        duration: AppTokens.canvasColorTransition,
+        color: canvasColor,
+        child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
@@ -254,12 +315,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: PageView.builder(
                 controller: _pageController,
                 physics: const BouncingScrollPhysics(),
-                itemCount: kMathmoStages.length,
+                itemCount: kIthungStages.length,
                 onPageChanged: (page) {
                   setState(() => _currentStageIndex = page);
+                  ref
+                      .read(bgmServiceProvider)
+                      .playTrack(kIthungStages[page].bgmAssetPath);
                 },
                 itemBuilder: (context, index) {
-                  final stage = kMathmoStages[index];
+                  final stage = kIthungStages[index];
                   return _StageCanvasView(
                     stage: stage,
                     currentLevel: currentLevel,
@@ -280,7 +344,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Header: Avatar, Streak, XP
+                    // Header: Avatar, Streak, XP, Mute Button
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -289,12 +353,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: AppHeader(
                         streak: currentStreak,
                         xp: totalXp,
+                        actions: const [
+                          _SettingsButton(),
+                          SizedBox(width: 6),
+                          _MuteToggleButton(),
+                        ],
                         leading: Container(
                           width: 42,
                           height: 42,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(13),
                             border: Border.all(
                               color: AppTheme.darkBorder,
                               width: AppTokens.borderWidthDefault,
@@ -307,14 +376,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             ],
                           ),
-                          child: const Center(
-                            child: Text(
-                              'M',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w900,
-                                color: AppTheme.darkBorder,
-                              ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(11),
+                            child: Image.asset(
+                              'assets/icon/app_launcher.png',
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
@@ -415,11 +481,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               padding: EdgeInsets.zero,
                               icon: const Icon(Icons.chevron_right, size: 28),
                               color: _currentStageIndex <
-                                      kMathmoStages.length - 1
+                                      kIthungStages.length - 1
                                   ? AppTheme.darkBorder
                                   : Colors.grey.shade400,
                               onPressed: _currentStageIndex <
-                                      kMathmoStages.length - 1
+                                      kIthungStages.length - 1
                                   ? () {
                                       _pageController.nextPage(
                                         duration:
@@ -484,8 +550,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 /// Widget yang merender 1 lembar kanvas pemandangan dengan koordinat piksel terpadu 768 x 1376 px.
@@ -543,6 +610,7 @@ class _StageCanvasView extends StatelessWidget {
                   context: context,
                   level: stage.startLevel + i,
                   pos: stage.nodeAnchors[i],
+                  scale: kStagePerspectiveScales[i],
                 ),
 
               // 3. Milestone Chest Node at summit destination
@@ -551,10 +619,14 @@ class _StageCanvasView extends StatelessWidget {
                 top: stage.chestAnchor.dy - 26,
                 width: 52,
                 height: 52,
-                child: MilestoneChestNode(
-                  level: stage.endLevel,
-                  isUnlocked: stage.endLevel <= currentLevel,
-                  accentColor: stage.accentColor,
+                child: Transform.scale(
+                  scale: kMilestoneChestPerspectiveScale,
+                  alignment: Alignment.center,
+                  child: MilestoneChestNode(
+                    level: stage.endLevel,
+                    isUnlocked: stage.endLevel <= currentLevel,
+                    accentColor: stage.accentColor,
+                  ),
                 ),
               ),
             ],
@@ -568,6 +640,7 @@ class _StageCanvasView extends StatelessWidget {
     required BuildContext context,
     required int level,
     required Offset pos,
+    required double scale,
   }) {
     final status = level < currentLevel
         ? LevelNodeStatus.completed
@@ -580,27 +653,31 @@ class _StageCanvasView extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Level Node (Center positioned around pos)
+        // Level Node (Center positioned around pos, scaled with 3D depth perspective)
         Positioned(
           left: pos.dx - 75,
           top: status == LevelNodeStatus.active
-              ? pos.dy - 43
+              ? pos.dy - (43 * scale)
               : (status == LevelNodeStatus.completed
-                  ? pos.dy - 29
-                  : pos.dy - 27),
+                  ? pos.dy - (29 * scale)
+                  : pos.dy - (27 * scale)),
           width: 150,
           child: Align(
             alignment: Alignment.topCenter,
-            child: LevelNode(
-              level: level,
-              status: status,
-              accentColor: stage.accentColor,
-              starCount: starCount,
-              onTap: () {
-                if (status != LevelNodeStatus.locked) {
-                  context.go('/game/$level');
-                }
-              },
+            child: Transform.scale(
+              scale: scale,
+              alignment: Alignment.topCenter,
+              child: LevelNode(
+                level: level,
+                status: status,
+                accentColor: stage.accentColor,
+                starCount: starCount,
+                onTap: () {
+                  if (status != LevelNodeStatus.locked) {
+                    context.go('/game/$level');
+                  }
+                },
+              ),
             ),
           ),
         ),
@@ -609,7 +686,7 @@ class _StageCanvasView extends StatelessWidget {
         if (status == LevelNodeStatus.active)
           Positioned(
             left: pos.dx - 100,
-            top: pos.dy - 98,
+            top: pos.dy - (98 * scale).clamp(85.0, 118.0),
             width: 200,
             child: Center(
               child: AvatarCalloutPin(
@@ -619,6 +696,93 @@ class _StageCanvasView extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Tombol Buka Pengaturan bergaya Neobrutalism di header HomeScreen.
+class _SettingsButton extends StatelessWidget {
+  const _SettingsButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Pengaturan',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push('/settings'),
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppTheme.darkBorder,
+                width: AppTokens.borderWidthDefault,
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: AppTheme.darkBorder,
+                  offset: Offset(0, 2),
+                  blurRadius: 0,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.settings_rounded,
+              size: 20,
+              color: AppTheme.darkBorder,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tombol Mute / Unmute BGM loop bergaya Neobrutalism di header HomeScreen.
+class _MuteToggleButton extends ConsumerWidget {
+  const _MuteToggleButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isMuted = ref.watch(bgmMuteProvider);
+    return Tooltip(
+      message: isMuted ? 'Nyalakan Musik' : 'Matikan Musik',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => ref.read(bgmMuteProvider.notifier).toggle(),
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppTheme.darkBorder,
+                width: AppTokens.borderWidthDefault,
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: AppTheme.darkBorder,
+                  offset: Offset(0, 2),
+                  blurRadius: 0,
+                ),
+              ],
+            ),
+            child: Icon(
+              isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+              size: 20,
+              color: isMuted ? Colors.grey.shade500 : AppTheme.darkBorder,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -15,6 +15,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     required this.xp,
     this.leading,
     this.title,
+    this.actions,
     this.onBackTap,
     this.backgroundColor = Colors.transparent,
   });
@@ -23,6 +24,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final int xp;
   final Widget? leading;
   final String? title;
+  final List<Widget>? actions;
   final VoidCallback? onBackTap;
   final Color backgroundColor;
 
@@ -83,11 +85,20 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
 
-            // Sisi Kanan: XP Pill
-            BadgePill(
-              icon: AppIcons.xp,
-              value: '$xp',
-              iconColor: const Color(0xFFF57F17), // Deep amber star
+            // Sisi Kanan: XP Pill & Actions
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                BadgePill(
+                  icon: AppIcons.xp,
+                  value: '$xp',
+                  iconColor: const Color(0xFFF57F17), // Deep amber star
+                ),
+                if (actions != null) ...[
+                  const SizedBox(width: 8),
+                  ...actions!,
+                ],
+              ],
             ),
           ],
         ),

@@ -4,7 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 
 /// Jenis bioma dunia Mathmo yang merepresentasikan tingkat kematangan level band.
-enum MathmoBiome {
+enum IthungBiome {
   meadow, // Band 1 (L1–5): Fresh Sprout Meadow
   canyon, // Band 2 (L6–15): Golden Sun Canyon
   ridge, // Band 3 (L16–30): Coral Sunset Ridge
@@ -13,12 +13,12 @@ enum MathmoBiome {
 }
 
 /// Helper untuk menentukan bioma berdasarkan nomor level.
-MathmoBiome biomeForLevel(int level) {
-  if (level <= 5) return MathmoBiome.meadow;
-  if (level <= 15) return MathmoBiome.canyon;
-  if (level <= 30) return MathmoBiome.ridge;
-  if (level <= 50) return MathmoBiome.twilight;
-  return MathmoBiome.cosmic;
+IthungBiome biomeForLevel(int level) {
+  if (level <= 5) return IthungBiome.meadow;
+  if (level <= 15) return IthungBiome.canyon;
+  if (level <= 30) return IthungBiome.ridge;
+  if (level <= 50) return IthungBiome.twilight;
+  return IthungBiome.cosmic;
 }
 
 /// Factory widget yang menyajikan dekorasi lingkungan (props) yang relevan
@@ -39,31 +39,31 @@ class BiomePropsFactory extends StatelessWidget {
     final variantIndex = (level + (isLeftSide ? 0 : 2)) % 4;
 
     return switch (biome) {
-      MathmoBiome.meadow => switch (variantIndex) {
+      IthungBiome.meadow => switch (variantIndex) {
         0 => const MeadowPineTree(),
         1 => const MeadowBushWithFlowers(),
         2 => const MeadowRoundTree(),
         _ => const MeadowWoodenFence(),
       },
-      MathmoBiome.canyon => switch (variantIndex) {
+      IthungBiome.canyon => switch (variantIndex) {
         0 => const CanyonSaguaroCactus(),
         1 => const CanyonRockMesa(),
         2 => const CanyonPricklyPear(),
         _ => const CanyonTumbleweed(),
       },
-      MathmoBiome.ridge => switch (variantIndex) {
+      IthungBiome.ridge => switch (variantIndex) {
         0 => const RidgeLayeredRock(),
         1 => const RidgeAutumnShrub(),
         2 => const RidgeRockCairn(),
         _ => const RidgeLayeredRock(isSmall: true),
       },
-      MathmoBiome.twilight => switch (variantIndex) {
+      IthungBiome.twilight => switch (variantIndex) {
         0 => const TwilightMushroom(),
         1 => const TwilightMysticTree(),
         2 => const TwilightLantern(),
         _ => const TwilightMushroom(isDouble: true),
       },
-      MathmoBiome.cosmic => switch (variantIndex) {
+      IthungBiome.cosmic => switch (variantIndex) {
         0 => const CosmicCrystalObelisk(),
         1 => const CosmicRuneStone(),
         2 => const CosmicCloud(),

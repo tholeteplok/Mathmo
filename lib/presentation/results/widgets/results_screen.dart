@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/services/sfx_service.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/models/session_result.dart';
 import '../../game/providers/level_band_theme_provider.dart';
+import '../../settings/providers/settings_provider.dart';
 import '../../shared/widgets/chunky_button.dart';
 import '../../shared/widgets/chunky_card.dart';
 import 'score_stat_card.dart';
@@ -13,13 +15,30 @@ import 'score_stat_card.dart';
 /// Layar rangkuman hasil sesi permainan (ResultsScreen).
 ///
 /// Menampilkan skor total, statistik akurasi, rincian XP, dan banner streak.
-class ResultsScreen extends ConsumerWidget {
+class ResultsScreen extends ConsumerStatefulWidget {
   const ResultsScreen({super.key, required this.result});
 
   final SessionResult result;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ResultsScreen> createState() => _ResultsScreenState();
+}
+
+class _ResultsScreenState extends ConsumerState<ResultsScreen> {
+  SessionResult get result => widget.result;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(sfxServiceProvider).play(SfxType.levelUp);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeAsync = ref.watch(levelBandThemeProvider);
     final canvasColor =
         themeAsync.valueOrNull?.canvasColor ?? const Color(0xFFEAF3DE);

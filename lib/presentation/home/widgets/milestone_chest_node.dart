@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/sfx_service.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
+import '../../settings/providers/settings_provider.dart';
 import '../../shared/widgets/chunky_button.dart';
 
 /// Node interaktif Peti Harta Karun Milestone di setiap kelipatan 5 level (L5, 10, 15, dst.).
-class MilestoneChestNode extends StatelessWidget {
+class MilestoneChestNode extends ConsumerWidget {
   const MilestoneChestNode({
     super.key,
     required this.level,
@@ -20,7 +23,14 @@ class MilestoneChestNode extends StatelessWidget {
   final Color accentColor;
   final int xpReward;
 
-  void _showRewardDialog(BuildContext context) {
+  void _showRewardDialog(BuildContext context, WidgetRef ref) {
+    if (isUnlocked) {
+      try {
+        ref.read(sfxServiceProvider).play(SfxType.chestOpen);
+      } catch (_) {
+        // Abaikan jika dipanggil di luar ProviderScope (mis. isolated widget test)
+      }
+    }
     showDialog<void>(
       context: context,
       builder: (dialogContext) => MilestoneRewardDialog(
@@ -33,10 +43,10 @@ class MilestoneChestNode extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => _showRewardDialog(context),
+      onTap: () => _showRewardDialog(context, ref),
       child: Transform.rotate(
         angle: AppTokens.rotationSubtleNegative,
         child: Container(

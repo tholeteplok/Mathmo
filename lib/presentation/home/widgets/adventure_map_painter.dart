@@ -17,7 +17,7 @@ class AdventureMapPainter extends CustomPainter {
   final List<Offset> nodePositions;
 
   /// Bioma aktif saat ini untuk menentukan warna batu jalan setapak.
-  final MathmoBiome biome;
+  final IthungBiome biome;
 
   /// Warna border neobrutalis.
   final Color borderColor;
@@ -85,25 +85,25 @@ class AdventureMapPainter extends CustomPainter {
   }
 
   /// Menghitung warna isian jalan dan warna batu pijakan per bioma.
-  (Color pathColor, Color stoneColor) _resolvePathColors(MathmoBiome biome) {
+  (Color pathColor, Color stoneColor) _resolvePathColors(IthungBiome biome) {
     return switch (biome) {
-      MathmoBiome.meadow => (
+      IthungBiome.meadow => (
         const Color(0xFFE2EED0), // Green cobblestone path
         const Color(0xFFB8D992),
       ),
-      MathmoBiome.canyon => (
+      IthungBiome.canyon => (
         const Color(0xFFFBE4C3), // Sandstone trail
         const Color(0xFFE2B77B),
       ),
-      MathmoBiome.ridge => (
+      IthungBiome.ridge => (
         const Color(0xFFF7D5CA), // Terracotta stone
         const Color(0xFFDE9682),
       ),
-      MathmoBiome.twilight => (
+      IthungBiome.twilight => (
         const Color(0xFFECD2E4), // Twilight crystal dust path
         const Color(0xFFC798BC),
       ),
-      MathmoBiome.cosmic => (
+      IthungBiome.cosmic => (
         const Color(0xFFDCD7F9), // Obsidian glowing path
         const Color(0xFFABA1E8),
       ),
@@ -165,7 +165,7 @@ class WindingPathSegmentPainter extends CustomPainter {
   final double nextOffset;
   final bool hasPrev;
   final bool hasNext;
-  final MathmoBiome biome;
+  final IthungBiome biome;
   final Color borderColor;
 
   @override
@@ -258,25 +258,25 @@ class WindingPathSegmentPainter extends CustomPainter {
     }
   }
 
-  (Color pathColor, Color stoneColor) _resolvePathColors(MathmoBiome biome) {
+  (Color pathColor, Color stoneColor) _resolvePathColors(IthungBiome biome) {
     return switch (biome) {
-      MathmoBiome.meadow => (
+      IthungBiome.meadow => (
         const Color(0xFFE2EED0),
         const Color(0xFFB8D992),
       ),
-      MathmoBiome.canyon => (
+      IthungBiome.canyon => (
         const Color(0xFFFBE4C3),
         const Color(0xFFE2B77B),
       ),
-      MathmoBiome.ridge => (
+      IthungBiome.ridge => (
         const Color(0xFFF7D5CA),
         const Color(0xFFDE9682),
       ),
-      MathmoBiome.twilight => (
+      IthungBiome.twilight => (
         const Color(0xFFECD2E4),
         const Color(0xFFC798BC),
       ),
-      MathmoBiome.cosmic => (
+      IthungBiome.cosmic => (
         const Color(0xFFDCD7F9),
         const Color(0xFFABA1E8),
       ),

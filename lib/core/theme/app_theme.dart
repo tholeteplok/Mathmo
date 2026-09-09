@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Konfigurasi tema global terpusat untuk aplikasi Mathmo.
+/// Konfigurasi tema global terpusat untuk aplikasi iTHUNG.
 ///
 /// Keputusan tipografi:
 /// - **Quicksand**: Font UI utama, headline, body, label (kesan playful & ramah)
@@ -101,6 +101,20 @@ class AppTheme {
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
+    );
+  }
+
+  /// TextStyle khusus untuk nama brand aplikasi "iTHUNG" menggunakan font kustom Baberry.
+  static TextStyle brandTitleStyle({
+    double fontSize = 62,
+    Color color = const Color(0xFF639922),
+    double? letterSpacing,
+  }) {
+    return TextStyle(
+      fontFamily: 'Baberry',
+      fontSize: fontSize,
+      color: color,
+      letterSpacing: letterSpacing,
     );
   }
 }

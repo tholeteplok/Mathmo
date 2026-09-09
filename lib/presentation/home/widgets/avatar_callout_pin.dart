@@ -10,7 +10,7 @@ import '../../../core/theme/app_tokens.dart';
 class AvatarCalloutPin extends StatefulWidget {
   const AvatarCalloutPin({
     super.key,
-    this.avatarLetter = 'M',
+    this.avatarLetter = 'i',
     this.label = 'Mulai di Sini!',
     this.accentColor = const Color(0xFF639922),
     this.onTap,

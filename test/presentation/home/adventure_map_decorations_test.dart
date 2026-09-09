@@ -53,20 +53,20 @@ SessionResult _createSession({
 void main() {
   group('Biome Architecture (Opsi A)', () {
     test('biomeForLevel maps correctly across all 5 Level Bands', () {
-      expect(biomeForLevel(1), equals(MathmoBiome.meadow));
-      expect(biomeForLevel(5), equals(MathmoBiome.meadow));
+      expect(biomeForLevel(1), equals(IthungBiome.meadow));
+      expect(biomeForLevel(5), equals(IthungBiome.meadow));
 
-      expect(biomeForLevel(6), equals(MathmoBiome.canyon));
-      expect(biomeForLevel(15), equals(MathmoBiome.canyon));
+      expect(biomeForLevel(6), equals(IthungBiome.canyon));
+      expect(biomeForLevel(15), equals(IthungBiome.canyon));
 
-      expect(biomeForLevel(16), equals(MathmoBiome.ridge));
-      expect(biomeForLevel(30), equals(MathmoBiome.ridge));
+      expect(biomeForLevel(16), equals(IthungBiome.ridge));
+      expect(biomeForLevel(30), equals(IthungBiome.ridge));
 
-      expect(biomeForLevel(31), equals(MathmoBiome.twilight));
-      expect(biomeForLevel(50), equals(MathmoBiome.twilight));
+      expect(biomeForLevel(31), equals(IthungBiome.twilight));
+      expect(biomeForLevel(50), equals(IthungBiome.twilight));
 
-      expect(biomeForLevel(51), equals(MathmoBiome.cosmic));
-      expect(biomeForLevel(100), equals(MathmoBiome.cosmic));
+      expect(biomeForLevel(51), equals(IthungBiome.cosmic));
+      expect(biomeForLevel(100), equals(IthungBiome.cosmic));
     });
 
     testWidgets('BiomePropsFactory renders meadow props for level 1', (

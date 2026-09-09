@@ -3,10 +3,12 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/services/sfx_service.dart';
 import '../../../domain/models/distractor.dart';
 import '../../../domain/models/question.dart';
 import '../../../domain/models/round_result.dart';
 import '../../../domain/models/session_result.dart';
+import '../../settings/providers/settings_provider.dart';
 import '../state/game_session_state.dart';
 import 'game_dependencies_provider.dart';
 import 'level_band_theme_provider.dart';
@@ -223,6 +225,14 @@ class GameSessionNotifier extends StateNotifier<GameSessionState>
     final scoring = _ref.read(scoringServiceProvider);
     final dda = _ref.read(ddaEngineProvider);
     final masteryService = _ref.read(masteryUpdateServiceProvider);
+
+    // SFX feedback instan
+    final sfx = _ref.read(sfxServiceProvider);
+    if (isCorrect) {
+      sfx.play(SfxType.correct);
+    } else {
+      sfx.play(SfxType.wrong);
+    }
 
     // 1. Update streak & confidence score
     if (isCorrect) {

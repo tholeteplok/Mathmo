@@ -18,6 +18,7 @@ dependencies:
   riverpod_annotation: ^2.6.1
   tabler_icons_plus: ^3.46.0
   uuid: ^4.6.0
+  audioplayers: ^6.7.1
 
 dev_dependencies:
   flutter_test:
@@ -28,9 +29,26 @@ dev_dependencies:
   custom_lint: ^0.7.6
   riverpod_lint: ^2.6.5
   hive_ce_generator: ^1.9.2
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon/app_launcher.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
   assets:
     - assets/level_bands.json
     - assets/images/
+    - assets/sounds/musics/
+    - assets/sounds/sfx/
+    - assets/icon/
+
+  fonts:
+    - family: Baberry
+      fonts:
+        - asset: assets/font/baberry/Baberry.ttf
+
