@@ -121,7 +121,7 @@ class GameSessionNotifier extends StateNotifier<GameSessionState>
     }
   }
 
-  /// Memulai ronde baru: tampilkan soal ~600ms, lalu aktifkan opsi jawaban.
+  /// Memulai ronde baru: langsung aktifkan soal dan opsi jawaban secara serentak (0ms delay).
   void _startRound({bool isInitial = false}) {
     _showQuestionTimer?.cancel();
     _feedbackTimer?.cancel();
@@ -131,12 +131,7 @@ class GameSessionNotifier extends StateNotifier<GameSessionState>
         ? (state as ShowQuestionState).question
         : qGen.generateForLevel(args.level);
 
-    state = ShowQuestionState(question);
-
-    _showQuestionTimer = Timer(const Duration(milliseconds: 600), () {
-      if (!mounted) return;
-      _activateRound(question);
-    });
+    _activateRound(question);
   }
 
   /// Mengaktifkan timer ronde dan grid pilihan jawaban.
@@ -307,6 +302,8 @@ class GameSessionNotifier extends StateNotifier<GameSessionState>
       isCorrect: isCorrect,
       selectedAnswer: selectedAnswer,
       question: question,
+      distractors: current.distractors,
+      shuffledIndices: current.shuffledIndices,
       roundScore: scoreResult.roundScore,
     );
 

@@ -85,16 +85,16 @@ void main() {
       ),
     );
 
-    // Initial state should be ShowQuestionState
-    await tester.pump(const Duration(milliseconds: 700));
+    // Initial state transitions directly to ActiveState (0ms delay)
+    await tester.pump();
 
     final args = const GameSessionArgs(level: 1);
     final notifier = container.read(gameSessionProvider(args).notifier);
 
     // Play all 10 rounds with correct answers
     for (var r = 0; r < 10; r++) {
-      // 1. Wait for ShowQuestionState (600ms) -> ActiveState
-      await tester.pump(const Duration(milliseconds: 650));
+      // 1. Verify ActiveState is immediately active (0ms delay)
+      await tester.pump();
 
       final state = container.read(gameSessionProvider(args));
       expect(state, isA<ActiveState>());

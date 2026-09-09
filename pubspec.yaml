@@ -51,4 +51,11 @@ flutter:
     - family: Baberry
       fonts:
         - asset: assets/font/baberry/Baberry.ttf
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/font/jetbrains/JetBrainsMono-Bold.ttf
+          weight: 700
+        - asset: assets/font/jetbrains/JetBrainsMono-ExtraBold.ttf
+          weight: 800
+
 

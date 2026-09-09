@@ -72,12 +72,16 @@ class FeedbackState extends GameSessionState {
     required this.isCorrect,
     required this.selectedAnswer,
     required this.question,
+    required this.distractors,
+    required this.shuffledIndices,
     required this.roundScore,
   });
 
   final bool isCorrect;
   final int? selectedAnswer;
   final Question question;
+  final List<Distractor> distractors;
+  final List<int> shuffledIndices;
   final int roundScore;
 }
 

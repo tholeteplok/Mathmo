@@ -7,7 +7,6 @@ import '../../../domain/models/session_result.dart';
 import '../../home/providers/player_profile_provider.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/exit_confirm_dialog.dart';
-import '../providers/game_dependencies_provider.dart';
 import '../providers/game_session_provider.dart';
 import '../providers/level_band_theme_provider.dart';
 import '../state/game_session_state.dart';
@@ -217,25 +216,28 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       );
     }
 
-    // Tampilkan grid non-aktif saat state ShowQuestion / Feedback
-    return Opacity(
-      opacity: 0.6,
-      child: IgnorePointer(
-        child: AnswerGrid(
-          question: switch (state) {
-            ShowQuestionState(:final question) => question,
-            FeedbackState(:final question) => question,
-            PausedState(:final pausedFrom) => pausedFrom.question,
-            _ =>
-              ref
-                  .read(questionGeneratorProvider)
-                  .generateForLevel(widget.level),
-          },
-          distractors: const [],
-          shuffledIndices: const [0, 1, 2, 3],
-          onAnswerSelected: (_) {},
-        ),
-      ),
-    );
+    if (state is FeedbackState) {
+      return AnswerGrid(
+        key: ValueKey(state.question.id),
+        question: state.question,
+        distractors: state.distractors,
+        shuffledIndices: state.shuffledIndices,
+        enabled: false,
+        onAnswerSelected: (_) {},
+      );
+    }
+
+    if (state is PausedState) {
+      return AnswerGrid(
+        key: ValueKey(state.pausedFrom.question.id),
+        question: state.pausedFrom.question,
+        distractors: state.pausedFrom.distractors,
+        shuffledIndices: state.pausedFrom.shuffledIndices,
+        enabled: false,
+        onAnswerSelected: (_) {},
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }

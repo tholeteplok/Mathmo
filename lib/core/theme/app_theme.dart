@@ -63,14 +63,16 @@ class AppTheme {
 
   /// TextStyle khusus untuk angka soal aritmatika dan opsi jawaban di gameplay.
   ///
-  /// Menggunakan [GoogleFonts.jetbrainsMono] dengan tabular numerals
-  /// agar digit selalu memiliki lebar yang konsisten (monospace) dan mudah dibaca cepat.
+  /// Menggunakan font [JetBrainsMono] lokal yang di-bundle di assets
+  /// agar glif matematika (seperti ×, ÷, −, +) dan tabular numerals selalu konsisten,
+  /// 100% offline, dan bebas dari substitusi/fallback OEM Android font.
   static TextStyle mathNumberStyle({
     double fontSize = 38,
     FontWeight fontWeight = FontWeight.w800,
     Color color = darkBorder,
   }) {
-    return GoogleFonts.jetBrainsMono(
+    return TextStyle(
+      fontFamily: 'JetBrainsMono',
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -84,7 +86,8 @@ class AppTheme {
     FontWeight fontWeight = FontWeight.w700,
     Color color = darkBorder,
   }) {
-    return GoogleFonts.jetBrainsMono(
+    return TextStyle(
+      fontFamily: 'JetBrainsMono',
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -97,7 +100,8 @@ class AppTheme {
     FontWeight fontWeight = FontWeight.w700,
     Color color = darkBorder,
   }) {
-    return GoogleFonts.jetBrainsMono(
+    return TextStyle(
+      fontFamily: 'JetBrainsMono',
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,7 +9,6 @@ import '../../../core/theme/app_tokens.dart';
 import '../../game/providers/level_band_theme_provider.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/chunky_button.dart';
-import '../../shared/widgets/exit_confirm_dialog.dart';
 import '../providers/bgm_provider.dart';
 import '../providers/level_stars_provider.dart';
 import '../providers/player_profile_provider.dart';
@@ -236,6 +234,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Precache seluruh gambar kanvas biome agar swipe antar stage instan dan bebas jank
+    for (final stage in kIthungStages) {
+      precacheImage(AssetImage(stage.assetPath), context);
+    }
+  }
+
+  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
@@ -288,25 +295,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     final activeStage = kIthungStages[_currentStageIndex];
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final shouldExit = await showExitConfirmDialog(
-          context,
-          title: 'Keluar dari iTHUNG?',
-          message: 'Apakah kamu yakin ingin menutup aplikasi iTHUNG?',
-          confirmLabel: 'Keluar',
-          cancelLabel: 'Batal',
-        );
-        if (shouldExit && context.mounted) {
-          await SystemNavigator.pop();
-        }
-      },
-      child: AnimatedContainer(
-        duration: AppTokens.canvasColorTransition,
-        color: canvasColor,
-        child: Scaffold(
+    return AnimatedContainer(
+      duration: AppTokens.canvasColorTransition,
+      color: canvasColor,
+      child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
@@ -550,9 +542,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ],
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 /// Widget yang merender 1 lembar kanvas pemandangan dengan koordinat piksel terpadu 768 x 1376 px.
@@ -575,61 +566,64 @@ class _StageCanvasView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox.expand(
-      child: FittedBox(
-        fit: BoxFit.cover,
-        alignment: Alignment.center,
-        child: SizedBox(
-          width: canvasWidth,
-          height: canvasHeight,
-          child: Stack(
-            fit: StackFit.expand,
-            clipBehavior: Clip.none,
-            children: [
-              // 1. Scenic Canvas Background Image (768 x 1376 px)
-              Image.asset(
-                stage.assetPath,
-                width: canvasWidth,
-                height: canvasHeight,
-                fit: BoxFit.fill,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: stage.accentColor.withValues(alpha: 0.15),
-                    child: Center(
-                      child: Text(
-                        stage.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+      child: ClipRect(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          clipBehavior: Clip.hardEdge,
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: canvasWidth,
+            height: canvasHeight,
+            child: Stack(
+              fit: StackFit.expand,
+              clipBehavior: Clip.none,
+              children: [
+                // 1. Scenic Canvas Background Image (768 x 1376 px)
+                Image.asset(
+                  stage.assetPath,
+                  width: canvasWidth,
+                  height: canvasHeight,
+                  fit: BoxFit.fill,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: stage.accentColor.withValues(alpha: 0.15),
+                      child: Center(
+                        child: Text(
+                          stage.title,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-
-              // 2. Dynamic Interactive Level Nodes Overlay at exact calibrated pixel positions
-              for (var i = 0; i < 5; i++)
-                _buildNodeItem(
-                  context: context,
-                  level: stage.startLevel + i,
-                  pos: stage.nodeAnchors[i],
-                  scale: kStagePerspectiveScales[i],
+                    );
+                  },
                 ),
 
-              // 3. Milestone Chest Node at summit destination
-              Positioned(
-                left: stage.chestAnchor.dx - 26,
-                top: stage.chestAnchor.dy - 26,
-                width: 52,
-                height: 52,
-                child: Transform.scale(
-                  scale: kMilestoneChestPerspectiveScale,
-                  alignment: Alignment.center,
-                  child: MilestoneChestNode(
-                    level: stage.endLevel,
-                    isUnlocked: stage.endLevel <= currentLevel,
-                    accentColor: stage.accentColor,
+                // 2. Dynamic Interactive Level Nodes Overlay at exact calibrated pixel positions
+                for (var i = 0; i < 5; i++)
+                  _buildNodeItem(
+                    context: context,
+                    level: stage.startLevel + i,
+                    pos: stage.nodeAnchors[i],
+                    scale: kStagePerspectiveScales[i],
+                  ),
+
+                // 3. Milestone Chest Node at summit destination
+                Positioned(
+                  left: stage.chestAnchor.dx - 26,
+                  top: stage.chestAnchor.dy - 26,
+                  width: 52,
+                  height: 52,
+                  child: Transform.scale(
+                    scale: kMilestoneChestPerspectiveScale,
+                    alignment: Alignment.center,
+                    child: MilestoneChestNode(
+                      level: stage.endLevel,
+                      isUnlocked: stage.endLevel <= currentLevel,
+                      accentColor: stage.accentColor,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
