@@ -38,3 +38,25 @@ final dailyChallengeProvider = FutureProvider<DailyChallenge>((ref) async {
 
   return challenge;
 });
+
+/// Provider untuk memeriksa apakah pemain sudah menyelesaikan Daily Challenge hari ini.
+///
+/// Jika [RepoFailure] (mis. error I/O Hive), dikembalikan `null` agar pemain tidak terkunci
+/// secara keliru akibat masalah teknis internal (prinsip graceful degradation).
+final dailyChallengeCompletionProvider = FutureProvider<DailyChallengeResult?>((
+  ref,
+) async {
+  final now = DateTime.now();
+  final profile = await ref.watch(playerProfileProvider.future);
+  final config = await ref.watch(levelBandsConfigProvider.future);
+  final band = config.bandForLevel(profile.currentLevel);
+
+  final repo = ref.watch(dailyChallengeRepositoryProvider);
+  final result = await repo.getResult(now, band.id);
+
+  return switch (result) {
+    RepoSuccess(:final value) => value,
+    RepoFailure() => null,
+  };
+});
+

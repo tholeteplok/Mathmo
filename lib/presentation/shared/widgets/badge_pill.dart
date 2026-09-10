@@ -12,8 +12,8 @@ class BadgePill extends StatelessWidget {
     required this.icon,
     required this.value,
     required this.iconColor,
-    this.backgroundColor = Colors.white,
-    this.borderColor = AppTheme.darkBorder,
+    this.backgroundColor = AppTheme.colorVanillaCard,
+    this.borderColor = const Color(0xFFDECFA8),
     this.label,
     this.onTap,
   });
@@ -39,9 +39,9 @@ class BadgePill extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: borderColor,
+            color: AppTheme.colorWoodDark.withValues(alpha: 0.10),
             offset: const Offset(0, 2),
-            blurRadius: 0,
+            blurRadius: 3,
           ),
         ],
       ),
@@ -56,7 +56,7 @@ class BadgePill extends StatelessWidget {
             style: AppTheme.statNumberStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: AppTheme.darkBorder,
+              color: AppTheme.colorEspresso,
             ),
           ),
           if (label != null) ...[
@@ -65,7 +65,7 @@ class BadgePill extends StatelessWidget {
               label!,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppTheme.darkBorder,
+                color: AppTheme.colorEspresso,
               ),
             ),
           ],

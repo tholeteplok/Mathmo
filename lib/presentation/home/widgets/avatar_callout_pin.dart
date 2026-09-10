@@ -11,12 +11,14 @@ class AvatarCalloutPin extends StatefulWidget {
   const AvatarCalloutPin({
     super.key,
     this.avatarLetter = 'i',
+    this.avatarId,
     this.label = 'Mulai di Sini!',
     this.accentColor = const Color(0xFF639922),
     this.onTap,
   });
 
   final String avatarLetter;
+  final String? avatarId;
   final String label;
   final Color accentColor;
   final VoidCallback? onTap;
@@ -87,8 +89,8 @@ class _AvatarCalloutPinState extends State<AvatarCalloutPin>
                 children: [
                   // Mini Avatar Circle
                   Container(
-                    width: 24,
-                    height: 24,
+                    width: 26,
+                    height: 26,
                     decoration: BoxDecoration(
                       color: widget.accentColor,
                       shape: BoxShape.circle,
@@ -97,16 +99,23 @@ class _AvatarCalloutPinState extends State<AvatarCalloutPin>
                         width: AppTokens.borderWidthSubtle,
                       ),
                     ),
-                    child: Center(
-                      child: Text(
-                        widget.avatarLetter,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                    child: AppAssets.avatarPath(widget.avatarId) != null
+                        ? ClipOval(
+                            child: Image.asset(
+                              AppAssets.avatarPath(widget.avatarId)!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              widget.avatarLetter,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                   ),
                   const SizedBox(width: 8),
                   // Teks Label

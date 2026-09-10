@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../../domain/models/level_band_config.dart';
+import 'app_theme.dart';
 
 /// Hasil resolusi tema visual dinamis untuk satu level spesifik.
 class LevelBandTheme {
@@ -34,7 +35,7 @@ Color colorFromHex(String hex) {
   } else if (cleaned.length == 8) {
     return Color(int.parse(cleaned, radix: 16));
   }
-  return const Color(0xFFEAF3DE); // fallback
+  return AppTheme.colorSandyCanvas; // fallback
 }
 
 /// Fungsi murni untuk menyelesaikan [LevelBandTheme] dari [LevelBandsConfig] dan [level].
@@ -47,8 +48,8 @@ LevelBandTheme resolveLevelBandTheme(LevelBandsConfig config, int level) {
   final t = band.progressInBand(level);
   final interpolatedCanvas = Color.lerp(startColor, endColor, t) ?? startColor;
 
-  // Border chunky kontras gelap
-  const borderColor = Color(0xFF2C3E1B);
+  // Border kayu hangat / saddle wood
+  const borderColor = AppTheme.colorWoodMedium;
 
   return LevelBandTheme(
     band: band,

@@ -69,10 +69,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
 
               // Banner Streak Maintained
               ChunkyCard(
-                backgroundColor: const Color(
-                  0xFFFAEEDA,
-                ), // Warm amber background
-                borderColor: const Color(0xFFBA7517),
+                variant: ChunkyCardVariant.wood,
                 padding: const EdgeInsets.symmetric(
                   vertical: 12,
                   horizontal: 16,
@@ -82,7 +79,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                   children: [
                     const Icon(
                       AppIcons.streakMaintained,
-                      color: Color(0xFFE65100),
+                      color: AppTheme.colorCoral,
                       size: 26,
                     ),
                     const SizedBox(width: 8),
@@ -90,7 +87,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                       'Streak Harian Dipertahankan!',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFFBA7517),
+                        color: AppTheme.colorWoodDark,
                       ),
                     ),
                   ],
@@ -100,7 +97,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
 
               // Kartu Skor Total
               ChunkyCard(
-                backgroundColor: Colors.white,
+                variant: ChunkyCardVariant.wood,
                 padding: const EdgeInsets.symmetric(
                   vertical: 24,
                   horizontal: 20,
@@ -112,7 +109,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.2,
-                        color: const Color(0xFF7A8670),
+                        color: AppTheme.colorTaupe,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -137,7 +134,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                       title: 'Akurasi',
                       value: '$accuracyPercent%',
                       icon: AppIcons.accuracyStat,
-                      iconColor: const Color(0xFF639922),
+                      iconColor: AppTheme.colorSage,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -146,7 +143,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                       title: 'Rata-rata',
                       value: '${avgTimeSec}s',
                       icon: AppIcons.timeStat,
-                      iconColor: const Color(0xFFBA7517),
+                      iconColor: AppTheme.colorHoney,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -155,7 +152,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                       title: 'Streak',
                       value: '${result.bestStreak}',
                       icon: AppIcons.streak,
-                      iconColor: const Color(0xFFE65100),
+                      iconColor: AppTheme.colorCoral,
                     ),
                   ),
                 ],
@@ -164,7 +161,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
 
               // Kartu Rincian XP
               ChunkyCard(
-                backgroundColor: Colors.white,
+                variant: ChunkyCardVariant.wood,
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,14 +172,17 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                         Text(
                           'XP Diperoleh',
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800),
+                              ?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.colorEspresso,
+                              ),
                         ),
                         Text(
                           '+${result.xpEarned} XP',
                           style: AppTheme.statNumberStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
-                            color: const Color(0xFFF57F17),
+                            color: AppTheme.colorHoney,
                           ),
                         ),
                       ],
@@ -190,7 +190,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                     const Divider(
                       height: 24,
                       thickness: 1.5,
-                      color: Color(0xFFEAEAEA),
+                      color: Color(0xFFDECFA8),
                     ),
                     _buildXpRow(
                       context,
@@ -224,14 +224,13 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                   Expanded(
                     child: ChunkyButton(
                       onPressed: () => context.go('/'),
-                      backgroundColor: Colors.white,
-                      borderColor: AppTheme.darkBorder,
+                      backgroundColor: AppTheme.colorVanillaCard,
                       child: const Text(
                         'Ke Beranda',
                         style: TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.darkBorder,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.colorEspresso,
                         ),
                       ),
                     ),
@@ -245,7 +244,6 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                             : '/game/${result.levelReached}',
                       ),
                       backgroundColor: accentColor,
-                      borderColor: AppTheme.darkBorder,
                       child: Text(
                         result.accuracy >= 0.7
                             ? 'Level Berikutnya'

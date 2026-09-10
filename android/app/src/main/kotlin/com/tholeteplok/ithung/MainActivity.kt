@@ -1,4 +1,4 @@
-package com.example.mathmo_app
+﻿package com.tholeteplok.ithung
 
 import io.flutter.embedding.android.FlutterActivity
 

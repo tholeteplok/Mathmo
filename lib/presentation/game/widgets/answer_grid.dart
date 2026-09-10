@@ -93,14 +93,16 @@ class _AnswerGridState extends State<AnswerGrid> {
     return ChunkyButton(
       enabled: widget.enabled && !_hasTapped,
       onPressed: () => _handleTap(slotIndex),
-      backgroundColor: Colors.white,
-      borderColor: AppTheme.darkBorder,
+      backgroundColor: AppTheme.colorVanillaCard,
+      borderColor: const Color(0xFFDECFA8),
+      shadowColor: const Color(0xFFD5C4A1),
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Text(
         '$displayValue',
         style: AppTheme.answerButtonStyle(
           fontSize: 28,
           fontWeight: FontWeight.w800,
+          color: AppTheme.colorEspresso,
         ),
       ),
     );

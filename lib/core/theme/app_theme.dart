@@ -9,8 +9,48 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   AppTheme._();
 
-  /// Border color default untuk estetika chunky solid.
-  static const Color darkBorder = Color(0xFF232B1E);
+  // ── Palet Warna Terpusat (Cozy Warm Stationery & Woodwork) ────────
+  /// Teks utama dan outline kontras ramah mata (menggantikan hitam pekat).
+  static const Color colorEspresso = Color(0xFF3A2E2B);
+
+  /// Teks sekunder, label, dan elemen pendukung.
+  static const Color colorTaupe = Color(0xFF8F7E6D);
+
+  /// Aksen primer brand (bintang, streak, tab aktif).
+  static const Color colorHoney = Color(0xFFF6C443);
+
+  /// Aksen kayu gelap (bayangan & aksen serat kayu).
+  static const Color colorWoodDark = Color(0xFF633B1D);
+
+  /// Aksen kayu hangat / gantungan binder kalender (saddle brown).
+  static const Color colorWoodMedium = Color(0xFF9C663D);
+
+  /// Aksen kayu muda / highlight kayu pine.
+  static const Color colorWoodLight = Color(0xFFDDB988);
+
+  /// Border kayu tegas untuk plang dan kontainer kayu.
+  static const Color colorWoodBorder = Color(0xFF87532A);
+
+  /// Warna isian permukaan papan kayu.
+  static const Color colorWoodPlank = Color(0xFFF4E5CA);
+
+  /// Permukaan kertas putih bersih khusus soal matematika.
+  static const Color colorPaperWhite = Color(0xFFFFFFFF);
+
+  /// Permukaan kartu vanilla cream hangat untuk UI non-game.
+  static const Color colorVanillaCard = Color(0xFFFFFDF7);
+
+  /// Latar belakang kanvas dasar hangat (warm oatmeal/sandy cream).
+  static const Color colorSandyCanvas = Color(0xFFF4EBD0);
+
+  /// Warna sukses / jawaban benar / forest sage green.
+  static const Color colorSage = Color(0xFF5E9E52);
+
+  /// Warna peringatan / wrong / terracotta coral.
+  static const Color colorCoral = Color(0xFFE26D50);
+
+  /// Border color default (diarahkan ke [colorEspresso] demi kompatibilitas).
+  static const Color darkBorder = colorEspresso;
 
   /// Menghasilkan [ThemeData] utama aplikasi.
   static ThemeData get lightTheme {
@@ -18,44 +58,45 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      scaffoldBackgroundColor: colorSandyCanvas,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFF639922), // Onboarding green primary
-        primary: const Color(0xFF639922),
-        secondary: const Color(0xFFBA7517), // Warm amber
-        tertiary: const Color(0xFFD85A30), // Coral orange
-        surface: const Color(0xFFFAFDF5),
+        seedColor: colorHoney,
+        primary: colorHoney,
+        secondary: colorWoodMedium,
+        tertiary: colorCoral,
+        surface: colorSandyCanvas,
       ),
       textTheme: baseTextTheme.copyWith(
-        // Headline & Title memakai Quicksand bold
+        // Headline & Title memakai Quicksand bold warna Espresso
         displayLarge: GoogleFonts.quicksand(
           fontSize: 40,
           fontWeight: FontWeight.w800,
-          color: darkBorder,
+          color: colorEspresso,
         ),
         displayMedium: GoogleFonts.quicksand(
           fontSize: 32,
           fontWeight: FontWeight.w700,
-          color: darkBorder,
+          color: colorEspresso,
         ),
         titleLarge: GoogleFonts.quicksand(
           fontSize: 22,
           fontWeight: FontWeight.w700,
-          color: darkBorder,
+          color: colorEspresso,
         ),
         titleMedium: GoogleFonts.quicksand(
           fontSize: 18,
           fontWeight: FontWeight.w700,
-          color: darkBorder,
+          color: colorEspresso,
         ),
         bodyLarge: GoogleFonts.quicksand(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: darkBorder,
+          color: colorEspresso,
         ),
         bodyMedium: GoogleFonts.quicksand(
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: darkBorder,
+          color: colorEspresso,
         ),
       ),
     );
@@ -69,7 +110,7 @@ class AppTheme {
   static TextStyle mathNumberStyle({
     double fontSize = 38,
     FontWeight fontWeight = FontWeight.w800,
-    Color color = darkBorder,
+    Color color = colorEspresso,
   }) {
     return TextStyle(
       fontFamily: 'JetBrainsMono',
@@ -84,7 +125,7 @@ class AppTheme {
   static TextStyle statNumberStyle({
     double fontSize = 24,
     FontWeight fontWeight = FontWeight.w700,
-    Color color = darkBorder,
+    Color color = colorEspresso,
   }) {
     return TextStyle(
       fontFamily: 'JetBrainsMono',
@@ -98,7 +139,7 @@ class AppTheme {
   static TextStyle answerButtonStyle({
     double fontSize = 26,
     FontWeight fontWeight = FontWeight.w700,
-    Color color = darkBorder,
+    Color color = colorEspresso,
   }) {
     return TextStyle(
       fontFamily: 'JetBrainsMono',
@@ -111,7 +152,7 @@ class AppTheme {
   /// TextStyle khusus untuk nama brand aplikasi "iTHUNG" menggunakan font kustom Baberry.
   static TextStyle brandTitleStyle({
     double fontSize = 62,
-    Color color = const Color(0xFF639922),
+    Color color = colorHoney,
     double? letterSpacing,
   }) {
     return TextStyle(

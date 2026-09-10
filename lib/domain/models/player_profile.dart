@@ -3,16 +3,20 @@
 /// File ini adalah Pure Dart dan tidak bergantung pada Flutter atau Riverpod.
 library;
 
+import 'dart:math' as math;
+
 /// Status streak (keaktifan bermain harian) pemain beserta jaring pengaman token.
 ///
 /// Berdasarkan Core Gameplay Spec §8.3:
 /// - [freezeTokens]: "Asuransi" otomatis yang terpakai jika absen 1 hari.
 ///   Didapatkan secara bertahap dari konsistensi bermain (mis. +1 token tiap 7 hari streak).
 /// - [lastPlayedDate]: Tanggal kalender terakhir kali pemain menyelesaikan sesi permainan.
+/// - [longestStreak]: Rekor streak tertinggi yang pernah dicapai pemain sepanjang masa.
 class StreakState {
   const StreakState({
     required this.currentStreak,
     required this.freezeTokens,
+    this.longestStreak = 0,
     this.lastPlayedDate,
   });
 
@@ -22,6 +26,9 @@ class StreakState {
   /// Jumlah freeze token asuransi yang dimiliki pemain saat ini.
   final int freezeTokens;
 
+  /// Rekor streak tertinggi sepanjang masa.
+  final int longestStreak;
+
   /// Tanggal kalender terakhir aktivitas bermain dicatat.
   final DateTime? lastPlayedDate;
 
@@ -29,6 +36,7 @@ class StreakState {
   static const StreakState initial = StreakState(
     currentStreak: 0,
     freezeTokens: 1, // Diberi 1 token awal sebagai penyambut
+    longestStreak: 0,
     lastPlayedDate: null,
   );
 
@@ -54,6 +62,7 @@ class StreakState {
       return StreakState(
         currentStreak: 1,
         freezeTokens: freezeTokens,
+        longestStreak: math.max(longestStreak, 1),
         lastPlayedDate: todayDate,
       );
     }
@@ -79,6 +88,7 @@ class StreakState {
       return StreakState(
         currentStreak: nextStreak,
         freezeTokens: freezeTokens + bonusToken,
+        longestStreak: math.max(longestStreak, nextStreak),
         lastPlayedDate: todayDate,
       );
     }
@@ -93,6 +103,7 @@ class StreakState {
       return StreakState(
         currentStreak: nextStreak,
         freezeTokens: remainingTokens + bonusToken,
+        longestStreak: math.max(longestStreak, nextStreak),
         lastPlayedDate: todayDate,
       );
     } else {
@@ -100,6 +111,7 @@ class StreakState {
       return StreakState(
         currentStreak: 1,
         freezeTokens: 0,
+        longestStreak: math.max(longestStreak, 1),
         lastPlayedDate: todayDate,
       );
     }
@@ -122,12 +134,18 @@ class StreakState {
       parsedDate = DateTime.parse(rawDate as String);
     }
 
+    final curStreak =
+        ((json['current_streak'] ?? json['currentStreak'] ?? 0) as num).toInt();
+    final longest = ((json['longest_streak'] ??
+            json['longestStreak'] ??
+            curStreak) as num)
+        .toInt();
+
     return StreakState(
-      currentStreak:
-          ((json['current_streak'] ?? json['currentStreak'] ?? 0) as num)
-              .toInt(),
+      currentStreak: curStreak,
       freezeTokens:
           ((json['freeze_tokens'] ?? json['freezeTokens'] ?? 0) as num).toInt(),
+      longestStreak: longest,
       lastPlayedDate: parsedDate,
     );
   }
@@ -137,6 +155,7 @@ class StreakState {
     return {
       'current_streak': currentStreak,
       'freeze_tokens': freezeTokens,
+      'longest_streak': longestStreak,
       'last_played_date': formattedLastPlayedDate,
     };
   }
@@ -145,11 +164,13 @@ class StreakState {
   StreakState copyWith({
     int? currentStreak,
     int? freezeTokens,
+    int? longestStreak,
     DateTime? lastPlayedDate,
   }) {
     return StreakState(
       currentStreak: currentStreak ?? this.currentStreak,
       freezeTokens: freezeTokens ?? this.freezeTokens,
+      longestStreak: longestStreak ?? this.longestStreak,
       lastPlayedDate: lastPlayedDate ?? this.lastPlayedDate,
     );
   }
@@ -161,14 +182,16 @@ class StreakState {
           runtimeType == other.runtimeType &&
           currentStreak == other.currentStreak &&
           freezeTokens == other.freezeTokens &&
+          longestStreak == other.longestStreak &&
           lastPlayedDate == other.lastPlayedDate;
 
   @override
-  int get hashCode => Object.hash(currentStreak, freezeTokens, lastPlayedDate);
+  int get hashCode =>
+      Object.hash(currentStreak, freezeTokens, longestStreak, lastPlayedDate);
 
   @override
   String toString() =>
-      'StreakState(streak: $currentStreak, tokens: $freezeTokens, '
+      'StreakState(streak: $currentStreak, longest: $longestStreak, tokens: $freezeTokens, '
       'lastPlayed: $formattedLastPlayedDate)';
 }
 
@@ -179,8 +202,11 @@ class StreakState {
 class PlayerProfile {
   const PlayerProfile({
     required this.playerId,
+    this.username,
+    this.avatarId,
     required this.currentLevel,
     required this.totalXp,
+    this.totalScore = 0,
     required this.streak,
     required this.confidenceScore,
     required this.createdAt,
@@ -189,11 +215,20 @@ class PlayerProfile {
   /// ID unik pemain (mis. 'p_mika01').
   final String playerId;
 
+  /// Username pemain untuk leaderboard (minimal 4 karakter, non-email).
+  final String? username;
+
+  /// ID preset avatar pemain (mis. 'avatar_0' .. 'avatar_8', atau null jika inisial).
+  final String? avatarId;
+
   /// Level permainan pemain saat ini.
   final int currentLevel;
 
   /// Akumulasi total XP yang sudah diperoleh sepanjang masa.
   final int totalXp;
+
+  /// Akumulasi total skor terbaik dari replay level sepanjang masa.
+  final int totalScore;
 
   /// Status streak bermain harian dan token perlindungan.
   final StreakState streak;
@@ -208,12 +243,17 @@ class PlayerProfile {
   /// Membuat profil default baru untuk pemain baru.
   factory PlayerProfile.initial({
     required String playerId,
+    String? username,
+    String? avatarId,
     DateTime? createdAt,
   }) {
     return PlayerProfile(
       playerId: playerId,
+      username: username,
+      avatarId: avatarId,
       currentLevel: 1,
       totalXp: 0,
+      totalScore: 0,
       streak: StreakState.initial,
       confidenceScore: 0,
       createdAt: createdAt ?? DateTime.now().toUtc(),
@@ -229,9 +269,13 @@ class PlayerProfile {
 
     return PlayerProfile(
       playerId: (json['player_id'] ?? json['playerId']) as String,
+      username: json['username'] as String?,
+      avatarId: (json['avatar_id'] ?? json['avatarId']) as String?,
       currentLevel:
           ((json['current_level'] ?? json['currentLevel'] ?? 1) as num).toInt(),
       totalXp: ((json['total_xp'] ?? json['totalXp'] ?? 0) as num).toInt(),
+      totalScore:
+          ((json['total_score'] ?? json['totalScore'] ?? 0) as num).toInt(),
       streak: streakObj,
       confidenceScore:
           ((json['confidence_score'] ?? json['confidenceScore'] ?? 0) as num)
@@ -246,8 +290,11 @@ class PlayerProfile {
   Map<String, dynamic> toJson() {
     return {
       'player_id': playerId,
+      'username': username,
+      'avatar_id': avatarId,
       'current_level': currentLevel,
       'total_xp': totalXp,
+      'total_score': totalScore,
       'streak': streak.toJson(),
       'confidence_score': confidenceScore,
       'created_at': createdAt.toIso8601String(),
@@ -257,16 +304,23 @@ class PlayerProfile {
   /// Membuat salinan objek dengan field yang dimodifikasi.
   PlayerProfile copyWith({
     String? playerId,
+    String? username,
+    String? avatarId,
+    bool clearAvatar = false,
     int? currentLevel,
     int? totalXp,
+    int? totalScore,
     StreakState? streak,
     int? confidenceScore,
     DateTime? createdAt,
   }) {
     return PlayerProfile(
       playerId: playerId ?? this.playerId,
+      username: username ?? this.username,
+      avatarId: clearAvatar ? null : (avatarId ?? this.avatarId),
       currentLevel: currentLevel ?? this.currentLevel,
       totalXp: totalXp ?? this.totalXp,
+      totalScore: totalScore ?? this.totalScore,
       streak: streak ?? this.streak,
       confidenceScore: confidenceScore ?? this.confidenceScore,
       createdAt: createdAt ?? this.createdAt,
@@ -279,8 +333,11 @@ class PlayerProfile {
       other is PlayerProfile &&
           runtimeType == other.runtimeType &&
           playerId == other.playerId &&
+          username == other.username &&
+          avatarId == other.avatarId &&
           currentLevel == other.currentLevel &&
           totalXp == other.totalXp &&
+          totalScore == other.totalScore &&
           streak == other.streak &&
           confidenceScore == other.confidenceScore &&
           createdAt == other.createdAt;
@@ -288,8 +345,11 @@ class PlayerProfile {
   @override
   int get hashCode => Object.hash(
     playerId,
+    username,
+    avatarId,
     currentLevel,
     totalXp,
+    totalScore,
     streak,
     confidenceScore,
     createdAt,
@@ -297,6 +357,6 @@ class PlayerProfile {
 
   @override
   String toString() =>
-      'PlayerProfile(id: $playerId, lvl: $currentLevel, xp: $totalXp, '
+      'PlayerProfile(id: $playerId, user: $username, avatar: $avatarId, lvl: $currentLevel, xp: $totalXp, score: $totalScore, '
       'streak: ${streak.currentStreak}, conf: $confidenceScore)';
 }

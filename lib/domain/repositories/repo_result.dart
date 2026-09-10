@@ -3,6 +3,9 @@
 /// Sesuai `math-speed-game-error-handling-spec.md` §1.
 sealed class RepoResult<T> {
   const RepoResult();
+
+  bool get isSuccess => this is RepoSuccess<T>;
+  bool get isFailure => this is RepoFailure<T>;
 }
 
 class RepoSuccess<T> extends RepoResult<T> {

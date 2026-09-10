@@ -15,9 +15,9 @@ class CountdownProgressBar extends StatefulWidget {
     required this.duration,
     required this.onTimeout,
     this.height = 16.0,
-    this.primaryColor = const Color(0xFF639922),
-    this.warningColor = const Color(0xFFD85A30),
-    this.borderColor = AppTheme.darkBorder,
+    this.primaryColor = AppTheme.colorSage,
+    this.warningColor = AppTheme.colorCoral,
+    this.borderColor = const Color(0xFFDECFA8),
     this.resetToken,
   });
 
@@ -93,7 +93,7 @@ class CountdownProgressBarState extends State<CountdownProgressBar>
         width: double.infinity,
         height: widget.height,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.colorVanillaCard,
           borderRadius: BorderRadius.circular(widget.height / 2),
           border: Border.all(
             color: widget.borderColor,
@@ -101,9 +101,9 @@ class CountdownProgressBarState extends State<CountdownProgressBar>
           ),
           boxShadow: [
             BoxShadow(
-              color: widget.borderColor,
+              color: AppTheme.colorWoodDark.withValues(alpha: 0.10),
               offset: const Offset(0, 2),
-              blurRadius: 0,
+              blurRadius: 3,
             ),
           ],
         ),

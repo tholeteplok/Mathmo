@@ -27,57 +27,59 @@ class SettingsScreen extends ConsumerWidget {
     final streak = profileAsync.valueOrNull?.streak.currentStreak ?? 0;
     final xp = profileAsync.valueOrNull?.totalXp ?? 0;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAFDF5),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header Neobrutalis terpusat
-            AppHeader(
-              streak: streak,
-              xp: xp,
-              title: 'Pengaturan',
-              onBackTap: () {
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/');
-                }
-              },
-            ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          context.go('/');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.colorSandyCanvas,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Header terpusat
+              AppHeader(
+                streak: streak,
+                xp: xp,
+                title: 'Pengaturan',
+                onBackTap: () => context.go('/'),
+              ),
 
-            // Konten Pengaturan Scrollable
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ── KARTU 1: AUDIO & SUARA ─────────────────────────
-                    _AudioCard(
-                      settings: settings,
-                      notifier: settingsNotifier,
-                    ),
-                    const SizedBox(height: 16),
+              // Konten Pengaturan Scrollable
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ── KARTU 1: AUDIO & SUARA ─────────────────────────
+                      _AudioCard(
+                        settings: settings,
+                        notifier: settingsNotifier,
+                      ),
+                      const SizedBox(height: 16),
 
-                    // ── KARTU 2: PREFERENSI GAMEPLAY & HAPTIK ──────────
-                    _GameplayCard(
-                      settings: settings,
-                      notifier: settingsNotifier,
-                    ),
-                    const SizedBox(height: 16),
+                      // ── KARTU 2: PREFERENSI GAMEPLAY & HAPTIK ──────────
+                      _GameplayCard(
+                        settings: settings,
+                        notifier: settingsNotifier,
+                      ),
+                      const SizedBox(height: 16),
 
-                    // ── KARTU 3: TENTANG APLIKASI ──────────────────────
-                    const _AboutCard(),
-                    const SizedBox(height: 24),
-                  ],
+                      // ── KARTU 3: TENTANG APLIKASI ──────────────────────
+                      const _AboutCard(),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -97,7 +99,7 @@ class _AudioCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ChunkyCard(
-      backgroundColor: Colors.white,
+      variant: ChunkyCardVariant.wood,
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,7 +403,7 @@ class _GameplayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChunkyCard(
-      backgroundColor: Colors.white,
+      variant: ChunkyCardVariant.wood,
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -579,7 +581,7 @@ class _AboutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChunkyCard(
-      backgroundColor: Colors.white,
+      variant: ChunkyCardVariant.wood,
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
@@ -589,16 +591,17 @@ class _AboutCard extends StatelessWidget {
             height: 68,
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
+              color: AppTheme.colorVanillaCard,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: AppTheme.darkBorder,
+                color: const Color(0xFFDECFA8),
                 width: AppTokens.borderWidthDefault,
               ),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: AppTheme.darkBorder,
-                  offset: Offset(0, 3),
-                  blurRadius: 0,
+                  color: AppTheme.colorWoodDark.withValues(alpha: 0.12),
+                  offset: const Offset(0, 3),
+                  blurRadius: 4,
                 ),
               ],
             ),
@@ -616,7 +619,7 @@ class _AboutCard extends StatelessWidget {
             'iTHUNG',
             style: AppTheme.brandTitleStyle(
               fontSize: 44,
-              color: const Color(0xFF639922),
+              color: AppTheme.colorHoney,
             ),
           ),
           const SizedBox(height: 4),
@@ -627,7 +630,7 @@ class _AboutCard extends StatelessWidget {
             style: GoogleFonts.quicksand(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFFBA7517),
+              color: AppTheme.colorWoodMedium,
               letterSpacing: 0.4,
             ),
           ),
@@ -637,10 +640,10 @@ class _AboutCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF9C4),
+              color: AppTheme.colorWoodPlank,
               borderRadius: BorderRadius.circular(AppTokens.radiusPill),
               border: Border.all(
-                color: AppTheme.darkBorder,
+                color: const Color(0xFFDECFA8),
                 width: AppTokens.borderWidthSubtle,
               ),
             ),

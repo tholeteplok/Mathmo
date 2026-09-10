@@ -20,9 +20,7 @@ class FeedbackOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = isCorrect
-        ? const Color(0xFF639922)
-        : const Color(0xFFD85A30);
+    final iconColor = isCorrect ? AppTheme.colorSage : AppTheme.colorCoral;
     final icon = isCorrect ? AppIcons.answerCorrect : AppIcons.answerWrong;
 
     return Center(
@@ -36,14 +34,14 @@ class FeedbackOverlay extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppTheme.colorVanillaCard,
             borderRadius: BorderRadius.circular(AppTokens.radiusContainer),
-            border: Border.all(color: iconColor, width: 3.0),
+            border: Border.all(color: iconColor, width: 2.5),
             boxShadow: [
               BoxShadow(
-                color: iconColor.withValues(alpha: 0.4),
-                offset: const Offset(0, 8),
-                blurRadius: 0,
+                color: iconColor.withValues(alpha: 0.25),
+                offset: const Offset(0, 6),
+                blurRadius: 10,
               ),
             ],
           ),

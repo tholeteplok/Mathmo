@@ -60,6 +60,33 @@ class AppIcons {
   /// Ikon kalender / daily challenge.
   static const IconData calendar = TablerIcons.calendarEvent;
 
+  /// Ikon papan peringkat / piala.
+  static const IconData trophy = TablerIcons.trophy;
+
+  /// Ikon pengaturan.
+  static const IconData settings = TablerIcons.settings;
+
+  /// Ikon kembali.
+  static const IconData back = TablerIcons.arrowLeft;
+
+  /// Ikon cloud sync.
+  static const IconData cloudSync = TablerIcons.cloudUpload;
+
+  /// Ikon perisai keamanan.
+  static const IconData shield = TablerIcons.shieldCheck;
+
+  /// Ikon tanda centang.
+  static const IconData check = TablerIcons.check;
+
+  /// Ikon bintang.
+  static const IconData star = TablerIcons.star;
+
+  /// Ikon timer / waktu.
+  static const IconData timer = TablerIcons.clock;
+
+  /// Ikon lidah api streak.
+  static const IconData streakFlame = TablerIcons.flame;
+
   // ── Adventure Map & Milestones ──────────────────────────────────
 
   /// Ikon peti harta karun milestone.
@@ -73,4 +100,10 @@ class AppIcons {
 
   /// Sparkle efek reward.
   static const IconData sparkles = TablerIcons.sparkles;
+
+  /// Ikon peringatan / error banner.
+  static const IconData warning = TablerIcons.alertCircle;
+
+  /// Ikon edit / pensil.
+  static const IconData edit = TablerIcons.pencil;
 }

@@ -54,8 +54,8 @@ class ExitConfirmDialog extends StatelessWidget {
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
       child: ChunkyCard(
-        backgroundColor: const Color(0xFFFAFDF5),
-        padding: const EdgeInsets.all(24),
+        variant: ChunkyCardVariant.woodBoard,
+        padding: const EdgeInsets.fromLTRB(26, 44, 26, 26),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -65,7 +65,7 @@ class ExitConfirmDialog extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
-                color: AppTheme.darkBorder,
+                color: AppTheme.colorEspresso,
               ),
               textAlign: TextAlign.center,
             ),
@@ -76,8 +76,8 @@ class ExitConfirmDialog extends StatelessWidget {
               message,
               style: const TextStyle(
                 fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF556050),
+                fontWeight: FontWeight.w600,
+                color: AppTheme.colorTaupe,
               ),
               textAlign: TextAlign.center,
             ),
@@ -90,8 +90,9 @@ class ExitConfirmDialog extends StatelessWidget {
                 Expanded(
                   child: ChunkyButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    backgroundColor: const Color(0xFFFFF0F0),
-                    borderColor: AppTheme.darkBorder,
+                    backgroundColor: const Color(0xFFFFF2EE),
+                    borderColor: const Color(0xFFF0B8AC),
+                    shadowColor: const Color(0xFFDE998B),
                     borderWidth: AppTokens.borderWidthDefault,
                     borderRadius: AppTokens.radiusButton,
                     padding: const EdgeInsets.symmetric(vertical: 12),
@@ -123,8 +124,9 @@ class ExitConfirmDialog extends StatelessWidget {
                 Expanded(
                   child: ChunkyButton(
                     onPressed: () => Navigator.of(context).pop(true),
-                    backgroundColor: const Color(0xFFF0FDF4),
-                    borderColor: AppTheme.darkBorder,
+                    backgroundColor: const Color(0xFFF1F8ED),
+                    borderColor: const Color(0xFFBDDFB5),
+                    shadowColor: const Color(0xFFA1CF97),
                     borderWidth: AppTokens.borderWidthDefault,
                     borderRadius: AppTokens.radiusButton,
                     padding: const EdgeInsets.symmetric(vertical: 12),

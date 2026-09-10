@@ -3,16 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/services/bgm_service.dart';
-import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../game/providers/level_band_theme_provider.dart';
 import '../../shared/widgets/app_header.dart';
-import '../../shared/widgets/chunky_button.dart';
 import '../providers/bgm_provider.dart';
 import '../providers/level_stars_provider.dart';
 import '../providers/player_profile_provider.dart';
 import 'avatar_callout_pin.dart';
+import 'floating_bottom_dock.dart';
 import 'level_node.dart';
 import 'milestone_chest_node.dart';
 
@@ -240,6 +239,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     for (final stage in kIthungStages) {
       precacheImage(AssetImage(stage.assetPath), context);
     }
+    // Precache aset taktil
+    precacheImage(const AssetImage(AppAssets.woodTokenChecked), context);
+    precacheImage(const AssetImage(AppAssets.woodTokenLocked), context);
   }
 
   @override
@@ -266,9 +268,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final themeAsync = ref.watch(levelBandThemeProvider);
     final starsAsync = ref.watch(levelStarsProvider);
 
-    final currentLevel = profileAsync.valueOrNull?.currentLevel ?? 1;
-    final currentStreak = profileAsync.valueOrNull?.streak.currentStreak ?? 0;
-    final totalXp = profileAsync.valueOrNull?.totalXp ?? 0;
+    final profile = profileAsync.valueOrNull;
+    final currentLevel = profile?.currentLevel ?? 1;
+    final currentStreak = profile?.streak.currentStreak ?? 0;
+    final totalXp = profile?.totalXp ?? 0;
+    final avatarId = profile?.avatarId;
+    final username = profile?.username;
+    final avatarLetter = (username != null && username.isNotEmpty)
+        ? username[0].toUpperCase()
+        : 'P';
     final accentColor =
         themeAsync.valueOrNull?.accentColor ?? const Color(0xFF639922);
     final canvasColor =
@@ -321,6 +329,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     currentLevel: currentLevel,
                     accentColor: accentColor,
                     starsMap: starsMap,
+                    avatarId: avatarId,
+                    avatarLetter: avatarLetter,
                   );
                 },
               ),
@@ -346,16 +356,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         streak: currentStreak,
                         xp: totalXp,
                         actions: const [
-                          _SettingsButton(),
-                          SizedBox(width: 6),
                           _MuteToggleButton(),
                         ],
-                        leading: Container(
-                          width: 42,
-                          height: 42,
+                      ),
+                    ),
+
+                    // Stage Navigator Bar (Kartu Neobrutalism Vektor)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 4,
+                      ),
+                      child: Center(
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 320),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(13),
+                            color: AppTheme.colorVanillaCard,
+                            borderRadius:
+                                BorderRadius.circular(AppTokens.radiusCard),
                             border: Border.all(
                               color: AppTheme.darkBorder,
                               width: AppTokens.borderWidthDefault,
@@ -363,131 +385,107 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             boxShadow: const [
                               BoxShadow(
                                 color: AppTheme.darkBorder,
-                                offset: Offset(0, 2),
+                                offset: Offset(0, 3),
                                 blurRadius: 0,
                               ),
                             ],
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(11),
-                            child: Image.asset(
-                              'assets/icon/app_launcher.png',
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Stage Navigator Bar (Neobrutalist)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 4,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(
-                            AppTokens.radiusContainer,
-                          ),
-                          border: Border.all(
-                            color: AppTheme.darkBorder,
-                            width: AppTokens.borderWidthDefault,
-                          ),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: AppTheme.darkBorder,
-                              offset: Offset(0, 3),
-                              blurRadius: 0,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            // Tombol Previous Stage
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
-                              icon: const Icon(Icons.chevron_left, size: 28),
-                              color: _currentStageIndex > 0
-                                  ? AppTheme.darkBorder
-                                  : Colors.grey.shade400,
-                              onPressed: _currentStageIndex > 0
-                                  ? () {
-                                      _pageController.previousPage(
-                                        duration:
-                                            const Duration(milliseconds: 300),
-                                        curve: Curves.easeInOut,
-                                      );
-                                    }
-                                  : null,
-                            ),
-                            const SizedBox(width: 4),
-                            // Teks Judul Stage
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        activeStage.icon,
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Flexible(
-                                        child: Text(
-                                          activeStage.title,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
+                          child: Row(
+                            children: [
+                              // Tombol Previous Stage
+                              IconButton(
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(
+                                  Icons.chevron_left_rounded,
+                                  size: 26,
+                                ),
+                                color: _currentStageIndex > 0
+                                    ? AppTheme.colorEspresso
+                                    : AppTheme.colorTaupe
+                                        .withValues(alpha: 0.35),
+                                onPressed: _currentStageIndex > 0
+                                    ? () {
+                                        _pageController.previousPage(
+                                          duration: const Duration(
+                                            milliseconds: 300,
+                                          ),
+                                          curve: Curves.easeInOut,
+                                        );
+                                      }
+                                    : null,
+                              ),
+                              const SizedBox(width: 4),
+                              // Teks Judul Stage
+                              Expanded(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          activeStage.icon,
                                           style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w900,
-                                            color: AppTheme.darkBorder,
+                                            fontSize: 15,
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  Text(
-                                    activeStage.subtitle,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.grey.shade600,
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            activeStage.title,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w900,
+                                              color: AppTheme.colorEspresso,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      activeStage.subtitle,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppTheme.colorTaupe,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            // Tombol Next Stage
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
-                              icon: const Icon(Icons.chevron_right, size: 28),
-                              color: _currentStageIndex <
-                                      kIthungStages.length - 1
-                                  ? AppTheme.darkBorder
-                                  : Colors.grey.shade400,
-                              onPressed: _currentStageIndex <
-                                      kIthungStages.length - 1
-                                  ? () {
-                                      _pageController.nextPage(
-                                        duration:
-                                            const Duration(milliseconds: 300),
-                                        curve: Curves.easeInOut,
-                                      );
-                                    }
-                                  : null,
-                            ),
-                          ],
+                              const SizedBox(width: 4),
+                              // Tombol Next Stage
+                              IconButton(
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                icon: const Icon(
+                                  Icons.chevron_right_rounded,
+                                  size: 26,
+                                ),
+                                color: _currentStageIndex <
+                                        kIthungStages.length - 1
+                                    ? AppTheme.colorEspresso
+                                    : AppTheme.colorTaupe
+                                        .withValues(alpha: 0.35),
+                                onPressed: _currentStageIndex <
+                                        kIthungStages.length - 1
+                                    ? () {
+                                        _pageController.nextPage(
+                                          duration: const Duration(
+                                            milliseconds: 300,
+                                          ),
+                                          curve: Curves.easeInOut,
+                                        );
+                                      }
+                                    : null,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -496,47 +494,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
             ),
 
-            // 3. Floating Bottom Bar Overlay: Daily Challenge
-            Positioned(
+            // 3. Floating Bottom Navigation Dock (Profile, Leaderboard, Daily, Settings)
+            const Positioned(
               bottom: 0,
               left: 0,
               right: 0,
               child: SafeArea(
                 top: false,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: ChunkyButton(
-                    onPressed: () => context.go('/daily'),
-                    backgroundColor: const Color(0xFFBA7517), // Amber
-                    borderColor: AppTheme.darkBorder,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                      horizontal: 16,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          AppIcons.calendar,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Daily Challenge Hari Ini',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: Colors.white,
-                                  ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                child: FloatingBottomDock(),
               ),
             ),
           ],
@@ -553,12 +518,16 @@ class _StageCanvasView extends StatelessWidget {
     required this.currentLevel,
     required this.accentColor,
     required this.starsMap,
+    this.avatarId,
+    this.avatarLetter = 'P',
   });
 
   final StageData stage;
   final int currentLevel;
   final Color accentColor;
   final Map<int, int> starsMap;
+  final String? avatarId;
+  final String avatarLetter;
 
   static const double canvasWidth = 768.0;
   static const double canvasHeight = 1376.0;
@@ -684,55 +653,14 @@ class _StageCanvasView extends StatelessWidget {
             width: 200,
             child: Center(
               child: AvatarCalloutPin(
+                avatarId: avatarId,
+                avatarLetter: avatarLetter,
                 accentColor: stage.accentColor,
                 onTap: () => context.go('/game/$level'),
               ),
             ),
           ),
       ],
-    );
-  }
-}
-
-/// Tombol Buka Pengaturan bergaya Neobrutalism di header HomeScreen.
-class _SettingsButton extends StatelessWidget {
-  const _SettingsButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: 'Pengaturan',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => context.push('/settings'),
-          customBorder: const CircleBorder(),
-          child: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppTheme.darkBorder,
-                width: AppTokens.borderWidthDefault,
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: AppTheme.darkBorder,
-                  offset: Offset(0, 2),
-                  blurRadius: 0,
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.settings_rounded,
-              size: 20,
-              color: AppTheme.darkBorder,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -755,24 +683,24 @@ class _MuteToggleButton extends ConsumerWidget {
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppTheme.colorVanillaCard,
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppTheme.darkBorder,
+                color: const Color(0xFFDECFA8),
                 width: AppTokens.borderWidthDefault,
               ),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: AppTheme.darkBorder,
-                  offset: Offset(0, 2),
-                  blurRadius: 0,
+                  color: AppTheme.colorWoodDark.withValues(alpha: 0.12),
+                  offset: const Offset(0, 2),
+                  blurRadius: 3,
                 ),
               ],
             ),
             child: Icon(
               isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
               size: 20,
-              color: isMuted ? Colors.grey.shade500 : AppTheme.darkBorder,
+              color: isMuted ? Colors.grey.shade500 : AppTheme.colorEspresso,
             ),
           ),
         ),

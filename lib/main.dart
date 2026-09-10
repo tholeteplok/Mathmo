@@ -1,3 +1,5 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,8 @@ import 'domain/models/session_result.dart';
 import 'presentation/daily_challenge/widgets/daily_challenge_screen.dart';
 import 'presentation/game/widgets/game_screen.dart';
 import 'presentation/home/widgets/home_screen.dart';
+import 'presentation/leaderboard/widgets/leaderboard_screen.dart';
+import 'presentation/profile/widgets/profile_screen.dart';
 import 'presentation/results/widgets/results_screen.dart';
 import 'presentation/settings/widgets/settings_screen.dart';
 import 'presentation/shared/widgets/app_shell.dart';
@@ -16,8 +20,25 @@ import 'presentation/splash/widgets/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('Flutter uncaught error: ${details.exception}');
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Platform uncaught error: $error\n$stack');
+    return true;
+  };
+
   // Inisialisasi Hive CE storage
   await Hive.initFlutter();
+
+  // Inisialisasi Firebase (aman / fail-open jika offline atau di test environment)
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization skipped or failed: $e');
+  }
 
   runApp(const ProviderScope(child: IthungApp()));
 }
@@ -53,7 +74,15 @@ final GoRouter _router = GoRouter(
         ),
         GoRoute(
           path: '/daily',
-          builder: (context, state) => const DailyChallengeScreen(),
+          builder: (context, state) => const DailyChallengeGate(),
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen(),
+        ),
+        GoRoute(
+          path: '/leaderboard',
+          builder: (context, state) => const LeaderboardScreen(),
         ),
         GoRoute(
           path: '/settings',

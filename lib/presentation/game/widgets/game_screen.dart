@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_tokens.dart';
 import '../../../domain/models/session_result.dart';
+import '../../home/providers/level_stars_provider.dart';
 import '../../home/providers/player_profile_provider.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/exit_confirm_dialog.dart';
@@ -81,6 +82,18 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         ref.read(playerProfileProvider.notifier).completeSession(
               playedLevel: widget.level,
               xpEarned: next.result.xpEarned,
+              accuracy: next.result.accuracy,
+            );
+
+        // Catat rekor skor level & terapkan best-score delta
+        ref.read(playerProfileProvider.notifier).recordLevelScore(
+              level: widget.level,
+              sessionScore: next.result.totalScore,
+            );
+
+        // Perbarui bintang level secara instan di memori (0 ms delay)
+        ref.read(levelStarsProvider.notifier).recordStars(
+              level: widget.level,
               accuracy: next.result.accuracy,
             );
 

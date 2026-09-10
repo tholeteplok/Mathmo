@@ -10,7 +10,7 @@ void main() {
       final style = AppTheme.brandTitleStyle(fontSize: 60);
       expect(style.fontFamily, equals('Baberry'));
       expect(style.fontSize, equals(60));
-      expect(style.color, equals(const Color(0xFF639922)));
+      expect(style.color, equals(AppTheme.colorHoney));
     });
 
     testWidgets('renders iTHUNG title, tagline, and progress bar', (tester) async {

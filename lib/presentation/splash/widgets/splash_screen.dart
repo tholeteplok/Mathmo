@@ -72,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF3DE), // Signature Meadow Fresh canvas
+      backgroundColor: AppTheme.colorSandyCanvas,
       body: SafeArea(
         child: Center(
           child: Column(
@@ -86,22 +86,23 @@ class _SplashScreenState extends State<SplashScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Badge Ikon Neobrutalist Maskot iTHUNG
+                    // Badge Ikon Maskot iTHUNG
                     Container(
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppTheme.colorVanillaCard,
                         borderRadius: BorderRadius.circular(22),
                         border: Border.all(
-                          color: AppTheme.darkBorder,
-                          width: AppTokens.borderWidthDefault + 0.5,
+                          color: const Color(0xFFDECFA8),
+                          width: AppTokens.borderWidthDefault,
                         ),
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
-                            color: AppTheme.darkBorder,
-                            offset: Offset(0, 4),
-                            blurRadius: 0,
+                            color:
+                                AppTheme.colorWoodDark.withValues(alpha: 0.15),
+                            offset: const Offset(0, 4),
+                            blurRadius: 6,
                           ),
                         ],
                       ),
@@ -115,18 +116,18 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 16),
 
-                    // Teks Judul "iTHUNG" dengan Stroke Outline & Solid Shadow
+                    // Teks Judul "iTHUNG" dengan Stroke Outline & Warm 3D Shadow
                     Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Bayangan Solid Bawah Neobrutalist (Offset 0, 5)
+                        // Bayangan Solid Bawah Kayu/Espresso (Offset 0, 5)
                         Transform.translate(
                           offset: const Offset(0, 5),
                           child: Text(
                             'iTHUNG',
                             style: AppTheme.brandTitleStyle(
                               fontSize: 66,
-                              color: AppTheme.darkBorder,
+                              color: AppTheme.colorWoodDark,
                             ),
                           ),
                         ),
@@ -139,15 +140,15 @@ class _SplashScreenState extends State<SplashScreen>
                             foreground: Paint()
                               ..style = PaintingStyle.stroke
                               ..strokeWidth = 6.5
-                              ..color = AppTheme.darkBorder,
+                              ..color = AppTheme.colorWoodDark,
                           ),
                         ),
-                        // Fill Warna Hijau Alam Segar
+                        // Fill Warna Warm Honey Gold
                         Text(
                           'iTHUNG',
                           style: AppTheme.brandTitleStyle(
                             fontSize: 66,
-                            color: const Color(0xFF639922),
+                            color: AppTheme.colorHoney,
                           ),
                         ),
                       ],
@@ -158,7 +159,7 @@ class _SplashScreenState extends State<SplashScreen>
 
               const SizedBox(height: 18),
 
-              // 2. Tagline Resmi "Fast Math. Sharp Mind." dalam Pill Neobrutalis
+              // 2. Tagline Resmi "Fast Math. Sharp Mind." dalam Pill Cozy
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: Container(
@@ -167,17 +168,17 @@ class _SplashScreenState extends State<SplashScreen>
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppTheme.colorVanillaCard,
                     borderRadius: BorderRadius.circular(AppTokens.radiusPill),
                     border: Border.all(
-                      color: AppTheme.darkBorder,
+                      color: const Color(0xFFDECFA8),
                       width: AppTokens.borderWidthDefault,
                     ),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: AppTheme.darkBorder,
-                        offset: Offset(0, 3),
-                        blurRadius: 0,
+                        color: AppTheme.colorWoodDark.withValues(alpha: 0.10),
+                        offset: const Offset(0, 3),
+                        blurRadius: 4,
                       ),
                     ],
                   ),
@@ -187,7 +188,7 @@ class _SplashScreenState extends State<SplashScreen>
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.4,
-                      color: AppTheme.darkBorder,
+                      color: AppTheme.colorWoodMedium,
                     ),
                   ),
                 ),
@@ -195,7 +196,7 @@ class _SplashScreenState extends State<SplashScreen>
 
               const Spacer(flex: 3),
 
-              // 3. Mini Neobrutalist Progress Bar
+              // 3. Mini Cozy Progress Bar
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: Column(
@@ -208,27 +209,29 @@ class _SplashScreenState extends State<SplashScreen>
                           width: 170,
                           height: 12,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppTheme.colorVanillaCard,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: AppTheme.darkBorder,
-                              width: AppTokens.borderWidthSubtle + 0.5,
+                              color: const Color(0xFFDECFA8),
+                              width: AppTokens.borderWidthSubtle,
                             ),
-                            boxShadow: const [
+                            boxShadow: [
                               BoxShadow(
-                                color: AppTheme.darkBorder,
-                                offset: Offset(0, 2),
-                                blurRadius: 0,
+                                color: AppTheme.colorWoodDark
+                                    .withValues(alpha: 0.10),
+                                offset: const Offset(0, 2),
+                                blurRadius: 2,
                               ),
                             ],
                           ),
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: FractionallySizedBox(
-                              widthFactor: _progressAnimation.value.clamp(0.0, 1.0),
+                              widthFactor:
+                                  _progressAnimation.value.clamp(0.0, 1.0),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF639922),
+                                  color: AppTheme.colorHoney,
                                   borderRadius: BorderRadius.circular(5),
                                 ),
                               ),
@@ -243,7 +246,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: GoogleFonts.quicksand(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.darkBorder.withValues(alpha: 0.75),
+                        color: AppTheme.colorTaupe,
                       ),
                     ),
                   ],

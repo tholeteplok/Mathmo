@@ -6,9 +6,9 @@
       "operations": ["add", "subtract"],
       "digit_range": "1-digit",
       "timer_base_sec": 8,
-      "canvas_color": "#EAF3DE",
-      "canvas_color_end": "#DCEACB",
-      "accent_color": "#639922"
+      "canvas_color": "#EFE7CC",
+      "canvas_color_end": "#E5DEC0",
+      "accent_color": "#5B9356"
     },
     {
       "id": "basic",
@@ -16,9 +16,9 @@
       "operations": ["add", "subtract", "multiply"],
       "digit_range": "1-2-digit",
       "timer_base_sec": 6,
-      "canvas_color": "#FAEEDA",
-      "canvas_color_end": "#F3E0BE",
-      "accent_color": "#BA7517"
+      "canvas_color": "#F7ECCB",
+      "canvas_color_end": "#EFE0B9",
+      "accent_color": "#D88D28"
     },
     {
       "id": "intermediate",
@@ -26,9 +26,9 @@
       "operations": ["add", "subtract", "multiply", "divide"],
       "digit_range": "2-digit",
       "timer_base_sec": 4.5,
-      "canvas_color": "#FAECE7",
-      "canvas_color_end": "#F3D9CF",
-      "accent_color": "#D85A30"
+      "canvas_color": "#F8E6DD",
+      "canvas_color_end": "#EED7CB",
+      "accent_color": "#D26748"
     },
     {
       "id": "advanced",
@@ -36,9 +36,9 @@
       "operations": ["mixed"],
       "digit_range": "2-3-digit",
       "timer_base_sec": 3.5,
-      "canvas_color": "#FBEAF0",
-      "canvas_color_end": "#F4D5E1",
-      "accent_color": "#D4537E"
+      "canvas_color": "#F8E7ED",
+      "canvas_color_end": "#EED7DE",
+      "accent_color": "#C8587A"
     },
     {
       "id": "expert",
@@ -46,9 +46,9 @@
       "operations": ["mixed_multistep"],
       "digit_range": "3-digit",
       "timer_base_sec": 3.0,
-      "canvas_color": "#EEEDFE",
-      "canvas_color_end": "#DCD9FC",
-      "accent_color": "#7F77DD"
+      "canvas_color": "#ECE7F8",
+      "canvas_color_end": "#DFD8EE",
+      "accent_color": "#7468B6"
     }
   ]
 }

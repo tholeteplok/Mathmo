@@ -118,12 +118,16 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
   Future<void> _finishChallenge() async {
     _sessionStopwatch.stop();
     final profile = ref.read(playerProfileProvider).valueOrNull;
+    final config = ref.read(levelBandsConfigProvider).valueOrNull;
     final now = DateTime.now();
+
+    final currentLevel = profile?.currentLevel ?? 1;
+    final bandId = config?.bandForLevel(currentLevel).id ?? 'basic';
 
     final result = DailyChallengeResult(
       playerId: profile?.playerId ?? 'player',
       date: now,
-      band: 'basic',
+      band: bandId,
       correctCount: _correctCount,
       totalTimeMs: _totalTimeMs,
       rankInBand: null,
@@ -132,6 +136,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     // Rekam aktivitas harian dan update streak
     await ref.read(playerProfileProvider.notifier).recordActivity(now);
     await ref.read(dailyChallengeRepositoryProvider).saveResult(result);
+    ref.invalidate(dailyChallengeCompletionProvider);
 
     setState(() {
       _isFinished = true;
@@ -228,10 +233,10 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                             width: double.infinity,
                             height: 16.0,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: AppTheme.colorVanillaCard,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: const Color(0xFF232B1E),
+                                color: const Color(0xFFDECFA8),
                                 width: AppTokens.borderWidthDefault,
                               ),
                             ),
@@ -295,12 +300,13 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           ChunkyCard(
+            variant: ChunkyCardVariant.wood,
             padding: const EdgeInsets.all(28),
             child: Column(
               children: [
                 const Icon(
                   AppIcons.streakMaintained,
-                  color: Color(0xFFE65100),
+                  color: AppTheme.colorCoral,
                   size: 54,
                 ),
                 const SizedBox(height: 14),
@@ -308,7 +314,10 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                   'Tantangan Selesai!',
                   style: Theme.of(
                     context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+                  ).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.colorEspresso,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -321,7 +330,9 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                 const SizedBox(height: 6),
                 Text(
                   'Total Waktu: ${(_totalTimeMs / 1000).toStringAsFixed(1)} detik',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.colorTaupe,
+                  ),
                 ),
               ],
             ),
@@ -330,7 +341,6 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
           ChunkyButton(
             onPressed: () => context.go('/'),
             backgroundColor: accentColor,
-            borderColor: AppTheme.darkBorder,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             child: const Text(
               'Kembali ke Beranda',
@@ -345,4 +355,162 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
       ),
     );
   }
+}
+
+/// Gerbang rute (/daily) yang mengecek apakah Daily Challenge hari ini sudah diselesaikan.
+///
+/// Jika sudah selesai, menampilkan [DailyChallengeLockedView].
+/// Jika belum selesai atau gagal membaca data lokal, menampilkan [DailyChallengeScreen].
+class DailyChallengeGate extends ConsumerWidget {
+  const DailyChallengeGate({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final completionAsync = ref.watch(dailyChallengeCompletionProvider);
+
+    return completionAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppTheme.colorSandyCanvas,
+        body: Center(
+          child: CircularProgressIndicator(color: AppTheme.colorWoodMedium),
+        ),
+      ),
+      error: (err, stack) => const DailyChallengeScreen(),
+      data: (result) {
+        if (result != null) {
+          return DailyChallengeLockedView(result: result);
+        }
+        return const DailyChallengeScreen();
+      },
+    );
+  }
+}
+
+/// Tampilan saat pemain membuka Daily Challenge yang sudah diselesaikan hari ini.
+class DailyChallengeLockedView extends ConsumerWidget {
+  const DailyChallengeLockedView({super.key, required this.result});
+
+  final DailyChallengeResult result;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(playerProfileProvider).valueOrNull;
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    final hoursLeft = nextMidnight.difference(now).inHours;
+    final minutesLeft = nextMidnight.difference(now).inMinutes % 60;
+
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          context.go('/');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.colorSandyCanvas,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Column(
+            children: [
+              // Header Profil
+              AppHeader(
+                streak: profile?.streak.currentStreak ?? 0,
+                xp: profile?.totalXp ?? 0,
+                onBackTap: () => context.go('/'),
+              ),
+              const Spacer(),
+
+              // Kartu Papan Kayu Pengumuman
+              ChunkyCard(
+                variant: ChunkyCardVariant.woodBoard,
+                padding: const EdgeInsets.fromLTRB(26, 44, 26, 26),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      AppIcons.levelCompleted,
+                      color: AppTheme.colorSage,
+                      size: 48,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Tantangan Hari Ini Selesai!',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.colorEspresso,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Skor Akhir: ${result.correctCount} / 12 Benar',
+                      style: AppTheme.statNumberStyle(
+                        fontSize: 24,
+                        color: AppTheme.colorSage,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Total Waktu: ${(result.totalTimeMs / 1000).toStringAsFixed(1)} detik',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.colorTaupe,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.colorVanillaCard,
+                        borderRadius:
+                            BorderRadius.circular(AppTokens.radiusPill),
+                        border: Border.all(
+                          color: const Color(0xFFDECFA8),
+                          width: AppTokens.borderWidthSubtle,
+                        ),
+                      ),
+                      child: Text(
+                        'Tantangan berikutnya terbuka dalam $hoursLeft jam $minutesLeft menit (00:00).',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.colorWoodDark,
+                              fontWeight: FontWeight.w700,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Tombol Kembali ke Beranda
+              ChunkyButton(
+                onPressed: () => context.go('/'),
+                backgroundColor: AppTheme.colorWoodMedium,
+                borderColor: AppTheme.colorWoodDark,
+                shadowColor: AppTheme.colorWoodDark,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                child: const Text(
+                  'Kembali ke Beranda',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const Spacer(),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
 }

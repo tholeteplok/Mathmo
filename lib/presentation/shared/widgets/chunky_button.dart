@@ -3,18 +3,19 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 
-/// Tombol interaktif bergaya "chunky playful".
+/// Tombol interaktif bergaya "Cozy Tactile 3D".
 ///
-/// Memiliki efek visual tactile yang memuaskan:
-/// Saat ditekan, tombol turun sejauh 4px dan solid shadow menghilang seolah-olah
-/// tombol fisik ditekan ke dalam permukaan.
+/// Memiliki efek visual tactile fisik:
+/// Memiliki 3D bottom-lip tebal 4px. Saat ditekan, tombol turun sejauh 4px
+/// dan shadow merapat ke permukaan memberi kepuasan taktil seperti tombol mainan empuk.
 class ChunkyButton extends StatefulWidget {
   const ChunkyButton({
     super.key,
     required this.onPressed,
     required this.child,
-    this.backgroundColor = Colors.white,
-    this.borderColor = AppTheme.darkBorder,
+    this.backgroundColor = AppTheme.colorVanillaCard,
+    this.borderColor,
+    this.shadowColor,
     this.borderRadius = AppTokens.radiusButton,
     this.borderWidth = AppTokens.borderWidthDefault,
     this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -27,7 +28,8 @@ class ChunkyButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final Widget child;
   final Color backgroundColor;
-  final Color borderColor;
+  final Color? borderColor;
+  final Color? shadowColor;
   final double borderRadius;
   final double borderWidth;
   final EdgeInsetsGeometry padding;
@@ -59,10 +61,28 @@ class _ChunkyButtonState extends State<ChunkyButton> {
     setState(() => _isPressed = false);
   }
 
+  Color _computeDarkerLip(Color base) {
+    final hsl = HSLColor.fromColor(base);
+    return hsl.withLightness((hsl.lightness - 0.18).clamp(0.0, 1.0)).toColor();
+  }
+
   @override
   Widget build(BuildContext context) {
     const shadowOffset = 4.0;
     final isPressed = _isPressed;
+
+    final isWhiteOrVanilla = widget.backgroundColor == Colors.white ||
+        widget.backgroundColor == AppTheme.colorVanillaCard;
+
+    final effectiveBorderColor = widget.borderColor ??
+        (isWhiteOrVanilla
+            ? const Color(0xFFDECFA8)
+            : _computeDarkerLip(widget.backgroundColor));
+
+    final effectiveShadowColor = widget.shadowColor ??
+        (isWhiteOrVanilla
+            ? const Color(0xFFD5C4A1)
+            : _computeDarkerLip(widget.backgroundColor));
 
     Widget button = GestureDetector(
       onTapDown: _handleTapDown,
@@ -87,12 +107,12 @@ class _ChunkyButtonState extends State<ChunkyButton> {
               : widget.backgroundColor.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(widget.borderRadius),
           border: Border.all(
-            color: widget.borderColor,
+            color: effectiveBorderColor,
             width: widget.borderWidth,
           ),
           boxShadow: isPressed
               ? ChunkyShadow.pressed
-              : ChunkyShadow.button(widget.borderColor),
+              : ChunkyShadow.button(effectiveShadowColor),
         ),
         child: Center(child: widget.child),
       ),

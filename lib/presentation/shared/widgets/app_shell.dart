@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../game/providers/level_band_theme_provider.dart';
 import 'exit_confirm_dialog.dart';
@@ -29,14 +30,17 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeAsync = ref.watch(levelBandThemeProvider);
     final canvasColor =
-        themeAsync.valueOrNull?.canvasColor ?? const Color(0xFFEAF3DE);
+        themeAsync.valueOrNull?.canvasColor ?? AppTheme.colorSandyCanvas;
 
-    final isHome = (state?.matchedLocation ??
-            GoRouterState.of(context).matchedLocation) ==
-        '/';
+    final location = state?.matchedLocation ??
+        GoRouterState.of(context).matchedLocation;
+    final isHome = location == '/';
+    final isSecondaryTab = location == '/profile' ||
+        location == '/leaderboard' ||
+        location == '/settings';
 
     return PopScope(
-      canPop: !isHome,
+      canPop: !isHome && !isSecondaryTab,
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         if (isHome) {
@@ -50,13 +54,15 @@ class AppShell extends ConsumerWidget {
           if (shouldExit && context.mounted) {
             await SystemNavigator.pop();
           }
+        } else if (isSecondaryTab) {
+          context.go('/');
         }
       },
       child: NotificationListener<NavigationNotification>(
         onNotification: (notification) {
-          // Ketika berada di HomeScreen, jangan biarkan notifikasi canHandlePop: false
-          // dari Shell Navigator anak menimpa status true milik Root Navigator.
-          if (isHome && !notification.canHandlePop) {
+          // Ketika berada di HomeScreen atau tab sekunder, jangan biarkan notifikasi
+          // canHandlePop: false dari Shell Navigator anak menimpa status milik Root Navigator.
+          if ((isHome || isSecondaryTab) && !notification.canHandlePop) {
             return true; // Stop bubbling ke WidgetsApp
           }
           return false;

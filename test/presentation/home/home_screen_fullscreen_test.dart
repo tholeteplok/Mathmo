@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mathmo_app/presentation/home/widgets/floating_bottom_dock.dart';
 import 'package:mathmo_app/presentation/home/widgets/home_screen.dart';
 import 'package:mathmo_app/presentation/home/widgets/level_node.dart';
 import 'package:mathmo_app/presentation/home/widgets/milestone_chest_node.dart';
@@ -79,7 +80,7 @@ void main() {
       await tester.pump();
 
       expect(find.byType(PageView), findsOneWidget);
-      expect(find.text('Daily Challenge Hari Ini'), findsOneWidget);
+      expect(find.byType(FloatingBottomDock), findsOneWidget);
       expect(find.byType(LevelNode), findsWidgets);
       expect(find.byType(MilestoneChestNode), findsWidgets);
 

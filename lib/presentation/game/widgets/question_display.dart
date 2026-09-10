@@ -19,9 +19,10 @@ class QuestionDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChunkyCard(
+      variant: ChunkyCardVariant.hangingPaper,
       rotation: rotation,
-      backgroundColor: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.symmetric(vertical: 34, horizontal: 24),
       child: Center(
         child: FittedBox(
           fit: BoxFit.scaleDown,
@@ -30,6 +31,7 @@ class QuestionDisplay extends StatelessWidget {
             style: AppTheme.mathNumberStyle(
               fontSize: 48,
               fontWeight: FontWeight.w800,
+              color: AppTheme.colorEspresso,
             ),
           ),
         ),

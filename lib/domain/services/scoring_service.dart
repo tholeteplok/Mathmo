@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import '../models/level_score_record.dart';
 import '../models/round_result.dart';
 import '../models/session_result.dart';
 
@@ -90,5 +91,17 @@ class ScoringService {
         (sessionCompleted ? 10 : 0);
 
     return (totalXp: total, breakdown: breakdown);
+  }
+
+  /// Menghitung delta skor untuk penyelesaian/pengulangan sebuah level (node).
+  ///
+  /// Berbeda dari [computeRoundScore] (per-soal) — ini beroperasi di level
+  /// SessionResult.totalScore vs rekor terbaik level tersebut.
+  ({int scoreDelta, LevelScoreRecord updatedRecord}) computeLevelReplayDelta({
+    required LevelScoreRecord currentRecord,
+    required int newSessionScore,
+  }) {
+    final result = currentRecord.applyAttempt(newSessionScore);
+    return (scoreDelta: result.delta, updatedRecord: result.record);
   }
 }

@@ -2,10 +2,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/local/hive_daily_challenge_repository.dart';
 import '../../../data/local/hive_event_log.dart';
+import '../../../data/local/hive_level_score_repository.dart';
 import '../../../data/local/hive_mastery_repository.dart';
 import '../../../data/local/hive_player_repository.dart';
 import '../../../data/local/hive_session_repository.dart';
+import '../../../data/remote/firebase_auth_repository.dart';
+import '../../../data/remote/firebase_leaderboard_repository.dart';
+import '../../../domain/repositories/auth_repository.dart';
 import '../../../domain/repositories/daily_challenge_repository.dart';
+import '../../../domain/repositories/leaderboard_repository.dart';
+import '../../../domain/repositories/level_score_repository.dart';
 import '../../../domain/repositories/mastery_repository.dart';
 import '../../../domain/repositories/player_repository.dart';
 import '../../../domain/repositories/session_repository.dart';
@@ -33,6 +39,18 @@ final dailyChallengeRepositoryProvider = Provider<DailyChallengeRepository>((
   ref,
 ) {
   return HiveDailyChallengeRepository();
+});
+
+final levelScoreRepositoryProvider = Provider<LevelScoreRepository>((ref) {
+  return HiveLevelScoreRepository();
+});
+
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return FirebaseAuthRepository();
+});
+
+final leaderboardRepositoryProvider = Provider<LeaderboardRepository>((ref) {
+  return FirebaseLeaderboardRepository();
 });
 
 final eventLogProvider = Provider<HiveEventLog>((ref) {

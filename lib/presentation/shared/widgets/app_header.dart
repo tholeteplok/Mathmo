@@ -67,7 +67,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 BadgePill(
                   icon: AppIcons.streak,
                   value: '$streak',
-                  iconColor: const Color(0xFFE65100), // Deep orange flame
+                  iconColor: AppTheme.colorCoral,
                 ),
               ],
             ),
@@ -80,6 +80,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
+                    color: AppTheme.colorEspresso,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -92,7 +93,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 BadgePill(
                   icon: AppIcons.xp,
                   value: '$xp',
-                  iconColor: const Color(0xFFF57F17), // Deep amber star
+                  iconColor: AppTheme.colorHoney,
                 ),
                 if (actions != null) ...[
                   const SizedBox(width: 8),

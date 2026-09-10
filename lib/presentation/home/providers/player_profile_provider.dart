@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../domain/models/level_score_record.dart';
 import '../../../domain/models/player_profile.dart';
 import '../../../domain/repositories/repo_result.dart';
 import '../../game/providers/game_dependencies_provider.dart';
@@ -23,12 +24,13 @@ class PlayerProfileNotifier extends AsyncNotifier<PlayerProfile> {
     }
   }
 
-  /// Menyelesaikan sesi gameplay secara atomik: menambahkan XP dan menaikkan level
+  /// Menyelesaikan sesi gameplay secara atomik: menambahkan XP, skor delta, dan menaikkan level
   /// jika performa memenuhi syarat (akurasi >= 70% dan level yang dimainkan >= level saat ini).
   Future<void> completeSession({
     required int playedLevel,
     required int xpEarned,
     required double accuracy,
+    int scoreDelta = 0,
   }) async {
     PlayerProfile? current = state.valueOrNull;
     if (current == null) {
@@ -46,8 +48,50 @@ class PlayerProfileNotifier extends AsyncNotifier<PlayerProfile> {
 
     final updated = current.copyWith(
       totalXp: current.totalXp + xpEarned,
+      totalScore: current.totalScore + scoreDelta,
       currentLevel: newLevel,
     );
+    state = AsyncData(updated);
+
+    final repo = ref.read(playerRepositoryProvider);
+    await repo.saveProfile(updated);
+  }
+
+  /// Mencatat hasil attempt skor level dan menerapkan delta skor terbaik ke profil pemain.
+  Future<int> recordLevelScore({
+    required int level,
+    required int sessionScore,
+  }) async {
+    final scoreRepo = ref.read(levelScoreRepositoryProvider);
+    final scoringService = ref.read(scoringServiceProvider);
+
+    final existingRecordResult = await scoreRepo.getRecord(level);
+    final currentRecord = switch (existingRecordResult) {
+      RepoSuccess(:final value) => value ?? LevelScoreRecord.initial(level),
+      RepoFailure() => LevelScoreRecord.initial(level),
+    };
+
+    final (:scoreDelta, :updatedRecord) = scoringService.computeLevelReplayDelta(
+      currentRecord: currentRecord,
+      newSessionScore: sessionScore,
+    );
+
+    await scoreRepo.saveRecord(updatedRecord);
+
+    if (scoreDelta > 0) {
+      await addScore(scoreDelta);
+    }
+
+    return scoreDelta;
+  }
+
+  /// Menambahkan skor total pemain.
+  Future<void> addScore(int scoreDelta) async {
+    if (scoreDelta <= 0) return;
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    final updated = current.copyWith(totalScore: current.totalScore + scoreDelta);
     state = AsyncData(updated);
 
     final repo = ref.read(playerRepositoryProvider);
@@ -88,5 +132,20 @@ class PlayerProfileNotifier extends AsyncNotifier<PlayerProfile> {
     if (result is RepoSuccess<PlayerProfile>) {
       state = AsyncData(result.value);
     }
+  }
+
+  /// Memperbarui avatar pemain (preset avatarId atau null untuk inisial huruf).
+  Future<void> updateAvatar(String? avatarId) async {
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    final updated = current.copyWith(
+      avatarId: avatarId,
+      clearAvatar: avatarId == null,
+    );
+    state = AsyncData(updated);
+
+    final repo = ref.read(playerRepositoryProvider);
+    await repo.saveProfile(updated);
   }
 }

@@ -21,6 +21,7 @@ class ScoreStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChunkyCard(
+      variant: ChunkyCardVariant.wood,
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -34,6 +35,7 @@ class ScoreStatCard extends StatelessWidget {
             style: AppTheme.statNumberStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
+              color: AppTheme.colorEspresso,
             ),
           ),
           const SizedBox(height: 4),
@@ -42,7 +44,7 @@ class ScoreStatCard extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF6B7260),
+              color: AppTheme.colorTaupe,
             ),
             textAlign: TextAlign.center,
           ),
