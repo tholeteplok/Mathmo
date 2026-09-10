@@ -85,6 +85,9 @@ class GameSessionNotifier extends StateNotifier<GameSessionState>
 
   DateTime? _activeRoundStartTime;
 
+  /// Daftar hasil ronde yang telah diselesaikan pada sesi ini.
+  List<RoundResult> get completedRounds => List.unmodifiable(_completedRounds);
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final current = this.state;
@@ -116,7 +119,10 @@ class GameSessionNotifier extends StateNotifier<GameSessionState>
   void resume() {
     final current = state;
     if (current is PausedState) {
-      _activeRoundStartTime = DateTime.now();
+      final elapsedBeforePause =
+          current.pausedFrom.totalTimeMs - current.pausedFrom.timeRemainingMs;
+      _activeRoundStartTime =
+          DateTime.now().subtract(Duration(milliseconds: elapsedBeforePause));
       state = current.pausedFrom;
     }
   }

@@ -219,7 +219,8 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
   }) async {
     try {
       final dateKey = _formatDateKey(result.date);
-      final docId = '${dateKey}_${result.band}_$username';
+      final cleanUsername = username.trim().toLowerCase();
+      final docId = '${dateKey}_${result.band}_$cleanUsername';
 
       final currentUid = auth.currentUser?.uid ?? result.playerId;
 

@@ -19,6 +19,7 @@ class CountdownProgressBar extends StatefulWidget {
     this.warningColor = AppTheme.colorCoral,
     this.borderColor = const Color(0xFFDECFA8),
     this.resetToken,
+    this.initialProgress = 1.0,
   });
 
   final Duration duration;
@@ -28,6 +29,10 @@ class CountdownProgressBar extends StatefulWidget {
   final Color warningColor;
   final Color borderColor;
   final Object? resetToken;
+
+  /// Nilai awal sisa waktu (1.0 = penuh 100%, 0.5 = tersisa 50%, dsb).
+  /// Berguna agar saat resume dari pause, progress bar tidak melompat kembali ke 100%.
+  final double initialProgress;
 
   @override
   State<CountdownProgressBar> createState() => CountdownProgressBarState();
@@ -42,7 +47,8 @@ class CountdownProgressBarState extends State<CountdownProgressBar>
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration)
       ..addStatusListener(_onAnimationStatus);
-    _controller.forward(from: 0.0);
+    final startVal = (1.0 - widget.initialProgress).clamp(0.0, 1.0);
+    _controller.forward(from: startVal);
   }
 
   void _onAnimationStatus(AnimationStatus status) {
@@ -59,7 +65,8 @@ class CountdownProgressBarState extends State<CountdownProgressBar>
       _controller.duration = widget.duration;
       _controller.stop();
       _controller.reset();
-      _controller.forward(from: 0.0);
+      final startVal = (1.0 - widget.initialProgress).clamp(0.0, 1.0);
+      _controller.forward(from: startVal);
     }
   }
 

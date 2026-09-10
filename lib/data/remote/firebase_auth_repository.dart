@@ -109,7 +109,23 @@ class FirebaseAuthRepository implements AuthRepository {
         idToken: googleAuth.idToken,
       );
 
-      final userCredential = await auth.signInWithCredential(credential);
+      final currentUser = auth.currentUser;
+      UserCredential userCredential;
+      if (currentUser != null && currentUser.isAnonymous) {
+        try {
+          userCredential = await currentUser.linkWithCredential(credential);
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'credential-already-in-use') {
+            // Akun Google sudah terdaftar di UID lain, sign in langsung ke akun tersebut
+            userCredential = await auth.signInWithCredential(credential);
+          } else {
+            rethrow;
+          }
+        }
+      } else {
+        userCredential = await auth.signInWithCredential(credential);
+      }
+
       final uid = userCredential.user?.uid;
       if (uid == null) {
         return const RepoFailure('Gagal mengautentikasi pengguna dengan Firebase');

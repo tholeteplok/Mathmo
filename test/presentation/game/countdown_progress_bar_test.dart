@@ -111,5 +111,32 @@ void main() {
       await tester.pump(const Duration(milliseconds: 350));
       expect(timeoutCount, equals(1));
     });
+
+    testWidgets('initialProgress starts animation from partial position and expires in proportional time', (tester) async {
+      var timeoutCalled = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CountdownProgressBar(
+              duration: const Duration(milliseconds: 1000),
+              initialProgress: 0.4, // 40% time remaining -> 400ms remaining
+              onTimeout: () {
+                timeoutCalled = true;
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Advance by 300ms (less than 400ms)
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(timeoutCalled, isFalse);
+
+      // Advance by another 150ms (total 450ms > 400ms remaining)
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(timeoutCalled, isTrue);
+    });
   });
 }
+

@@ -175,10 +175,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   Widget _buildTimerBar(GameSessionState state, Color accentColor) {
     if (state is ActiveState) {
+      final initialProgress = state.totalTimeMs > 0
+          ? (state.timeRemainingMs / state.totalTimeMs).clamp(0.0, 1.0)
+          : 1.0;
       return CountdownProgressBar(
         key: ValueKey('${state.question.id}_${state.totalTimeMs}'),
         resetToken: state.question.id,
         duration: Duration(milliseconds: state.totalTimeMs),
+        initialProgress: initialProgress,
         primaryColor: accentColor,
         onTimeout: () {
           ref.read(gameSessionProvider(_args).notifier).handleTimeout();

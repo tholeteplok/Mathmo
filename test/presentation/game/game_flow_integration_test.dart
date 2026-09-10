@@ -113,9 +113,44 @@ void main() {
 
     // Check state
     final profile = container.read(playerProfileProvider).valueOrNull;
-
-
     expect(profile?.currentLevel, equals(2));
     expect(mockRepo.profile.currentLevel, equals(2));
   });
+
+  test('GameSessionNotifier pause and resume preserves elapsed time across pause', () async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    const args = GameSessionArgs(level: 1);
+    final sub = container.listen(gameSessionProvider(args), (prev, next) {});
+    addTearDown(sub.close);
+
+    final notifier = container.read(gameSessionProvider(args).notifier);
+
+    // Initial state transitions directly to ActiveState
+    final active = container.read(gameSessionProvider(args));
+    expect(active, isA<ActiveState>());
+
+    // Wait a brief tick then pause
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    notifier.pause();
+
+    final pausedState = container.read(gameSessionProvider(args));
+    expect(pausedState, isA<PausedState>());
+
+    // Resume
+    notifier.resume();
+
+    final resumedState = container.read(gameSessionProvider(args));
+    expect(resumedState, isA<ActiveState>());
+
+    // Submit answer
+    final correctIndex = (resumedState as ActiveState).shuffledIndices.indexOf(0);
+    notifier.submitAnswer(correctIndex);
+
+    expect(notifier.completedRounds, isNotEmpty);
+    expect(notifier.completedRounds.first.responseTimeMs, greaterThanOrEqualTo(50));
+  });
 }
+
+

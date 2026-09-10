@@ -3,27 +3,36 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // 1. Koleksi Pemetaan Username Unik
-    // Setiap pemain bisa mengecek ketersediaan username (read).
-    // Pembuatan/update username hanya boleh jika UID dokumen cocok dengan user yang login.
+    // Setiap pemain bisa membaca ketersediaan username.
+    // Pembuatan/update username hanya boleh jika UID cocok dengan user yang login.
     match /usernames/{username} {
       allow read: if true;
       allow create, update: if request.auth != null && request.resource.data.uid == request.auth.uid;
     }
 
     // 2. Profil Pemain & Papan Peringkat All-Time
-    // Terbuka untuk dibaca agar leaderboard Semua Waktu bisa melakukan query/sorting skor.
-    // Hanya pemilik akun (auth.uid == userId) yang berhak menulis/memperbarui data profilnya.
+    // Terbuka untuk dibaca agar leaderboard Semua Waktu bisa melakukan query.
+    // Hanya pemilik akun yang berhak memperbarui profil miliknya sendiri.
     match /profiles/{userId} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
     // 3. Hasil Tantangan Harian (Papan Peringkat Harian)
-    // Terbuka untuk dibaca agar pemain bisa melihat ranking harian per band level.
-    // Pemain yang login berhak mengunggah hasil tantangan mereka.
+    // Terbuka untuk dibaca publik.
+    // Validasi kepemilikan player_id, tipe data, batas skor 0..12, dan waktu non-negatif.
+    // Dibuat immutable (tidak dapat ditimpa atau dihapus dari client).
     match /daily_challenge_results/{resultId} {
       allow read: if true;
-      allow create, update: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.player_id == request.auth.uid
+        && request.resource.data.correct_count is int
+        && request.resource.data.correct_count >= 0
+        && request.resource.data.correct_count <= 12
+        && request.resource.data.total_time_ms is int
+        && request.resource.data.total_time_ms >= 0;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
