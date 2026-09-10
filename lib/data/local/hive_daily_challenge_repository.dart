@@ -65,7 +65,7 @@ class HiveDailyChallengeRepository implements DailyChallengeRepository {
   Future<RepoResult<void>> cacheChallenge(DailyChallenge challenge) async {
     try {
       final box = await _getChallengeBox();
-      final key = '${challenge.date}_${challenge.band}';
+      final key = '${_formatDateKey(challenge.date)}_${challenge.band}';
       await box.put(key, challenge.toJson());
       return const RepoSuccess(null);
     } catch (e) {
@@ -77,7 +77,8 @@ class HiveDailyChallengeRepository implements DailyChallengeRepository {
   Future<RepoResult<void>> saveResult(DailyChallengeResult result) async {
     try {
       final box = await _getResultBox();
-      final key = '${result.date}_${result.band}';
+      final dateKey = _formatDateKey(result.date);
+      final key = '${dateKey}_${result.band}';
       await box.put(key, result.toJson());
 
       // Juga masukkan ke antrian pending submissions
@@ -97,8 +98,21 @@ class HiveDailyChallengeRepository implements DailyChallengeRepository {
   ) async {
     try {
       final box = await _getResultBox();
-      final key = '${_formatDateKey(date)}_$band';
-      final raw = box.get(key);
+      final dateKey = _formatDateKey(date);
+      final key = '${dateKey}_$band';
+      var raw = box.get(key);
+
+      // Fallback untuk key versi legacy yang memuat timestamp lengkap
+      if (raw == null) {
+        for (final k in box.keys) {
+          final kStr = k.toString();
+          if (kStr.startsWith(dateKey) && kStr.endsWith('_$band')) {
+            raw = box.get(k);
+            break;
+          }
+        }
+      }
+
       if (raw == null) return const RepoSuccess(null);
       return RepoSuccess(
         DailyChallengeResult.fromJson(Map<String, dynamic>.from(raw)),

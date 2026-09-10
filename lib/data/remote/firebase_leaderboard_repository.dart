@@ -30,22 +30,32 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
     try {
       final dateKey = _formatDateKey(date);
 
+      // Query sederhana tanpa multi-orderBy server-side agar tidak memerlukan Composite Index manual di Firestore
       final snapshot = await firestore
           .collection(collectionName)
           .where('band', isEqualTo: band)
           .where('date', isEqualTo: dateKey)
-          .orderBy('correct_count', descending: true)
-          .orderBy('total_time_ms', descending: false)
-          .limit(limit)
           .get()
           .timeout(const Duration(seconds: 10));
+
+      // Parsing dan sorting di memori (correct_count desc, total_time_ms asc)
+      final sortedDocs = snapshot.docs.map((doc) => doc.data()).toList()
+        ..sort((a, b) {
+          final cA = ((a['correct_count'] ?? 0) as num).toInt();
+          final cB = ((b['correct_count'] ?? 0) as num).toInt();
+          final comp = cB.compareTo(cA);
+          if (comp != 0) return comp;
+          final tA = ((a['total_time_ms'] ?? 0) as num).toInt();
+          final tB = ((b['total_time_ms'] ?? 0) as num).toInt();
+          return tA.compareTo(tB);
+        });
 
       final entries = <LeaderboardEntry>[];
       var rank = 1;
       bool playerFound = false;
 
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
+      for (var i = 0; i < sortedDocs.length; i++) {
+        final data = sortedDocs[i];
         final username = (data['username'] ?? 'Pemain') as String;
         final isCurrent = currentPlayerUsername != null &&
             username.toLowerCase() == currentPlayerUsername.toLowerCase();
@@ -54,28 +64,30 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
           playerFound = true;
         }
 
-        entries.add(
-          LeaderboardEntry(
-            rank: rank++,
-            username: username,
-            avatarId: data['avatar_id'] as String?,
-            correctCount: ((data['correct_count']) as num).toInt(),
-            totalTimeMs: ((data['total_time_ms']) as num).toInt(),
-            isCurrentPlayer: isCurrent,
-          ),
-        );
-      }
-
-      // Jika pemain saat ini sudah submit tetapi tidak masuk top-N, sisipkan di bawah
-      if (!playerFound && currentPlayerUsername != null) {
-        final playerEntryResult = await getPlayerEntry(
-          band: band,
-          date: date,
-          username: currentPlayerUsername,
-        );
-        if (playerEntryResult is RepoSuccess<LeaderboardEntry?> &&
-            playerEntryResult.value != null) {
-          entries.add(playerEntryResult.value!);
+        if (i < limit) {
+          entries.add(
+            LeaderboardEntry(
+              rank: rank++,
+              username: username,
+              avatarId: data['avatar_id'] as String?,
+              correctCount: ((data['correct_count'] ?? 0) as num).toInt(),
+              totalTimeMs: ((data['total_time_ms'] ?? 0) as num).toInt(),
+              isCurrentPlayer: isCurrent,
+            ),
+          );
+        } else if (playerFound && isCurrent) {
+          // Pemain berada di luar top-limit, sisipkan posisinya di paling bawah
+          entries.add(
+            LeaderboardEntry(
+              rank: i + 1,
+              username: username,
+              avatarId: data['avatar_id'] as String?,
+              correctCount: ((data['correct_count'] ?? 0) as num).toInt(),
+              totalTimeMs: ((data['total_time_ms'] ?? 0) as num).toInt(),
+              isCurrentPlayer: true,
+            ),
+          );
+          break;
         }
       }
 
@@ -97,58 +109,43 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
     try {
       final dateKey = _formatDateKey(date);
 
-      final query = await firestore
+      final snapshot = await firestore
           .collection(collectionName)
           .where('band', isEqualTo: band)
           .where('date', isEqualTo: dateKey)
-          .where('username', isEqualTo: username)
-          .limit(1)
           .get()
           .timeout(const Duration(seconds: 10));
 
-      if (query.docs.isEmpty) {
-        return const RepoSuccess(null);
+      final sortedDocs = snapshot.docs.map((doc) => doc.data()).toList()
+        ..sort((a, b) {
+          final cA = ((a['correct_count'] ?? 0) as num).toInt();
+          final cB = ((b['correct_count'] ?? 0) as num).toInt();
+          final comp = cB.compareTo(cA);
+          if (comp != 0) return comp;
+          final tA = ((a['total_time_ms'] ?? 0) as num).toInt();
+          final tB = ((b['total_time_ms'] ?? 0) as num).toInt();
+          return tA.compareTo(tB);
+        });
+
+      final targetLower = username.toLowerCase();
+      for (var i = 0; i < sortedDocs.length; i++) {
+        final data = sortedDocs[i];
+        final docUsername = (data['username'] ?? '') as String;
+        if (docUsername.toLowerCase() == targetLower) {
+          return RepoSuccess(
+            LeaderboardEntry(
+              rank: i + 1,
+              username: docUsername,
+              avatarId: data['avatar_id'] as String?,
+              correctCount: ((data['correct_count'] ?? 0) as num).toInt(),
+              totalTimeMs: ((data['total_time_ms'] ?? 0) as num).toInt(),
+              isCurrentPlayer: true,
+            ),
+          );
+        }
       }
 
-      final myDoc = query.docs.first.data();
-      final myCorrect = (myDoc['correct_count'] as num).toInt();
-      final myTime = (myDoc['total_time_ms'] as num).toInt();
-
-      // Hitung rank pemain: berapa banyak pemain dengan skor lebih baik
-      final aheadCountQuery = await firestore
-          .collection(collectionName)
-          .where('band', isEqualTo: band)
-          .where('date', isEqualTo: dateKey)
-          .where('correct_count', isGreaterThan: myCorrect)
-          .count()
-          .get()
-          .timeout(const Duration(seconds: 10));
-
-      final higherScoreCount = aheadCountQuery.count ?? 0;
-
-      final sameScoreFasterQuery = await firestore
-          .collection(collectionName)
-          .where('band', isEqualTo: band)
-          .where('date', isEqualTo: dateKey)
-          .where('correct_count', isEqualTo: myCorrect)
-          .where('total_time_ms', isLessThan: myTime)
-          .count()
-          .get()
-          .timeout(const Duration(seconds: 10));
-
-      final fasterCount = sameScoreFasterQuery.count ?? 0;
-      final myRank = higherScoreCount + fasterCount + 1;
-
-      return RepoSuccess(
-        LeaderboardEntry(
-          rank: myRank,
-          username: username,
-          avatarId: myDoc['avatar_id'] as String?,
-          correctCount: myCorrect,
-          totalTimeMs: myTime,
-          isCurrentPlayer: true,
-        ),
-      );
+      return const RepoSuccess(null);
     } catch (e) {
       return RepoFailure(
         FirebaseErrorMapper.map(e, defaultMessage: 'Gagal menghitung posisi pemain'),

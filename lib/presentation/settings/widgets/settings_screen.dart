@@ -3,12 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/services/sfx_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../home/providers/player_profile_provider.dart';
 import '../../shared/widgets/app_header.dart';
-import '../../shared/widgets/chunky_button.dart';
 import '../../shared/widgets/chunky_card.dart';
 import '../providers/settings_provider.dart';
 
@@ -161,54 +159,6 @@ class _AudioCard extends ConsumerWidget {
             onToggle: () => notifier.toggleSfx(),
             onVolumeChanged: (val) => notifier.setSfxVolume(val),
           ),
-          const SizedBox(height: 18),
-
-          // Tes Efek Suara (Audition Section)
-          Text(
-            'Tes Efek Suara:',
-            style: GoogleFonts.quicksand(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.darkBorder,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _SfxTestButton(
-                label: '✓ Benar',
-                color: const Color(0xFFE8F5E9),
-                textColor: const Color(0xFF2E7D32),
-                onTap: () => ref.read(sfxServiceProvider).play(SfxType.correct),
-              ),
-              _SfxTestButton(
-                label: '✗ Salah',
-                color: const Color(0xFFFFEBEE),
-                textColor: const Color(0xFFC62828),
-                onTap: () => ref.read(sfxServiceProvider).play(SfxType.wrong),
-              ),
-              _SfxTestButton(
-                label: '★ Naik Level',
-                color: const Color(0xFFFFF8E1),
-                textColor: const Color(0xFFF57F17),
-                onTap: () => ref.read(sfxServiceProvider).play(SfxType.levelUp),
-              ),
-              _SfxTestButton(
-                label: '🎁 Peti Harta',
-                color: const Color(0xFFEDE7F6),
-                textColor: const Color(0xFF512DA8),
-                onTap: () => ref.read(sfxServiceProvider).play(SfxType.chestOpen),
-              ),
-              _SfxTestButton(
-                label: '🔘 Tap',
-                color: const Color(0xFFE0F2F1),
-                textColor: const Color(0xFF00695C),
-                onTap: () => ref.read(sfxServiceProvider).play(SfxType.tap),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -350,42 +300,6 @@ class _AudioControlRow extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-/// Tombol tes preview efek suara.
-class _SfxTestButton extends StatelessWidget {
-  const _SfxTestButton({
-    required this.label,
-    required this.color,
-    required this.textColor,
-    required this.onTap,
-  });
-
-  final String label;
-  final Color color;
-  final Color textColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ChunkyButton(
-      onPressed: onTap,
-      backgroundColor: color,
-      borderColor: AppTheme.darkBorder,
-      borderWidth: AppTokens.borderWidthSubtle,
-      borderRadius: 12,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      height: 34,
-      child: Text(
-        label,
-        style: TextStyle(
-          color: textColor,
-          fontWeight: FontWeight.w800,
-          fontSize: 12,
-        ),
-      ),
     );
   }
 }

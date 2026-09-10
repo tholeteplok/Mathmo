@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/errors/firebase_error_mapper.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
@@ -81,6 +82,7 @@ class LeaderboardScreen extends ConsumerWidget {
               child: entriesAsync.when(
                 loading: () => const LeaderboardLoadingView(),
                 error: (err, _) => LeaderboardErrorView(
+                  error: err,
                   onRetry: () =>
                       ref.invalidate(leaderboardEntriesProvider(selectedBand)),
                 ),
@@ -354,14 +356,26 @@ class LeaderboardLoadingView extends StatelessWidget {
   }
 }
 
-/// Error view dengan tombol coba lagi
+/// Error view dengan tombol coba lagi dan pesan dinamis informatif
 class LeaderboardErrorView extends StatelessWidget {
-  const LeaderboardErrorView({super.key, required this.onRetry});
+  const LeaderboardErrorView({
+    super.key,
+    this.error,
+    required this.onRetry,
+  });
 
+  final Object? error;
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final message = error != null
+        ? FirebaseErrorMapper.map(
+            error!,
+            defaultMessage: 'Gagal memuat papan peringkat. Silakan periksa koneksi atau coba lagi nanti.',
+          )
+        : 'Periksa koneksi internetmu dan coba kembali.';
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -380,11 +394,12 @@ class LeaderboardErrorView extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     color: AppTheme.colorEspresso,
                   ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Periksa koneksi internetmu dan coba kembali.',
-              style: TextStyle(
+            Text(
+              message,
+              style: const TextStyle(
                 color: AppTheme.colorTaupe,
                 fontSize: 13,
               ),

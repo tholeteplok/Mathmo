@@ -68,7 +68,7 @@ class _AvatarCalloutPinState extends State<AvatarCalloutPin>
           children: [
             // Balon Utama
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(AppTokens.radiusPill),
@@ -89,8 +89,8 @@ class _AvatarCalloutPinState extends State<AvatarCalloutPin>
                 children: [
                   // Mini Avatar Circle
                   Container(
-                    width: 26,
-                    height: 26,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: widget.accentColor,
                       shape: BoxShape.circle,
@@ -117,7 +117,7 @@ class _AvatarCalloutPinState extends State<AvatarCalloutPin>
                             ),
                           ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   // Teks Label
                   Flexible(
                     child: Text(
@@ -127,7 +127,7 @@ class _AvatarCalloutPinState extends State<AvatarCalloutPin>
                       style: TextStyle(
                         fontFamily:
                             Theme.of(context).textTheme.bodyMedium?.fontFamily,
-                        fontSize: 12,
+                        fontSize: 14,
                         fontWeight: FontWeight.w800,
                         color: AppTheme.darkBorder,
                       ),

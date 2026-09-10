@@ -16,6 +16,7 @@ import '../../game/widgets/countdown_progress_bar.dart';
 import '../../game/widgets/feedback_overlay.dart';
 import '../../game/widgets/question_display.dart';
 import '../../home/providers/player_profile_provider.dart';
+import '../../profile/providers/account_status_provider.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/chunky_button.dart';
 import '../../shared/widgets/chunky_card.dart';
@@ -133,15 +134,35 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
       rankInBand: null,
     );
 
-    // Rekam aktivitas harian dan update streak
-    await ref.read(playerProfileProvider.notifier).recordActivity(now);
-    await ref.read(dailyChallengeRepositoryProvider).saveResult(result);
-    ref.invalidate(dailyChallengeCompletionProvider);
+    try {
+      // Rekam aktivitas harian dan update streak
+      await ref.read(playerProfileProvider.notifier).recordActivity(now);
+      await ref.read(dailyChallengeRepositoryProvider).saveResult(result);
+      ref.invalidate(dailyChallengeCompletionProvider);
 
-    setState(() {
-      _isFinished = true;
-      _isFeedback = false;
-    });
+      // Jika pemain sudah memiliki username akun, submit ke papan peringkat cloud
+      final accountState = ref.read(accountStatusProvider).valueOrNull;
+      final username = accountState?.username;
+      if (username != null && username.isNotEmpty) {
+        final avatarId = profile?.avatarId;
+        try {
+          await ref.read(leaderboardRepositoryProvider).submitDailyResult(
+            result: result,
+            username: username,
+            avatarId: avatarId,
+          );
+        } catch (_) {}
+      }
+    } catch (_) {
+      // Graceful degradation: kegagalan IO/cloud tidak menghalangi transisi UI
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFinished = true;
+          _isFeedback = false;
+        });
+      }
+    }
   }
 
   @override
