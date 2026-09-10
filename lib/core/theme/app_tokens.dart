@@ -14,6 +14,7 @@ class AppTokens {
   static const double borderWidthWood = 2.5; // untuk kontainer/plang kayu
 
   // ── Radius ───────────────────────────────────────────────────────
+  static const double radiusAvatar = 32.0; // container avatar profil (match curvature gambar)
   static const double radiusContainer = 28.0; // bingkai layar/kartu besar
   static const double radiusCard = 26.0; // kartu soal, kartu skor
   static const double radiusButton = 22.0; // tombol jawaban / aksi

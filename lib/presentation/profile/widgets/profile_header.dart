@@ -72,7 +72,7 @@ class ProfileHeader extends ConsumerWidget {
                 height: 92,
                 decoration: BoxDecoration(
                   color: AppTheme.colorVanillaCard,
-                  borderRadius: BorderRadius.circular(AppTokens.radiusContainer),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusAvatar),
                   border: Border.all(
                     color: AppTheme.darkBorder,
                     width: AppTokens.borderWidthDefault,
@@ -86,7 +86,7 @@ class ProfileHeader extends ConsumerWidget {
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppTokens.radiusContainer - 2),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusAvatar - 2),
                   child: avatarAsset != null
                       ? Image.asset(
                           avatarAsset,

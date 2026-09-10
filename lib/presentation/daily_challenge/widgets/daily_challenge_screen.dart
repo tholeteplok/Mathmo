@@ -21,6 +21,8 @@ import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/chunky_button.dart';
 import '../../shared/widgets/chunky_card.dart';
 import '../../shared/widgets/exit_confirm_dialog.dart';
+import '../../../domain/repositories/repo_result.dart';
+import '../../leaderboard/providers/leaderboard_provider.dart';
 import '../providers/daily_challenge_provider.dart';
 
 /// Layar tantangan harian (DailyChallengeScreen).
@@ -42,6 +44,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
   bool _isFinished = false;
   bool _isFeedback = false;
   bool _lastIsCorrect = false;
+  bool _didAttemptSubmit = false;
 
   late final Stopwatch _sessionStopwatch;
 
@@ -116,6 +119,8 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     });
   }
 
+  String? _submitError;
+
   Future<void> _finishChallenge() async {
     _sessionStopwatch.stop();
     final profile = ref.read(playerProfileProvider).valueOrNull;
@@ -134,6 +139,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
       rankInBand: null,
     );
 
+    String? submitErrMsg;
     try {
       // Rekam aktivitas harian dan update streak
       await ref.read(playerProfileProvider.notifier).recordActivity(now);
@@ -144,22 +150,33 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
       final accountState = ref.read(accountStatusProvider).valueOrNull;
       final username = accountState?.username;
       if (username != null && username.isNotEmpty) {
+        submitErrMsg = null; // tandai bahwa submit dicoba
         final avatarId = profile?.avatarId;
-        try {
-          await ref.read(leaderboardRepositoryProvider).submitDailyResult(
-            result: result,
-            username: username,
-            avatarId: avatarId,
-          );
-        } catch (_) {}
+        final submitResult = await ref
+            .read(leaderboardRepositoryProvider)
+            .submitDailyResult(
+              result: result,
+              username: username,
+              avatarId: avatarId,
+            );
+        if (submitResult case RepoFailure(:final reason)) {
+          submitErrMsg = reason;
+        } else {
+          // Invalidate cache leaderboard agar data baru langsung muncul
+          ref.invalidate(leaderboardEntriesProvider(bandId));
+        }
       }
     } catch (_) {
-      // Graceful degradation: kegagalan IO/cloud tidak menghalangi transisi UI
+      // Graceful degradation: kegagalan IO tidak menghalangi transisi UI
     } finally {
       if (mounted) {
         setState(() {
           _isFinished = true;
           _isFeedback = false;
+          _submitError = submitErrMsg;
+          // Jika submitErrMsg == null dan username ada → submit berhasil
+          final accountState = ref.read(accountStatusProvider).valueOrNull;
+          _didAttemptSubmit = accountState?.hasUsername ?? false;
         });
       }
     }
@@ -317,62 +334,127 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
 
   Widget _buildFinishedView(BuildContext context, Color accentColor) {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ChunkyCard(
-            variant: ChunkyCardVariant.wood,
-            padding: const EdgeInsets.all(28),
-            child: Column(
-              children: [
-                const Icon(
-                  AppIcons.streakMaintained,
-                  color: AppTheme.colorCoral,
-                  size: 54,
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  'Tantangan Selesai!',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: AppTheme.colorEspresso,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ChunkyCard(
+              variant: ChunkyCardVariant.wood,
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                children: [
+                  const Icon(
+                    AppIcons.streakMaintained,
+                    color: AppTheme.colorCoral,
+                    size: 54,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Skor Akhir: $_correctCount / 12 Benar',
-                  style: AppTheme.statNumberStyle(
-                    fontSize: 26,
-                    color: accentColor,
+                  const SizedBox(height: 14),
+                  Text(
+                    'Tantangan Selesai!',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.colorEspresso,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Total Waktu: ${(_totalTimeMs / 1000).toStringAsFixed(1)} detik',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.colorTaupe,
+                  const SizedBox(height: 8),
+                  Text(
+                    'Skor Akhir: $_correctCount / 12 Benar',
+                    style: AppTheme.statNumberStyle(
+                      fontSize: 26,
+                      color: accentColor,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          ChunkyButton(
-            onPressed: () => context.go('/'),
-            backgroundColor: accentColor,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            child: const Text(
-              'Kembali ke Beranda',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
+                  const SizedBox(height: 6),
+                  Text(
+                    'Total Waktu: ${(_totalTimeMs / 1000).toStringAsFixed(1)} detik',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.colorTaupe,
+                    ),
+                  ),
+                  // Status badge pengiriman skor ke cloud (hanya jika user punya username)
+                  if (_didAttemptSubmit) ...[ 
+                    const SizedBox(height: 12),
+                    if (_submitError != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF3CD),
+                        borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+                        border: Border.all(
+                          color: const Color(0xFFD4A017),
+                          width: AppTokens.borderWidthSubtle,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.warning_amber_rounded,
+                              size: 14, color: Color(0xFFB45309)),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              'Skor gagal dikirim: $_submitError',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF92400E),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+                        border: Border.all(
+                          color: const Color(0xFF4CAF50),
+                          width: AppTokens.borderWidthSubtle,
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.cloud_done_rounded,
+                              size: 14, color: Color(0xFF2E7D32)),
+                          SizedBox(width: 6),
+                          Text(
+                            'Skor terkirim ke papan peringkat!',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1B5E20),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ], // end _didAttemptSubmit
+                ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            ChunkyButton(
+              onPressed: () => context.go('/'),
+              backgroundColor: accentColor,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              child: const Text(
+                'Kembali ke Beranda',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
