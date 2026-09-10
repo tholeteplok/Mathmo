@@ -64,10 +64,7 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(width: 14),
                   Text(
                     'Profil Petualang',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: AppTheme.colorEspresso,
-                        ),
+                    style: AppTheme.headerTitleStyle(fontSize: 21),
                   ),
                 ],
               ),

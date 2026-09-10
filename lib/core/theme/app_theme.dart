@@ -189,4 +189,23 @@ class AppTheme {
       letterSpacing: letterSpacing,
     );
   }
+
+  /// Family font judul AppBar/Header tersentralisasi (Catboo).
+  static const String headerFontFamily = 'Catboo';
+
+  /// TextStyle judul AppBar/Header — dipakai [AppHeader] dan semua
+  /// header manual agar konsisten (font Catboo, tanpa hardcode di widget).
+  static TextStyle headerTitleStyle({
+    double fontSize = 19,
+    FontWeight fontWeight = FontWeight.w800,
+    Color color = colorEspresso,
+  }) {
+    return TextStyle(
+      fontFamily: headerFontFamily,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      color: color,
+      letterSpacing: 0,
+    );
+  }
 }

@@ -83,16 +83,13 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
               ],
             ),
 
-            // Judul Tengah (opsional)
+            // Judul Tengah (opsional) — font Catboo tersentral.
             if (title != null)
               Expanded(
                 child: Text(
                   title!,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.colorEspresso,
-                  ),
+                  style: AppTheme.headerTitleStyle(),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),

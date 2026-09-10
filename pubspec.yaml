@@ -56,6 +56,9 @@ flutter:
     - family: Baberry
       fonts:
         - asset: assets/font/baberry/Baberry.ttf
+    - family: Catboo
+      fonts:
+        - asset: assets/font/catboo/Catboo.ttf
     - family: JetBrainsMono
       fonts:
         - asset: assets/font/jetbrains/JetBrainsMono-Bold.ttf
