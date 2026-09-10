@@ -7,6 +7,14 @@ import '../../game/providers/level_band_theme_provider.dart';
 import '../../home/providers/player_profile_provider.dart';
 import '../../profile/providers/account_status_provider.dart';
 
+/// Mode tampilan leaderboard: harian (daily) atau semua waktu (all-time).
+enum LeaderboardMode { daily, allTime }
+
+/// Provider mode yang sedang aktif di layar leaderboard.
+final leaderboardModeProvider = StateProvider<LeaderboardMode>((ref) {
+  return LeaderboardMode.daily;
+});
+
 /// Provider untuk band level yang sedang aktif dipilih pada tab Leaderboard.
 final leaderboardSelectedBandProvider = StateProvider<String>((ref) {
   final level = ref.watch(playerProfileProvider).valueOrNull?.currentLevel ?? 1;
@@ -14,7 +22,7 @@ final leaderboardSelectedBandProvider = StateProvider<String>((ref) {
   return config?.bandForLevel(level).id ?? 'onboarding';
 });
 
-/// Provider untuk memuat daftar entri leaderboard per band level.
+/// Provider untuk memuat daftar entri leaderboard per band level (mode harian).
 final leaderboardEntriesProvider =
     FutureProvider.family<List<LeaderboardEntry>, String>((ref, band) async {
   final repo = ref.watch(leaderboardRepositoryProvider);
@@ -25,6 +33,23 @@ final leaderboardEntriesProvider =
   final result = await repo.fetchTopEntries(
     band: band,
     date: now,
+    limit: 50,
+    currentPlayerUsername: username,
+  );
+
+  return switch (result) {
+    RepoSuccess(:final value) => value,
+    RepoFailure(:final reason) => throw Exception(reason),
+  };
+});
+
+/// Provider untuk memuat daftar entri leaderboard all-time (total skor akumulatif).
+final allTimeEntriesProvider = FutureProvider<List<LeaderboardEntry>>((ref) async {
+  final repo = ref.watch(leaderboardRepositoryProvider);
+  final accountState = ref.watch(accountStatusProvider).valueOrNull;
+  final username = accountState?.username;
+
+  final result = await repo.fetchAllTimeEntries(
     limit: 50,
     currentPlayerUsername: username,
   );

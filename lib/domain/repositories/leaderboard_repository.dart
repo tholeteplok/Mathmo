@@ -20,10 +20,17 @@ abstract class LeaderboardRepository {
     required String username,
   });
 
+  /// Mengambil daftar top-N entri papan peringkat all-time (total skor akumulatif).
+  Future<RepoResult<List<LeaderboardEntry>>> fetchAllTimeEntries({
+    int limit = 50,
+    String? currentPlayerUsername,
+  });
+
   /// Mengunggah hasil tantangan harian pemain ke cloud papan peringkat.
   Future<RepoResult<void>> submitDailyResult({
     required DailyChallengeResult result,
     required String username,
     String? avatarId,
+    int? totalScore,
   });
 }

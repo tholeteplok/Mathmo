@@ -28,9 +28,13 @@ class LeaderboardScreen extends ConsumerWidget {
       return LeaderboardLockedView(accountState: accountState);
     }
 
-    // 2. Jika sudah terhubung, tampilkan Leaderboard dengan filter band
+    // 2. Jika sudah terhubung, tampilkan Leaderboard dengan mode toggle
+    final mode = ref.watch(leaderboardModeProvider);
     final selectedBand = ref.watch(leaderboardSelectedBandProvider);
-    final entriesAsync = ref.watch(leaderboardEntriesProvider(selectedBand));
+
+    final entriesAsync = mode == LeaderboardMode.daily
+        ? ref.watch(leaderboardEntriesProvider(selectedBand))
+        : ref.watch(allTimeEntriesProvider);
 
     return PopScope(
       canPop: false,
@@ -42,59 +46,162 @@ class LeaderboardScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: AppTheme.colorSandyCanvas,
         body: SafeArea(
-        child: Column(
-          children: [
-            // Top Bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  ChunkyButton(
-                    onPressed: () => context.go('/'),
-                    backgroundColor: AppTheme.colorVanillaCard,
-                    borderColor: AppTheme.darkBorder,
-                    shadowColor: AppTheme.darkBorder,
-                    padding: const EdgeInsets.all(10),
-                    child: const Icon(
-                      AppIcons.back,
-                      size: 20,
-                      color: AppTheme.colorWoodDark,
+          child: Column(
+            children: [
+              // Top Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    ChunkyButton(
+                      onPressed: () => context.go('/'),
+                      backgroundColor: AppTheme.colorVanillaCard,
+                      borderColor: AppTheme.darkBorder,
+                      shadowColor: AppTheme.darkBorder,
+                      padding: const EdgeInsets.all(10),
+                      child: const Icon(
+                        AppIcons.back,
+                        size: 20,
+                        color: AppTheme.colorWoodDark,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Text(
-                    'Papan Peringkat',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: AppTheme.colorEspresso,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Band Tabs Selector
-            const _BandTabsSelector(),
-            const SizedBox(height: 8),
-
-            // Konten State Leaderboard
-            Expanded(
-              child: entriesAsync.when(
-                loading: () => const LeaderboardLoadingView(),
-                error: (err, _) => LeaderboardErrorView(
-                  error: err,
-                  onRetry: () =>
-                      ref.invalidate(leaderboardEntriesProvider(selectedBand)),
+                    const SizedBox(width: 14),
+                    Text(
+                      'Papan Peringkat',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.colorEspresso,
+                          ),
+                    ),
+                  ],
                 ),
-                data: (entries) => LeaderboardListView(entries: entries),
               ),
+
+              // Mode Toggle Pill (Harian / Semua Waktu)
+              const _ModeToggle(),
+              const SizedBox(height: 6),
+
+              // Band Tabs Selector — hanya tampil di mode daily
+              if (mode == LeaderboardMode.daily) ...[
+                const _BandTabsSelector(),
+                const SizedBox(height: 8),
+              ] else
+                const SizedBox(height: 4),
+
+              // Konten State Leaderboard
+              Expanded(
+                child: entriesAsync.when(
+                  loading: () => const LeaderboardLoadingView(),
+                  error: (err, _) => LeaderboardErrorView(
+                    error: err,
+                    onRetry: () {
+                      if (mode == LeaderboardMode.daily) {
+                        ref.invalidate(leaderboardEntriesProvider(selectedBand));
+                      } else {
+                        ref.invalidate(allTimeEntriesProvider);
+                      }
+                    },
+                  ),
+                  data: (entries) => LeaderboardListView(
+                    entries: entries,
+                    mode: mode,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Toggle pill untuk memilih mode leaderboard (Harian / Semua Waktu).
+class _ModeToggle extends ConsumerWidget {
+  const _ModeToggle();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(leaderboardModeProvider);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppTheme.colorVanillaCard,
+          borderRadius: BorderRadius.circular(AppTokens.radiusButton),
+          border: Border.all(
+            color: AppTheme.darkBorder,
+            width: AppTokens.borderWidthDefault,
+          ),
+        ),
+        child: Row(
+          children: [
+            _ModeTab(
+              label: '🏆  Harian',
+              isSelected: mode == LeaderboardMode.daily,
+              onTap: () => ref.read(leaderboardModeProvider.notifier).state =
+                  LeaderboardMode.daily,
+            ),
+            _ModeTab(
+              label: '⭐  Semua Waktu',
+              isSelected: mode == LeaderboardMode.allTime,
+              onTap: () => ref.read(leaderboardModeProvider.notifier).state =
+                  LeaderboardMode.allTime,
             ),
           ],
         ),
       ),
-    ),
-  );
+    );
+  }
 }
+
+class _ModeTab extends StatelessWidget {
+  const _ModeTab({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? AppTheme.colorWoodMedium : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppTokens.radiusButton - 4),
+            boxShadow: isSelected
+                ? [
+                    const BoxShadow(
+                      color: AppTheme.colorWoodDark,
+                      offset: Offset(0, 2),
+                      blurRadius: 0,
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: isSelected ? Colors.white : AppTheme.colorTaupe,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Selector tab band horizontal
@@ -428,15 +535,27 @@ class LeaderboardErrorView extends StatelessWidget {
   }
 }
 
-/// Tampilan daftar skor leaderboard
+/// Tampilan daftar skor leaderboard — mendukung mode daily & all-time
 class LeaderboardListView extends StatelessWidget {
-  const LeaderboardListView({super.key, required this.entries});
+  const LeaderboardListView({
+    super.key,
+    required this.entries,
+    required this.mode,
+  });
 
   final List<LeaderboardEntry> entries;
+  final LeaderboardMode mode;
 
   @override
   Widget build(BuildContext context) {
     if (entries.isEmpty) {
+      final emptyTitle = mode == LeaderboardMode.allTime
+          ? 'Belum Ada Pemain'
+          : 'Belum Ada Skor Hari Ini';
+      final emptySubtitle = mode == LeaderboardMode.allTime
+          ? 'Selesaikan tantangan harian untuk mencatat rekor skor!'
+          : 'Jadilah petualang pertama yang menaklukkan tantangan ini!';
+
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -450,16 +569,16 @@ class LeaderboardListView extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Belum Ada Skor Hari Ini',
+                emptyTitle,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: AppTheme.colorEspresso,
                     ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Jadilah petualang pertama yang menaklukkan tantangan ini!',
-                style: TextStyle(color: AppTheme.colorTaupe, fontSize: 13),
+              Text(
+                emptySubtitle,
+                style: const TextStyle(color: AppTheme.colorTaupe, fontSize: 13),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -473,16 +592,17 @@ class LeaderboardListView extends StatelessWidget {
       itemCount: entries.length,
       itemBuilder: (context, index) {
         final entry = entries[index];
-        return _LeaderboardRowItem(entry: entry);
+        return _LeaderboardRowItem(entry: entry, mode: mode);
       },
     );
   }
 }
 
 class _LeaderboardRowItem extends StatelessWidget {
-  const _LeaderboardRowItem({required this.entry});
+  const _LeaderboardRowItem({required this.entry, required this.mode});
 
   final LeaderboardEntry entry;
+  final LeaderboardMode mode;
 
   @override
   Widget build(BuildContext context) {
@@ -492,6 +612,19 @@ class _LeaderboardRowItem extends StatelessWidget {
       3 => (const Color(0xFF5D3A1A), const Color(0xFFFFCCBC)), // Perunggu
       _ => (AppTheme.colorWoodDark, AppTheme.colorSandyCanvas),
     };
+
+    // Skor yang ditampilkan berbeda per mode
+    final scoreLabel = mode == LeaderboardMode.allTime
+        ? '${entry.totalScore ?? 0} pts'
+        : '${entry.correctCount}/12';
+    final scoreColor = mode == LeaderboardMode.allTime
+        ? AppTheme.colorCoral
+        : AppTheme.colorSage;
+
+    // Sub-info berbeda per mode
+    final subInfo = mode == LeaderboardMode.allTime
+        ? 'Total Skor'
+        : 'Waktu: ${entry.formattedTime}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -625,7 +758,7 @@ class _LeaderboardRowItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Waktu: ${entry.formattedTime}',
+                  subInfo,
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -636,21 +769,21 @@ class _LeaderboardRowItem extends StatelessWidget {
             ),
           ),
 
-          // Skor Utama
+          // Skor Utama (dinamis per mode)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.colorSage.withValues(alpha: 0.15),
+              color: scoreColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTokens.radiusPill),
               border: Border.all(
-                color: AppTheme.colorSage.withValues(alpha: 0.4),
+                color: scoreColor.withValues(alpha: 0.4),
                 width: 1,
               ),
             ),
             child: Text(
-              '${entry.correctCount}/12',
-              style: const TextStyle(
-                color: AppTheme.colorSage,
+              scoreLabel,
+              style: TextStyle(
+                color: scoreColor,
                 fontWeight: FontWeight.w900,
                 fontSize: 13,
               ),
@@ -661,3 +794,4 @@ class _LeaderboardRowItem extends StatelessWidget {
     );
   }
 }
+

@@ -13,6 +13,7 @@ class LeaderboardEntry {
     required this.correctCount,
     required this.totalTimeMs,
     required this.isCurrentPlayer,
+    this.totalScore,
   });
 
   /// Posisi peringkat (1-based index).
@@ -24,7 +25,7 @@ class LeaderboardEntry {
   /// ID preset avatar pemain (mis. 'avatar_0' .. 'avatar_8', atau null jika inisial).
   final String? avatarId;
 
-  /// Jumlah jawaban benar (skor utama).
+  /// Jumlah jawaban benar (skor daily challenge).
   final int correctCount;
 
   /// Total waktu penyelesaian dalam milidetik (tie-breaker).
@@ -33,8 +34,12 @@ class LeaderboardEntry {
   /// Menandai apakah entri ini milik pemain yang sedang login.
   final bool isCurrentPlayer;
 
+  /// Akumulasi total skor sepanjang masa (hanya terisi di mode all-time, null di mode daily).
+  final int? totalScore;
+
   /// Format waktu dalam detik (mis. "24.5s").
   String get formattedTime => '${(totalTimeMs / 1000).toStringAsFixed(1)}s';
+
 
   factory LeaderboardEntry.fromJson(Map<String, dynamic> json) {
     return LeaderboardEntry(
@@ -46,6 +51,9 @@ class LeaderboardEntry {
       totalTimeMs:
           ((json['total_time_ms'] ?? json['totalTimeMs'] ?? 0) as num).toInt(),
       isCurrentPlayer: (json['is_current_player'] ?? false) as bool,
+      totalScore: json['total_score'] != null
+          ? ((json['total_score']) as num).toInt()
+          : null,
     );
   }
 
@@ -56,6 +64,7 @@ class LeaderboardEntry {
     'correct_count': correctCount,
     'total_time_ms': totalTimeMs,
     'is_current_player': isCurrentPlayer,
+    if (totalScore != null) 'total_score': totalScore,
   };
 
   LeaderboardEntry copyWith({
@@ -66,6 +75,7 @@ class LeaderboardEntry {
     int? correctCount,
     int? totalTimeMs,
     bool? isCurrentPlayer,
+    int? totalScore,
   }) {
     return LeaderboardEntry(
       rank: rank ?? this.rank,
@@ -74,6 +84,7 @@ class LeaderboardEntry {
       correctCount: correctCount ?? this.correctCount,
       totalTimeMs: totalTimeMs ?? this.totalTimeMs,
       isCurrentPlayer: isCurrentPlayer ?? this.isCurrentPlayer,
+      totalScore: totalScore ?? this.totalScore,
     );
   }
 
@@ -87,6 +98,7 @@ class LeaderboardEntry {
           avatarId == other.avatarId &&
           correctCount == other.correctCount &&
           totalTimeMs == other.totalTimeMs &&
+          totalScore == other.totalScore &&
           isCurrentPlayer == other.isCurrentPlayer;
 
   @override
@@ -96,10 +108,11 @@ class LeaderboardEntry {
     avatarId,
     correctCount,
     totalTimeMs,
+    totalScore,
     isCurrentPlayer,
   );
 
   @override
   String toString() =>
-      'LeaderboardEntry(#$rank, @$username, avatar: $avatarId, score: $correctCount, time: $formattedTime, me: $isCurrentPlayer)';
+      'LeaderboardEntry(#$rank, @$username, avatar: $avatarId, score: $correctCount, allTime: $totalScore, time: $formattedTime, me: $isCurrentPlayer)';
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mathmo_app/domain/models/leaderboard_entry.dart';
 
 void main() {
@@ -37,5 +37,24 @@ void main() {
       final from = LeaderboardEntry.fromJson(json);
       expect(from, equals(entry));
     });
+
+    test('supports totalScore in all-time mode', () {
+      const entry = LeaderboardEntry(
+        rank: 1,
+        username: 'master',
+        correctCount: 0,
+        totalTimeMs: 0,
+        isCurrentPlayer: true,
+        totalScore: 4500,
+      );
+
+      final json = entry.toJson();
+      expect(json['total_score'], equals(4500));
+
+      final from = LeaderboardEntry.fromJson(json);
+      expect(from.totalScore, equals(4500));
+      expect(from, equals(entry));
+    });
   });
 }
+

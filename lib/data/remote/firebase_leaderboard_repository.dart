@@ -16,6 +16,7 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
   FirebaseFirestore get firestore => _firestore ??= FirebaseFirestore.instance;
 
   static const String collectionName = 'daily_challenge_results';
+  static const String profilesCollection = 'profiles';
 
   static String _formatDateKey(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
@@ -155,15 +156,66 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
   }
 
   @override
+  Future<RepoResult<List<LeaderboardEntry>>> fetchAllTimeEntries({
+    int limit = 50,
+    String? currentPlayerUsername,
+  }) async {
+    try {
+      // Query /profiles diurutkan by total_score desc (single-field, tidak butuh Composite Index)
+      final snapshot = await firestore
+          .collection(profilesCollection)
+          .orderBy('total_score', descending: true)
+          .limit(limit)
+          .get()
+          .timeout(const Duration(seconds: 10));
+
+      final entries = <LeaderboardEntry>[];
+      var rank = 1;
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final username = (data['username'] ?? '') as String;
+        if (username.isEmpty) continue; // skip profil tanpa username
+
+        final isCurrent = currentPlayerUsername != null &&
+            username.toLowerCase() == currentPlayerUsername.toLowerCase();
+
+        entries.add(
+          LeaderboardEntry(
+            rank: rank++,
+            username: username,
+            avatarId: data['avatar_id'] as String?,
+            correctCount: 0,
+            totalTimeMs: 0,
+            isCurrentPlayer: isCurrent,
+            totalScore: data['total_score'] != null
+                ? ((data['total_score']) as num).toInt()
+                : 0,
+          ),
+        );
+      }
+
+      return RepoSuccess(entries);
+    } catch (e) {
+      return RepoFailure(
+        FirebaseErrorMapper.map(e, defaultMessage: 'Gagal memuat papan all-time'),
+        e,
+      );
+    }
+  }
+
+  @override
   Future<RepoResult<void>> submitDailyResult({
     required DailyChallengeResult result,
     required String username,
     String? avatarId,
+    int? totalScore,
   }) async {
     try {
       final dateKey = _formatDateKey(result.date);
       final docId = '${dateKey}_${result.band}_$username';
 
+      // 1. Simpan hasil daily challenge
       await firestore.collection(collectionName).doc(docId).set({
         'player_id': result.playerId,
         'username': username,
@@ -174,6 +226,21 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
         'total_time_ms': result.totalTimeMs,
         'submitted_at': FieldValue.serverTimestamp(),
       }).timeout(const Duration(seconds: 10));
+
+      // 2. Sinkronisasi total_score + avatar_id ke /profiles/{playerId}
+      //    agar all-time leaderboard selalu up-to-date
+      if (totalScore != null) {
+        await firestore
+            .collection(profilesCollection)
+            .doc(result.playerId)
+            .set({
+              'username': username,
+              'avatar_id': avatarId,
+              'total_score': totalScore,
+              'updated_at': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true))
+            .timeout(const Duration(seconds: 10));
+      }
 
       return const RepoSuccess(null);
     } catch (e) {

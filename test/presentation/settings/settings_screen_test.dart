@@ -136,14 +136,9 @@ void main() {
       expect(find.text('Musik & Suara'), findsOneWidget);
       expect(find.text('Musik Latar (BGM)'), findsOneWidget);
       expect(find.text('Efek Suara (SFX)'), findsOneWidget);
-      expect(find.text('Tes Efek Suara:'), findsOneWidget);
-
-      // Verify 5 SFX preview buttons
-      expect(find.text('✓ Benar'), findsOneWidget);
-      expect(find.text('✗ Salah'), findsOneWidget);
-      expect(find.text('★ Naik Level'), findsOneWidget);
-      expect(find.text('🎁 Peti Harta'), findsOneWidget);
-      expect(find.text('🔘 Tap'), findsOneWidget);
+      // SFX audition was removed per user request
+      expect(find.text('Tes Efek Suara:'), findsNothing);
+      expect(find.text('✓ Benar'), findsNothing);
 
       // Verify Gameplay Card
       expect(find.text('Preferensi Permainan'), findsOneWidget);
@@ -162,7 +157,7 @@ void main() {
       );
     });
 
-    testWidgets('tapping audition buttons triggers corresponding SfxType', (tester) async {
+    testWidgets('audio volume sliders are rendered when unmuted', (tester) async {
       tester.view.physicalSize = const Size(800, 1400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -170,30 +165,10 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      // Tap Correct
-      await tester.tap(find.text('✓ Benar'));
-      await tester.pump();
-      expect(mockSfx.playedTypes, contains(SfxType.correct));
-
-      // Tap Wrong
-      await tester.tap(find.text('✗ Salah'));
-      await tester.pump();
-      expect(mockSfx.playedTypes, contains(SfxType.wrong));
-
-      // Tap Level Up
-      await tester.tap(find.text('★ Naik Level'));
-      await tester.pump();
-      expect(mockSfx.playedTypes, contains(SfxType.levelUp));
-
-      // Tap Chest Open
-      await tester.tap(find.text('🎁 Peti Harta'));
-      await tester.pump();
-      expect(mockSfx.playedTypes, contains(SfxType.chestOpen));
-
-      // Tap Tactile Tap
-      await tester.tap(find.text('🔘 Tap'));
-      await tester.pump();
-      expect(mockSfx.playedTypes, contains(SfxType.tap));
+      final sliders = find.byType(Slider);
+      expect(sliders, findsWidgets);
     });
   });
 }
+
+

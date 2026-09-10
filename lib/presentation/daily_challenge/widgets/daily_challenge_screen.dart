@@ -158,12 +158,14 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
               result: result,
               username: username,
               avatarId: avatarId,
+              totalScore: profile?.totalScore,
             );
         if (submitResult case RepoFailure(:final reason)) {
           submitErrMsg = reason;
         } else {
           // Invalidate cache leaderboard agar data baru langsung muncul
           ref.invalidate(leaderboardEntriesProvider(bandId));
+          ref.invalidate(allTimeEntriesProvider);
         }
       }
     } catch (_) {
