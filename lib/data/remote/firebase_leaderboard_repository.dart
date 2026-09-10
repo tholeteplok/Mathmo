@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../core/errors/firebase_error_mapper.dart';
 import '../../domain/models/daily_challenge.dart';
@@ -8,12 +9,17 @@ import '../../domain/repositories/repo_result.dart';
 
 /// Implementasi [LeaderboardRepository] menggunakan Cloud Firestore.
 class FirebaseLeaderboardRepository implements LeaderboardRepository {
-  FirebaseLeaderboardRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore;
+  FirebaseLeaderboardRepository({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+  })  : _firestore = firestore,
+        _auth = auth;
 
   FirebaseFirestore? _firestore;
+  FirebaseAuth? _auth;
 
   FirebaseFirestore get firestore => _firestore ??= FirebaseFirestore.instance;
+  FirebaseAuth get auth => _auth ??= FirebaseAuth.instance;
 
   static const String collectionName = 'daily_challenge_results';
   static const String profilesCollection = 'profiles';
@@ -215,9 +221,11 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
       final dateKey = _formatDateKey(result.date);
       final docId = '${dateKey}_${result.band}_$username';
 
+      final currentUid = auth.currentUser?.uid ?? result.playerId;
+
       // 1. Simpan hasil daily challenge
       await firestore.collection(collectionName).doc(docId).set({
-        'player_id': result.playerId,
+        'player_id': currentUid,
         'username': username,
         'avatar_id': avatarId,
         'band': result.band,
@@ -227,12 +235,12 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
         'submitted_at': FieldValue.serverTimestamp(),
       }).timeout(const Duration(seconds: 10));
 
-      // 2. Sinkronisasi total_score + avatar_id ke /profiles/{playerId}
+      // 2. Sinkronisasi total_score + avatar_id ke /profiles/{currentUid}
       //    agar all-time leaderboard selalu up-to-date
       if (totalScore != null) {
         await firestore
             .collection(profilesCollection)
-            .doc(result.playerId)
+            .doc(currentUid)
             .set({
               'username': username,
               'avatar_id': avatarId,
