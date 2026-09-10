@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
-import '../../home/providers/player_profile_provider.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/chunky_card.dart';
 import '../providers/settings_provider.dart';
@@ -21,9 +20,6 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(audioSettingsProvider);
     final settingsNotifier = ref.read(audioSettingsProvider.notifier);
-    final profileAsync = ref.watch(playerProfileProvider);
-    final streak = profileAsync.valueOrNull?.streak.currentStreak ?? 0;
-    final xp = profileAsync.valueOrNull?.totalXp ?? 0;
 
     return PopScope(
       canPop: false,
@@ -39,9 +35,8 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               // Header terpusat
               AppHeader(
-                streak: streak,
-                xp: xp,
                 title: 'Pengaturan',
+                showStats: false,
                 onBackTap: () => context.go('/'),
               ),
 

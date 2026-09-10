@@ -127,10 +127,10 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      // Verify Header
+      // Verify Header: hanya back + judul, tanpa pil streak/XP.
       expect(find.text('Pengaturan'), findsOneWidget);
-      expect(find.text('5'), findsOneWidget); // Streak
-      expect(find.text('450'), findsOneWidget); // XP
+      expect(find.text('5'), findsNothing); // Streak disembunyikan
+      expect(find.text('450'), findsNothing); // XP disembunyikan
 
       // Verify Audio Card
       expect(find.text('Musik & Suara'), findsOneWidget);

@@ -192,7 +192,6 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
   Widget build(BuildContext context) {
     final challengeAsync = ref.watch(dailyChallengeProvider);
     final themeAsync = ref.watch(levelBandThemeProvider);
-    final profile = ref.watch(playerProfileProvider).valueOrNull;
 
     final canvasColor =
         themeAsync.valueOrNull?.canvasColor ?? AppTheme.fallbackCanvas;
@@ -239,8 +238,8 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                       children: [
                         // Header
                         AppHeader(
-                          streak: profile?.streak.currentStreak ?? 0,
-                          xp: profile?.totalXp ?? 0,
+                          title: 'Tantangan Harian',
+                          showStats: false,
                           onBackTap: () async {
                             final shouldExit = await showExitConfirmDialog(
                               context,
@@ -503,7 +502,6 @@ class DailyChallengeLockedView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(playerProfileProvider).valueOrNull;
     final now = DateTime.now();
     final nextMidnight = DateTime(now.year, now.month, now.day + 1);
     final hoursLeft = nextMidnight.difference(now).inHours;
@@ -525,8 +523,8 @@ class DailyChallengeLockedView extends ConsumerWidget {
             children: [
               // Header Profil
               AppHeader(
-                streak: profile?.streak.currentStreak ?? 0,
-                xp: profile?.totalXp ?? 0,
+                title: 'Tantangan Harian',
+                showStats: false,
                 onBackTap: () => context.go('/'),
               ),
               const Spacer(),

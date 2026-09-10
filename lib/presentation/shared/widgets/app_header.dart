@@ -8,7 +8,12 @@ import 'chunky_button.dart';
 
 /// Header persisten untuk GameScreen, HomeScreen, dan ShellRoute.
 ///
-/// Menampilkan badge streak harian di sisi kiri dan badge XP di sisi kanan.
+/// Kontrak tampilan:
+/// - Home & Game: HUD penuh (pil streak kiri + pil XP kanan).
+/// - Layar sekunder (leaderboard, pengaturan, daily, profil, dsb.):
+///   hanya tombol back + judul — set `showStats: false`.
+/// Saat stats dan actions disembunyikan, sisi kanan diberi spacer penyeimbang
+/// agar judul tetap ter-center secara visual.
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   const AppHeader({
     super.key,
@@ -92,7 +97,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ),
 
-            // Sisi Kanan: XP Pill & Actions
+            // Sisi Kanan: XP Pill & Actions (atau spacer penyeimbang judul)
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -106,6 +111,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                   const SizedBox(width: 8),
                   ...actions!,
                 ],
+                // Penyeimbang tombol back (40) + gap (8) agar judul center.
+                if (!showStats && actions == null)
+                  const SizedBox(width: 48),
               ],
             ),
           ],
