@@ -9,6 +9,8 @@ import 'package:mathmo_app/domain/models/player_profile.dart';
 import 'package:mathmo_app/presentation/home/providers/bgm_provider.dart';
 import 'package:mathmo_app/presentation/home/providers/player_profile_provider.dart';
 import 'package:mathmo_app/presentation/settings/providers/settings_provider.dart';
+import 'package:mathmo_app/core/constants/developer_contact.dart';
+import 'package:mathmo_app/core/services/external_link_service.dart';
 import 'package:mathmo_app/presentation/settings/widgets/settings_screen.dart';
 
 class MockSfxService implements SfxService {
@@ -93,16 +95,30 @@ class FakePlayerProfileNotifier extends PlayerProfileNotifier {
   }
 }
 
+class FakeExternalLinkService extends ExternalLinkService {
+  FakeExternalLinkService(this.opened);
+
+  final List<Uri> opened;
+
+  @override
+  Future<bool> open(Uri uri) async {
+    opened.add(uri);
+    return true;
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('SettingsScreen Widget Tests', () {
     late MockSfxService mockSfx;
     late MockBgmService mockBgm;
+    late List<Uri> openedLinks;
 
     setUp(() {
       mockSfx = MockSfxService();
       mockBgm = MockBgmService();
+      openedLinks = [];
     });
 
     Widget buildTestWidget() {
@@ -111,6 +127,9 @@ void main() {
           sfxServiceProvider.overrideWithValue(mockSfx),
           bgmServiceProvider.overrideWithValue(mockBgm),
           playerProfileProvider.overrideWith(FakePlayerProfileNotifier.new),
+          externalLinkServiceProvider.overrideWithValue(
+            FakeExternalLinkService(openedLinks),
+          ),
         ],
         child: MaterialApp(
           theme: AppTheme.lightTheme,
@@ -155,6 +174,32 @@ void main() {
         find.text('Aset Audio & SFX: Creative Commons CC0'),
         findsOneWidget,
       );
+
+      // Verify Contact Card
+      expect(find.text('Hubungi Developer'), findsOneWidget);
+      expect(find.text('Telegram'), findsOneWidget);
+      expect(find.text(DeveloperContact.telegramHandle), findsOneWidget);
+      expect(find.text('WhatsApp'), findsOneWidget);
+      expect(find.text(DeveloperContact.whatsappDisplay), findsOneWidget);
+    });
+
+    testWidgets('contact buttons open telegram and whatsapp links', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Telegram'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('WhatsApp'));
+      await tester.pumpAndSettle();
+
+      expect(openedLinks, contains(DeveloperContact.telegramUrl));
+      expect(openedLinks, contains(DeveloperContact.whatsappUrl));
     });
 
     testWidgets('audio volume sliders are rendered when unmuted', (tester) async {
