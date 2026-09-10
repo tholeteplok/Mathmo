@@ -136,9 +136,7 @@ class _BandTabsSelector extends ConsumerWidget {
           child: Row(
             children: bands.map((band) {
               final isSelected = band.id == selectedBand;
-              final bandLabel = band.id.isNotEmpty
-                  ? '${band.id[0].toUpperCase()}${band.id.substring(1)}'
-                  : band.id;
+              final bandLabel = band.displayName;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: ChunkyButton(

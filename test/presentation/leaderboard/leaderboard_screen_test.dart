@@ -106,7 +106,7 @@ void main() {
     expect(find.text('Kamu'), findsOneWidget);
     expect(find.text('🏆  Harian'), findsOneWidget);
     expect(find.text('⭐  Semua Waktu'), findsOneWidget);
-    expect(find.text('Basic'), findsOneWidget);
+    expect(find.text('Zona Dasar'), findsOneWidget);
   });
 
   testWidgets('LeaderboardScreen renders all-time entries and hides band tabs in allTime mode', (tester) async {

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../game/providers/level_band_theme_provider.dart';
 import '../../home/providers/player_profile_provider.dart';
 import '../../shared/widgets/chunky_button.dart';
 import '../providers/account_status_provider.dart';
@@ -29,6 +30,7 @@ class ProfileScreen extends ConsumerWidget {
     final totalXp = profile?.totalXp ?? 0;
     final totalScore = profile?.totalScore ?? 0;
     final longestStreak = profile?.streak.longestStreak ?? 0;
+    final bandsConfig = ref.watch(levelBandsConfigProvider).valueOrNull;
 
     return PopScope(
       canPop: false,
@@ -83,11 +85,13 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // 2. Kartu Level & Progres XP
-                  LevelProgressCard(
-                    currentLevel: currentLevel,
-                    totalXp: totalXp,
-                  ),
+                  // 2. Kartu Zona & Progres Level
+                  if (bandsConfig != null)
+                    LevelProgressCard(
+                      currentLevel: currentLevel,
+                      totalXp: totalXp,
+                      band: bandsConfig.bandForLevel(currentLevel),
+                    ),
                   const SizedBox(height: 16),
 
                   // 3. Grid Statistik 2x2

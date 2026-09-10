@@ -70,6 +70,42 @@ class LevelBand {
     return (level - levelStart) / total;
   }
 
+  /// Nama tampilan zona dalam Bahasa Indonesia (tersentralisasi).
+  String get displayName => switch (id) {
+        'onboarding' => 'Zona Perkenalan',
+        'basic' => 'Zona Dasar',
+        'intermediate' => 'Zona Menengah',
+        'advanced' => 'Zona Lanjutan',
+        'expert' => 'Zona Ahli',
+        _ => id.isEmpty
+            ? 'Zona'
+            : '${id[0].toUpperCase()}${id.substring(1)}',
+      };
+
+  /// Label rentang level zona, mis. "Level 6–15" atau "Level 51+".
+  String get rangeLabel => levelEnd == null
+      ? 'Level $levelStart+'
+      : 'Level $levelStart–$levelEnd';
+
+  /// Total level dalam zona. `null` untuk zona tanpa batas (expert).
+  int? get levelsTotal =>
+      levelEnd == null ? null : (levelEnd! - levelStart + 1);
+
+  /// Jumlah level zona yang sudah dilewati pemain pada [level] saat ini.
+  int levelsCompleted(int level) {
+    final total = levelsTotal;
+    if (total == null) return 0;
+    return (level - levelStart + 1).clamp(0, total);
+  }
+
+  /// Fraksi progres zona 0.0–1.0 berdasarkan level yang dilewati.
+  /// Zona tanpa batas mengembalikan `null` (ditangani caller via fallback XP).
+  double? progressFraction(int level) {
+    final total = levelsTotal;
+    if (total == null || total <= 0) return null;
+    return (levelsCompleted(level) / total).clamp(0.0, 1.0);
+  }
+
   /// Membuat [LevelBand] dari Map JSON.
   factory LevelBand.fromJson(Map<String, dynamic> json) {
     int start;
