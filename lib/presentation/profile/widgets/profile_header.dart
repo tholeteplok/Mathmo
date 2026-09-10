@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../home/providers/player_profile_provider.dart';
 import '../providers/account_status_provider.dart';
+import '../../shared/widgets/avatar_frame.dart';
 import 'avatar_selection_dialog.dart';
 import 'set_username_dialog.dart';
 
@@ -31,19 +32,19 @@ class ProfileHeader extends ConsumerWidget {
     final (badgeText, badgeBg, badgeColor, badgeIcon) = switch (accountState.status) {
       AccountStatus.guest => (
         'Akun Tamu · Main Lokal',
-        const Color(0xFFF3EDD9),
+        AppTheme.badgeGuestBg,
         AppTheme.colorTaupe,
         AppIcons.shield,
       ),
       AccountStatus.anonymous => (
         'Akun Anonim (Cloud)',
-        const Color(0xFFE5F1F8),
-        const Color(0xFF2C6D9E),
+        AppTheme.badgeInfoBg,
+        AppTheme.badgeInfoFg,
         AppIcons.cloudSync,
       ),
       AccountStatus.linked => (
         'Terhubung dengan Google',
-        const Color(0xFFE8F5E9),
+        AppTheme.colorSuccessSoft,
         AppTheme.colorSage,
         AppIcons.check,
       ),
@@ -67,42 +68,10 @@ class ProfileHeader extends ConsumerWidget {
             clipBehavior: Clip.none,
             alignment: Alignment.bottomRight,
             children: [
-              Container(
-                width: 92,
-                height: 92,
-                decoration: BoxDecoration(
-                  color: AppTheme.colorVanillaCard,
-                  borderRadius: BorderRadius.circular(AppTokens.radiusAvatar),
-                  border: Border.all(
-                    color: AppTheme.darkBorder,
-                    width: AppTokens.borderWidthDefault,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: AppTheme.darkBorder,
-                      offset: Offset(0, 4),
-                      blurRadius: 0,
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppTokens.radiusAvatar - 2),
-                  child: avatarAsset != null
-                      ? Image.asset(
-                          avatarAsset,
-                          fit: BoxFit.cover,
-                        )
-                      : Center(
-                          child: Text(
-                            initialLetter,
-                            style: const TextStyle(
-                              fontSize: 40,
-                              fontWeight: FontWeight.w900,
-                              color: AppTheme.colorEspresso,
-                            ),
-                          ),
-                        ),
-                ),
+              AvatarFrame(
+                avatarAsset: avatarAsset,
+                initialLetter: initialLetter,
+                size: 92,
               ),
 
               // Badge Edit Avatar (Top-Right)
@@ -174,7 +143,7 @@ class ProfileHeader extends ConsumerWidget {
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: AppTheme.colorVanillaCard,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppTokens.radiusMini),
                     border: Border.all(
                       color: AppTheme.darkBorder,
                       width: 1,

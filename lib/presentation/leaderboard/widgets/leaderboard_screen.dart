@@ -10,8 +10,10 @@ import '../../../domain/models/leaderboard_entry.dart';
 import '../../game/providers/level_band_theme_provider.dart';
 import '../../profile/providers/account_status_provider.dart';
 import '../../profile/widgets/set_username_dialog.dart';
+import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/chunky_button.dart';
 import '../../shared/widgets/chunky_card.dart';
+import '../../shared/widgets/segmented_pill.dart';
 import '../providers/leaderboard_provider.dart';
 
 /// Layar Papan Peringkat Global / Kohor Harian (LeaderboardScreen - /leaderboard).
@@ -48,33 +50,11 @@ class LeaderboardScreen extends ConsumerWidget {
         body: SafeArea(
           child: Column(
             children: [
-              // Top Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    ChunkyButton(
-                      onPressed: () => context.go('/'),
-                      backgroundColor: AppTheme.colorVanillaCard,
-                      borderColor: AppTheme.darkBorder,
-                      shadowColor: AppTheme.darkBorder,
-                      padding: const EdgeInsets.all(10),
-                      child: const Icon(
-                        AppIcons.back,
-                        size: 20,
-                        color: AppTheme.colorWoodDark,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Text(
-                      'Papan Peringkat',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: AppTheme.colorEspresso,
-                          ),
-                    ),
-                  ],
-                ),
+              // Top Bar tersentral
+              AppHeader(
+                title: 'Papan Peringkat',
+                showStats: false,
+                onBackTap: () => context.go('/'),
               ),
 
               // Mode Toggle Pill (Harian / Semua Waktu)
@@ -126,85 +106,17 @@ class _ModeToggle extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: AppTheme.colorVanillaCard,
-          borderRadius: BorderRadius.circular(AppTokens.radiusButton),
-          border: Border.all(
-            color: AppTheme.darkBorder,
-            width: AppTokens.borderWidthDefault,
-          ),
-        ),
-        child: Row(
-          children: [
-            _ModeTab(
-              label: '🏆  Harian',
-              isSelected: mode == LeaderboardMode.daily,
-              onTap: () => ref.read(leaderboardModeProvider.notifier).state =
-                  LeaderboardMode.daily,
-            ),
-            _ModeTab(
-              label: '⭐  Semua Waktu',
-              isSelected: mode == LeaderboardMode.allTime,
-              onTap: () => ref.read(leaderboardModeProvider.notifier).state =
-                  LeaderboardMode.allTime,
-            ),
-          ],
-        ),
+      child: SegmentedPill(
+        labels: const ['🏆  Harian', '⭐  Semua Waktu'],
+        selectedIndex: mode == LeaderboardMode.daily ? 0 : 1,
+        onSelected: (i) => ref.read(leaderboardModeProvider.notifier).state =
+            i == 0 ? LeaderboardMode.daily : LeaderboardMode.allTime,
       ),
     );
   }
 }
 
-class _ModeTab extends StatelessWidget {
-  const _ModeTab({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? AppTheme.colorWoodMedium : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppTokens.radiusButton - 4),
-            boxShadow: isSelected
-                ? [
-                    const BoxShadow(
-                      color: AppTheme.colorWoodDark,
-                      offset: Offset(0, 2),
-                      blurRadius: 0,
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: isSelected ? Colors.white : AppTheme.colorTaupe,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Selector tab band horizontal
+/// Selector tab band horizontal — ChunkyButton sentral per item.
 class _BandTabsSelector extends ConsumerWidget {
   const _BandTabsSelector();
 
@@ -229,45 +141,32 @@ class _BandTabsSelector extends ConsumerWidget {
                   : band.id;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () {
+                child: ChunkyButton(
+                  onPressed: () {
                     ref.read(leaderboardSelectedBandProvider.notifier).state =
                         band.id;
                   },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppTheme.colorWoodMedium
-                          : AppTheme.colorVanillaCard,
-                      borderRadius:
-                          BorderRadius.circular(AppTokens.radiusPill),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppTheme.colorWoodDark
-                            : AppTheme.darkBorder,
-                        width: AppTokens.borderWidthDefault,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: isSelected
-                              ? AppTheme.colorWoodDark
-                              : AppTheme.darkBorder,
-                          offset: const Offset(0, 2),
-                          blurRadius: 0,
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      bandLabel,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: isSelected ? Colors.white : AppTheme.colorWoodDark,
-                      ),
+                  backgroundColor: isSelected
+                      ? AppTheme.colorWoodMedium
+                      : AppTheme.colorVanillaCard,
+                  borderColor: isSelected
+                      ? AppTheme.colorWoodDark
+                      : AppTheme.darkBorder,
+                  shadowColor: isSelected
+                      ? AppTheme.colorWoodDark
+                      : AppTheme.darkBorder,
+                  borderWidth: AppTokens.borderWidthDefault,
+                  borderRadius: AppTokens.radiusPill,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    bandLabel,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: isSelected ? Colors.white : AppTheme.colorWoodDark,
                     ),
                   ),
                 ),

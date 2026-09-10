@@ -19,6 +19,9 @@ class AppTokens {
   static const double radiusCard = 26.0; // kartu soal, kartu skor
   static const double radiusButton = 22.0; // tombol jawaban / aksi
   static const double radiusPill = 16.0; // badge streak/XP
+  static const double radiusIcon = 12.0; // ikon section, tombol back kecil
+  static const double radiusBar = 8.0; // progress bar / track tipis
+  static const double radiusMini = 6.0; // tombol mini (edit username)
 
   // ── Rotasi elemen non-kritis (kesan playful hand-drawn) ───────────
   static const double rotationSubtleNegative = -0.035; // radian, ≈ -2°

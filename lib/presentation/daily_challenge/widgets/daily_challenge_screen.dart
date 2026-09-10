@@ -191,9 +191,9 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     final profile = ref.watch(playerProfileProvider).valueOrNull;
 
     final canvasColor =
-        themeAsync.valueOrNull?.canvasColor ?? const Color(0xFFEAF3DE);
+        themeAsync.valueOrNull?.canvasColor ?? AppTheme.fallbackCanvas;
     final accentColor =
-        themeAsync.valueOrNull?.accentColor ?? const Color(0xFF639922);
+        themeAsync.valueOrNull?.accentColor ?? AppTheme.fallbackAccent;
 
     return PopScope(
       canPop: false,
@@ -274,9 +274,9 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                             height: 16.0,
                             decoration: BoxDecoration(
                               color: AppTheme.colorVanillaCard,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppTokens.radiusBar),
                               border: Border.all(
-                                color: const Color(0xFFDECFA8),
+                                color: AppTheme.colorCardBorder,
                                 width: AppTokens.borderWidthDefault,
                               ),
                             ),
@@ -413,7 +413,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8F5E9),
+                        color: AppTheme.colorSuccessSoft,
                         borderRadius: BorderRadius.circular(AppTokens.radiusPill),
                         border: Border.all(
                           color: const Color(0xFF4CAF50),
@@ -424,7 +424,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.cloud_done_rounded,
-                              size: 14, color: Color(0xFF2E7D32)),
+                              size: 14, color: AppTheme.colorSuccess),
                           SizedBox(width: 6),
                           Text(
                             'Skor terkirim ke papan peringkat!',
@@ -575,7 +575,7 @@ class DailyChallengeLockedView extends ConsumerWidget {
                         borderRadius:
                             BorderRadius.circular(AppTokens.radiusPill),
                         border: Border.all(
-                          color: const Color(0xFFDECFA8),
+                          color: AppTheme.colorCardBorder,
                           width: AppTokens.borderWidthSubtle,
                         ),
                       ),

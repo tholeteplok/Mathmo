@@ -108,8 +108,8 @@ class _AudioCard extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppTheme.colorSuccessSoft,
+                  borderRadius: BorderRadius.circular(AppTokens.radiusIcon),
                   border: Border.all(
                     color: AppTheme.darkBorder,
                     width: AppTokens.borderWidthSubtle,
@@ -117,7 +117,7 @@ class _AudioCard extends ConsumerWidget {
                 ),
                 child: const Icon(
                   Icons.volume_up_rounded,
-                  color: Color(0xFF2E7D32),
+                  color: AppTheme.colorSuccess,
                   size: 22,
                 ),
               ),
@@ -234,8 +234,8 @@ class _AudioControlRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isMuted
                       ? const Color(0xFFE0E0E0)
-                      : const Color(0xFF639922),
-                  borderRadius: BorderRadius.circular(15),
+                      : AppTheme.fallbackAccent,
+                  borderRadius: BorderRadius.circular(AppTokens.radiusPill),
                   border: Border.all(
                     color: AppTheme.darkBorder,
                     width: AppTokens.borderWidthDefault,
@@ -271,10 +271,10 @@ class _AudioControlRow extends StatelessWidget {
               Expanded(
                 child: SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: const Color(0xFF639922),
+                    activeTrackColor: AppTheme.fallbackAccent,
                     inactiveTrackColor: const Color(0xFFDCEDC8),
                     thumbColor: Colors.white,
-                    overlayColor: const Color(0xFF639922).withValues(alpha: 0.2),
+                    overlayColor: AppTheme.fallbackAccent.withValues(alpha: 0.2),
                     trackHeight: 6,
                     thumbShape: const RoundSliderThumbShape(
                       enabledThumbRadius: 10,
@@ -329,7 +329,7 @@ class _GameplayCard extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF3E0),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusIcon),
                   border: Border.all(
                     color: AppTheme.darkBorder,
                     width: AppTokens.borderWidthSubtle,
@@ -399,9 +399,9 @@ class _GameplayCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
                     color: settings.hapticEnabled
-                        ? const Color(0xFF639922)
+                        ? AppTheme.fallbackAccent
                         : const Color(0xFFE0E0E0),
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(AppTokens.radiusPill),
                     border: Border.all(
                       color: AppTheme.darkBorder,
                       width: AppTokens.borderWidthDefault,
@@ -476,7 +476,7 @@ class _GameplayCard extends StatelessWidget {
                   style: GoogleFonts.quicksand(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF2E7D32),
+                    color: AppTheme.colorSuccess,
                   ),
                 ),
               ),
@@ -506,9 +506,9 @@ class _AboutCard extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: AppTheme.colorVanillaCard,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTokens.radiusButton),
               border: Border.all(
-                color: const Color(0xFFDECFA8),
+                color: AppTheme.colorCardBorder,
                 width: AppTokens.borderWidthDefault,
               ),
               boxShadow: [
@@ -520,7 +520,7 @@ class _AboutCard extends StatelessWidget {
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppTokens.radiusPill),
               child: Image.asset(
                 'assets/icon/app_launcher.png',
                 fit: BoxFit.cover,
@@ -557,7 +557,7 @@ class _AboutCard extends StatelessWidget {
               color: AppTheme.colorWoodPlank,
               borderRadius: BorderRadius.circular(AppTokens.radiusPill),
               border: Border.all(
-                color: const Color(0xFFDECFA8),
+                color: AppTheme.colorCardBorder,
                 width: AppTokens.borderWidthSubtle,
               ),
             ),
@@ -580,7 +580,7 @@ class _AboutCard extends StatelessWidget {
               const Icon(
                 Icons.verified_user_rounded,
                 size: 16,
-                color: Color(0xFF2E7D32),
+                color: AppTheme.colorSuccess,
               ),
               const SizedBox(width: 6),
               Flexible(

@@ -13,7 +13,7 @@ class BadgePill extends StatelessWidget {
     required this.value,
     required this.iconColor,
     this.backgroundColor = AppTheme.colorVanillaCard,
-    this.borderColor = const Color(0xFFDECFA8),
+    this.borderColor = AppTheme.colorCardBorder,
     this.label,
     this.onTap,
   });

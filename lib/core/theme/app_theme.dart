@@ -52,6 +52,33 @@ class AppTheme {
   /// Border color default (diarahkan ke [colorEspresso] demi kompatibilitas).
   static const Color darkBorder = colorEspresso;
 
+  // ── Token semantik tersentralisasi (hasil audit UI) ───────────────
+  /// Border cream kartu vanilla (menggantikan literal 0xFFDECFA8).
+  static const Color colorCardBorder = Color(0xFFDECFA8);
+
+  /// Hijau sukses tegas (menggantikan literal 0xFF2E7D32).
+  static const Color colorSuccess = Color(0xFF2E7D32);
+
+  /// Latar hijau lembut (menggantikan literal 0xFFE8F5E9).
+  static const Color colorSuccessSoft = Color(0xFFE8F5E9);
+
+  /// Merah bahaya tegas (menggantikan literal 0xFFD32F2F).
+  static const Color colorDanger = Color(0xFFD32F2F);
+
+  /// Latar merah lembut (menggantikan literal 0xFFFFF2EE).
+  static const Color colorDangerSoft = Color(0xFFFFF2EE);
+
+  /// Fallback kanvas saat theme provider belum siap.
+  static const Color fallbackCanvas = Color(0xFFEAF3DE);
+
+  /// Fallback aksen saat theme provider belum siap.
+  static const Color fallbackAccent = Color(0xFF639922);
+
+  /// Badge status tamu / anonim / info.
+  static const Color badgeGuestBg = Color(0xFFF3EDD9);
+  static const Color badgeInfoBg = Color(0xFFE5F1F8);
+  static const Color badgeInfoFg = Color(0xFF2C6D9E);
+
   /// Menghasilkan [ThemeData] utama aplikasi.
   static ThemeData get lightTheme {
     final baseTextTheme = GoogleFonts.quicksandTextTheme();

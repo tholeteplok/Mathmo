@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/app_tokens.dart';
 import 'badge_pill.dart';
 import 'chunky_button.dart';
 
@@ -11,8 +12,9 @@ import 'chunky_button.dart';
 class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   const AppHeader({
     super.key,
-    required this.streak,
-    required this.xp,
+    this.streak = 0,
+    this.xp = 0,
+    this.showStats = true,
     this.leading,
     this.title,
     this.actions,
@@ -22,6 +24,9 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
 
   final int streak;
   final int xp;
+
+  /// Sembunyikan badge streak/XP di layar sekunder (leaderboard, profil, dsb).
+  final bool showStats;
   final Widget? leading;
   final String? title;
   final List<Widget>? actions;
@@ -52,7 +57,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                     width: 40,
                     height: 40,
                     padding: EdgeInsets.zero,
-                    borderRadius: 12,
+                    borderRadius: AppTokens.radiusIcon,
                     child: const Icon(
                       Icons.arrow_back_rounded,
                       size: 20,
@@ -64,11 +69,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                   leading!,
                   const SizedBox(width: 8),
                 ],
-                BadgePill(
-                  icon: AppIcons.streak,
-                  value: '$streak',
-                  iconColor: AppTheme.colorCoral,
-                ),
+                if (showStats)
+                  BadgePill(
+                    icon: AppIcons.streak,
+                    value: '$streak',
+                    iconColor: AppTheme.colorCoral,
+                  ),
               ],
             ),
 
@@ -90,11 +96,12 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                BadgePill(
-                  icon: AppIcons.xp,
-                  value: '$xp',
-                  iconColor: AppTheme.colorHoney,
-                ),
+                if (showStats)
+                  BadgePill(
+                    icon: AppIcons.xp,
+                    value: '$xp',
+                    iconColor: AppTheme.colorHoney,
+                  ),
                 if (actions != null) ...[
                   const SizedBox(width: 8),
                   ...actions!,

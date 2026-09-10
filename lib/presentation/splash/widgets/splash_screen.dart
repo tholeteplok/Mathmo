@@ -92,9 +92,9 @@ class _SplashScreenState extends State<SplashScreen>
                       height: 80,
                       decoration: BoxDecoration(
                         color: AppTheme.colorVanillaCard,
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(AppTokens.radiusButton),
                         border: Border.all(
-                          color: const Color(0xFFDECFA8),
+                          color: AppTheme.colorCardBorder,
                           width: AppTokens.borderWidthDefault,
                         ),
                         boxShadow: [
@@ -107,7 +107,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ],
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(19),
+                        borderRadius: BorderRadius.circular(AppTokens.radiusButton),
                         child: Image.asset(
                           'assets/icon/app_launcher.png',
                           fit: BoxFit.cover,
@@ -171,7 +171,7 @@ class _SplashScreenState extends State<SplashScreen>
                     color: AppTheme.colorVanillaCard,
                     borderRadius: BorderRadius.circular(AppTokens.radiusPill),
                     border: Border.all(
-                      color: const Color(0xFFDECFA8),
+                      color: AppTheme.colorCardBorder,
                       width: AppTokens.borderWidthDefault,
                     ),
                     boxShadow: [
@@ -210,9 +210,9 @@ class _SplashScreenState extends State<SplashScreen>
                           height: 12,
                           decoration: BoxDecoration(
                             color: AppTheme.colorVanillaCard,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(AppTokens.radiusBar),
                             border: Border.all(
-                              color: const Color(0xFFDECFA8),
+                              color: AppTheme.colorCardBorder,
                               width: AppTokens.borderWidthSubtle,
                             ),
                             boxShadow: [
@@ -232,7 +232,7 @@ class _SplashScreenState extends State<SplashScreen>
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: AppTheme.colorHoney,
-                                  borderRadius: BorderRadius.circular(5),
+                                  borderRadius: BorderRadius.circular(AppTokens.radiusMini),
                                 ),
                               ),
                             ),

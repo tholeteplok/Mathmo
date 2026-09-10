@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../../domain/models/session_result.dart';
 import '../../home/providers/level_stars_provider.dart';
@@ -71,9 +72,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final profile = ref.watch(playerProfileProvider).valueOrNull;
 
     final canvasColor =
-        themeAsync.valueOrNull?.canvasColor ?? const Color(0xFFEAF3DE);
+        themeAsync.valueOrNull?.canvasColor ?? AppTheme.fallbackCanvas;
     final accentColor =
-        themeAsync.valueOrNull?.accentColor ?? const Color(0xFF639922);
+        themeAsync.valueOrNull?.accentColor ?? AppTheme.fallbackAccent;
 
     // Dengarkan saat sesi selesai untuk navigasi otomatis ke /results
     ref.listen<GameSessionState>(gameSessionProvider(_args), (prev, next) {
@@ -196,7 +197,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       height: 16.0,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTokens.radiusBar),
         border: Border.all(
           color: const Color(0xFF232B1E),
           width: AppTokens.borderWidthDefault,

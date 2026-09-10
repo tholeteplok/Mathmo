@@ -76,7 +76,7 @@ class _ChunkyButtonState extends State<ChunkyButton> {
 
     final effectiveBorderColor = widget.borderColor ??
         (isWhiteOrVanilla
-            ? const Color(0xFFDECFA8)
+            ? AppTheme.colorCardBorder
             : _computeDarkerLip(widget.backgroundColor));
 
     final effectiveShadowColor = widget.shadowColor ??

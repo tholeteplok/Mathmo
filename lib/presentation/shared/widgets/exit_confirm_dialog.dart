@@ -90,7 +90,7 @@ class ExitConfirmDialog extends StatelessWidget {
                 Expanded(
                   child: ChunkyButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    backgroundColor: const Color(0xFFFFF2EE),
+                    backgroundColor: AppTheme.colorDangerSoft,
                     borderColor: const Color(0xFFF0B8AC),
                     shadowColor: const Color(0xFFDE998B),
                     borderWidth: AppTokens.borderWidthDefault,
@@ -102,7 +102,7 @@ class ExitConfirmDialog extends StatelessWidget {
                       children: [
                         const Icon(
                           Icons.close_rounded,
-                          color: Color(0xFFD32F2F), // Merah tegas
+                          color: AppTheme.colorDanger, // Merah tegas
                           size: 22,
                         ),
                         const SizedBox(width: 6),
@@ -111,7 +111,7 @@ class ExitConfirmDialog extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFFD32F2F),
+                            color: AppTheme.colorDanger,
                           ),
                         ),
                       ],
@@ -124,7 +124,7 @@ class ExitConfirmDialog extends StatelessWidget {
                 Expanded(
                   child: ChunkyButton(
                     onPressed: () => Navigator.of(context).pop(true),
-                    backgroundColor: const Color(0xFFF1F8ED),
+                    backgroundColor: AppTheme.colorSuccessSoft,
                     borderColor: const Color(0xFFBDDFB5),
                     shadowColor: const Color(0xFFA1CF97),
                     borderWidth: AppTokens.borderWidthDefault,
@@ -136,7 +136,7 @@ class ExitConfirmDialog extends StatelessWidget {
                       children: [
                         const Icon(
                           Icons.check_rounded,
-                          color: Color(0xFF2E7D32), // Hijau tegas
+                          color: AppTheme.colorSuccess, // Hijau tegas
                           size: 22,
                         ),
                         const SizedBox(width: 6),
@@ -145,7 +145,7 @@ class ExitConfirmDialog extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF2E7D32),
+                            color: AppTheme.colorSuccess,
                           ),
                         ),
                       ],

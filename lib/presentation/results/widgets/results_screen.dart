@@ -41,9 +41,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   Widget build(BuildContext context) {
     final themeAsync = ref.watch(levelBandThemeProvider);
     final canvasColor =
-        themeAsync.valueOrNull?.canvasColor ?? const Color(0xFFEAF3DE);
+        themeAsync.valueOrNull?.canvasColor ?? AppTheme.fallbackCanvas;
     final accentColor =
-        themeAsync.valueOrNull?.accentColor ?? const Color(0xFF639922);
+        themeAsync.valueOrNull?.accentColor ?? AppTheme.fallbackAccent;
 
     final accuracyPercent = (result.accuracy * 100).round();
     final avgTimeSec = (result.avgResponseTimeMs / 1000).toStringAsFixed(1);
@@ -190,7 +190,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                     const Divider(
                       height: 24,
                       thickness: 1.5,
-                      color: Color(0xFFDECFA8),
+                      color: AppTheme.colorCardBorder,
                     ),
                     _buildXpRow(
                       context,
