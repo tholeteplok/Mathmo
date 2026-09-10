@@ -198,7 +198,7 @@ class AppTheme {
   static TextStyle headerTitleStyle({
     double fontSize = 19,
     FontWeight fontWeight = FontWeight.w800,
-    Color color = colorEspresso,
+    Color color = colorWoodMedium,
   }) {
     return TextStyle(
       fontFamily: headerFontFamily,
