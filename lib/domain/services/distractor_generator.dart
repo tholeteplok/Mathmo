@@ -79,6 +79,7 @@ class DistractorGenerator {
     final ops = question.operands;
     if (ops.length < 2) return candidates;
 
+    // Soal multistep 3-operand memakai dua operand pertama untuk taksonomi error.
     final a = ops[0];
     final b = ops[1];
 

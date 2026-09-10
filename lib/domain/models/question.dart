@@ -273,6 +273,11 @@ class Question {
 
   /// String ekspresi matematika untuk ditampilkan di UI (mis. "7 × 8").
   String get displayExpression {
+    if (operation == Operation.mixedMultistep && operands.length == 3) {
+      // factKey menyimpan pola: '(a+b)x(c)' atau '(a-b)x(c)'.
+      final inner = factKey.split('x').first;
+      return '$inner × ${operands[2]}';
+    }
     if (operands.length == 2) {
       return '${operands[0]} ${operation.symbol} ${operands[1]}';
     }

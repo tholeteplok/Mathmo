@@ -200,6 +200,9 @@ class QuestionGenerator {
         op1 = dividend;
 
       case Operation.mixed || Operation.mixedMultistep:
+        if (t.operation == Operation.mixedMultistep) {
+          return _tryGenerateMultistep(t, rng);
+        }
         correct = op1 + op2;
     }
 
@@ -232,6 +235,38 @@ class QuestionGenerator {
       Operation.divide => '$a/$b',
       Operation.mixed || Operation.mixedMultistep => '$a+${b}_mix',
     };
+  }
+
+  /// Sampling soal multi-langkah (a ± b) × c dengan 3 operand.
+  Question? _tryGenerateMultistep(QuestionTemplate t, Random rng) {
+    final a = 2 + rng.nextInt(11); // 2..12
+    final b = 2 + rng.nextInt(11);
+    final c = 2 + rng.nextInt(8); // 2..9
+    final isAdd = rng.nextBool();
+    final useAdd = isAdd || a == b;
+    final innerValue = useAdd ? a + b : (a - b).abs();
+    // Pastikan inner positif dan tidak nol agar soal valid.
+    if (innerValue <= 0) return null;
+    final correct = innerValue * c;
+    final sign = useAdd ? '+' : '-';
+    final factKey = '($a$sign$b)x$c';
+    final id = 'q_${factKey}_${rng.nextInt(1000000)}';
+
+    return Question(
+      id: id,
+      factKey: factKey,
+      operation: Operation.mixedMultistep,
+      operands: [a, b, c],
+      correctAnswer: correct,
+      difficulty: QuestionDifficulty(
+        operandMagnitude: _resolveMagnitude(a > b ? a : b, c),
+        structuralProperty: StructuralProperty.none,
+        strategyTag: StrategyTag.procedural,
+        stepCount: 2,
+      ),
+      levelBand: t.levelBand,
+      level: t.level,
+    );
   }
 
   /// Penentuan template kognitif berdasarkan level pemain (§1.2 & §5 level_bands.json).
@@ -322,7 +357,18 @@ class QuestionGenerator {
         ),
       };
     } else if (level <= 50) {
-      // Advanced: 2-3 digit mixed
+      // Advanced: 2-3 digit mixed + 25% multistep
+      if (rng.nextInt(4) == 0) {
+        return QuestionTemplate(
+          operation: Operation.mixedMultistep,
+          rangeA: const OperandRange(min: 2, max: 12),
+          rangeB: const OperandRange(min: 2, max: 9),
+          strategyTag: StrategyTag.procedural,
+          levelBand: 'advanced',
+          level: level,
+          stepCount: 2,
+        );
+      }
       final isMul = rng.nextBool();
       if (isMul) {
         return QuestionTemplate(
@@ -344,6 +390,18 @@ class QuestionGenerator {
         requireCarry: true,
       );
     } else {
+      // Expert: 3-digit / mixed + 50% multistep
+      if (rng.nextBool()) {
+        return QuestionTemplate(
+          operation: Operation.mixedMultistep,
+          rangeA: const OperandRange(min: 2, max: 12),
+          rangeB: const OperandRange(min: 2, max: 9),
+          strategyTag: StrategyTag.procedural,
+          levelBand: 'expert',
+          level: level,
+          stepCount: 2,
+        );
+      }
       // Expert: 3-digit / mixed
       return QuestionTemplate(
         operation: Operation.multiply,

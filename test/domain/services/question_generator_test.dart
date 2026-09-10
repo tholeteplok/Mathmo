@@ -83,5 +83,25 @@ void main() {
         expect(q.operands.length, equals(2));
       },
     );
+
+    test('generates mixedMultistep questions at expert levels', () {
+      var found = 0;
+      for (var i = 0; i < 200; i++) {
+        final q = generator.generateForLevel(60);
+        if (q.operation == Operation.mixedMultistep) {
+          found++;
+          expect(q.operands.length, equals(3));
+          expect(q.difficulty.stepCount, equals(2));
+          final a = q.operands[0];
+          final b = q.operands[1];
+          final c = q.operands[2];
+          final inner = q.factKey.contains('($a+$b)') ? a + b : (a - b).abs();
+          expect(q.correctAnswer, equals(inner * c));
+          expect(q.correctAnswer, greaterThan(0));
+          expect(q.displayExpression, contains('× $c'));
+        }
+      }
+      expect(found, greaterThan(0));
+    });
   });
 }
