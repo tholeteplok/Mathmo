@@ -7,11 +7,13 @@ import '../../../core/theme/app_tokens.dart';
 import '../../../domain/models/session_result.dart';
 import '../../home/providers/level_stars_provider.dart';
 import '../../home/providers/player_profile_provider.dart';
+import '../../profile/providers/account_status_provider.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/exit_confirm_dialog.dart';
 import '../providers/game_session_provider.dart';
 import '../providers/level_band_theme_provider.dart';
 import '../state/game_session_state.dart';
+import '../../game/providers/game_dependencies_provider.dart';
 import 'answer_grid.dart';
 import 'countdown_progress_bar.dart';
 import 'feedback_overlay.dart';
@@ -86,11 +88,34 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               accuracy: next.result.accuracy,
             );
 
-        // Catat rekor skor level & terapkan best-score delta
-        ref.read(playerProfileProvider.notifier).recordLevelScore(
-              level: widget.level,
-              sessionScore: next.result.totalScore,
-            );
+        // Catat rekor skor level & terapkan best-score delta, lalu dorong
+        // total terbaru ke cloud agar tab Semua Waktu sinkron (max-safety).
+        // Fire-and-forget: kegagalan jaringan tidak menghalangi hasil.
+        (() async {
+          try {
+            final delta = await ref
+                .read(playerProfileProvider.notifier)
+                .recordLevelScore(
+                  level: widget.level,
+                  sessionScore: next.result.totalScore,
+                );
+            if (delta <= 0) return;
+            final accountState =
+                ref.read(accountStatusProvider).valueOrNull;
+            final username = accountState?.username;
+            if (username == null || username.isEmpty) return;
+            final latest =
+                ref.read(playerProfileProvider).valueOrNull;
+            if (latest == null) return;
+            await ref.read(leaderboardRepositoryProvider).syncProfileTotal(
+                  username: username,
+                  avatarId: latest.avatarId,
+                  totalScore: latest.totalScore,
+                );
+          } catch (_) {
+            // Abaikan: skor lokal sudah tersimpan, sinkron bisa susul.
+          }
+        })();
 
         // Perbarui bintang level secara instan di memori (0 ms delay)
         ref.read(levelStarsProvider.notifier).recordStars(

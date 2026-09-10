@@ -265,19 +265,16 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
         'submitted_at': FieldValue.serverTimestamp(),
       }).timeout(const Duration(seconds: 10));
 
-      // 2. Sinkronisasi total_score + avatar_id ke /profiles/{currentUid}
-      //    agar all-time leaderboard selalu up-to-date
+      // 2. Best-effort sinkronisasi total_score ke /profiles/{currentUid}
+      //    Daily TIDAK menambah skor — ini hanya menyelaraskan agar all-time
+      //    tidak tertinggal. Wajib semantik max(): nilai lama tidak menimpa baru.
       if (totalScore != null) {
-        await firestore
-            .collection(profilesCollection)
-            .doc(currentUid)
-            .set({
-              'username': username,
-              'avatar_id': avatarId,
-              'total_score': totalScore,
-              'updated_at': FieldValue.serverTimestamp(),
-            }, SetOptions(merge: true))
-            .timeout(const Duration(seconds: 10));
+        await _mergeProfileTotalMax(
+          uid: currentUid,
+          username: username,
+          avatarId: avatarId,
+          totalScore: totalScore,
+        );
       }
 
       return const RepoSuccess(null);
@@ -287,5 +284,53 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
         e,
       );
     }
+  }
+
+  @override
+  Future<RepoResult<void>> syncProfileTotal({
+    required String username,
+    String? avatarId,
+    required int totalScore,
+  }) async {
+    try {
+      final currentUid = auth.currentUser?.uid;
+      if (currentUid == null) return const RepoSuccess(null);
+      await _mergeProfileTotalMax(
+        uid: currentUid,
+        username: username,
+        avatarId: avatarId,
+        totalScore: totalScore,
+      );
+      return const RepoSuccess(null);
+    } catch (e) {
+      return RepoFailure(
+        FirebaseErrorMapper.map(e, defaultMessage: 'Gagal menyinkronkan total skor'),
+        e,
+      );
+    }
+  }
+
+  /// Menulis profil dengan semantik max() via transaksi agar nilai lama
+  /// dari snapshot usang tidak pernah menimpa total_score yang lebih baru.
+  Future<void> _mergeProfileTotalMax({
+    required String uid,
+    required String username,
+    String? avatarId,
+    required int totalScore,
+  }) async {
+    final ref = firestore.collection(profilesCollection).doc(uid);
+    await firestore.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      final existing = snap.exists
+          ? (((snap.data()?['total_score'] ?? 0) as num).toInt())
+          : 0;
+      final merged = totalScore > existing ? totalScore : existing;
+      tx.set(ref, {
+        'username': username,
+        'avatar_id': avatarId,
+        'total_score': merged,
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }).timeout(const Duration(seconds: 10));
   }
 }

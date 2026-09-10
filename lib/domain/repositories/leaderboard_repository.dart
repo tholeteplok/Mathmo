@@ -27,10 +27,22 @@ abstract class LeaderboardRepository {
   });
 
   /// Mengunggah hasil tantangan harian pemain ke cloud papan peringkat.
+  ///
+  /// Daily bersifat kompetisi harian murni: tidak mengubah total skor.
+  /// [totalScore] hanya dipakai untuk best-effort sinkronisasi profil agar
+  /// all-time tidak tertinggal jauh (nilai lama tidak pernah menimpa baru).
   Future<RepoResult<void>> submitDailyResult({
     required DailyChallengeResult result,
     required String username,
     String? avatarId,
     int? totalScore,
+  });
+
+  /// Mendorong total skor lokal terbaru ke /profiles agar all-time sinkron.
+  /// Implementasi wajib memakai semantik max(): nilai lama tidak menimpa baru.
+  Future<RepoResult<void>> syncProfileTotal({
+    required String username,
+    String? avatarId,
+    required int totalScore,
   });
 }

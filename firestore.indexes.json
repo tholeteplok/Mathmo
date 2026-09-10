@@ -1,4 +1,4 @@
-﻿{
+{
   "indexes": [
     {
       "collectionGroup": "daily_challenge_results",
@@ -17,6 +17,15 @@
         { "fieldPath": "date", "order": "ASCENDING" },
         { "fieldPath": "correct_count", "order": "ASCENDING" },
         { "fieldPath": "total_time_ms", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "daily_challenge_results",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "band", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "username", "order": "ASCENDING" }
       ]
     }
   ],

@@ -152,13 +152,17 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
       if (username != null && username.isNotEmpty) {
         submitErrMsg = null; // tandai bahwa submit dicoba
         final avatarId = profile?.avatarId;
+        // Baca ulang profil agar totalScore yang dikirim adalah nilai terbaru
+        // (bukan snapshot awal _finishChallenge).
+        final freshTotal = ref.read(playerProfileProvider).valueOrNull?.totalScore
+            ?? profile?.totalScore;
         final submitResult = await ref
             .read(leaderboardRepositoryProvider)
             .submitDailyResult(
               result: result,
               username: username,
               avatarId: avatarId,
-              totalScore: profile?.totalScore,
+              totalScore: freshTotal,
             );
         if (submitResult case RepoFailure(:final reason)) {
           submitErrMsg = reason;

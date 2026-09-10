@@ -40,6 +40,8 @@ class FirebaseErrorMapper {
 
     if (error is FirebaseException) {
       switch (error.code) {
+        case 'failed-precondition':
+          return 'Index database papan peringkat belum aktif. Tunggu beberapa menit lalu coba lagi.';
         case 'unavailable':
           return 'Layanan database belum aktif di server atau koneksi terputus. Pastikan koneksi internet aktif lalu coba lagi beberapa saat.';
         case 'permission-denied':
