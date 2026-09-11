@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../domain/models/player_profile.dart';
 import '../../../domain/repositories/repo_result.dart';
 import '../../game/providers/game_dependencies_provider.dart';
 import '../../home/providers/player_profile_provider.dart';
@@ -89,46 +90,11 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
 
     // Jika user sudah login dan profil lokal belum punya username atau butuh sinkronisasi dari cloud
     if (uid != null && (effectiveUsername == null || effectiveUsername.isEmpty)) {
-      try {
-        final leaderboardRepo = ref.read(leaderboardRepositoryProvider);
-        final cloudRes = await leaderboardRepo.fetchCloudProfile(uid);
-        if (cloudRes is RepoSuccess<Map<String, dynamic>?> && cloudRes.value != null) {
-          final cloudData = cloudRes.value!;
-          final cloudUsername = (cloudData['username'] as String?)?.trim();
-          final cloudAvatarId = cloudData['avatar_id'] as String?;
-          final cloudLevel = ((cloudData['current_level'] ?? 1) as num).toInt();
-          final cloudXp = ((cloudData['total_xp'] ?? 0) as num).toInt();
-          final cloudScore = ((cloudData['total_score'] ?? 0) as num).toInt();
-
-          if (cloudUsername != null && cloudUsername.isNotEmpty) {
-            effectiveUsername = cloudUsername;
-          }
-
-          if (localProfile != null) {
-            final mergedLevel = cloudLevel > localProfile.currentLevel
-                ? cloudLevel
-                : localProfile.currentLevel;
-            final mergedXp = cloudXp > localProfile.totalXp
-                ? cloudXp
-                : localProfile.totalXp;
-            final mergedScore = cloudScore > localProfile.totalScore
-                ? cloudScore
-                : localProfile.totalScore;
-
-            final restored = localProfile.copyWith(
-              username: effectiveUsername ?? localProfile.username,
-              avatarId: cloudAvatarId ?? localProfile.avatarId,
-              currentLevel: mergedLevel,
-              totalXp: mergedXp,
-              totalScore: mergedScore,
-            );
-            await ref.read(playerRepositoryProvider).saveProfile(restored);
-            ref.read(playerProfileProvider.notifier).state = AsyncData(restored);
-          }
-        }
-      } catch (_) {
-        // Fallback offline
-      }
+      effectiveUsername = await _restoreFromCloud(
+        uid: uid,
+        localProfile: localProfile,
+        initialUsername: effectiveUsername,
+      );
     }
 
     return AccountState(
@@ -139,6 +105,58 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
     );
   }
 
+  /// Memulihkan dan menyinkronkan profil pemain dari cloud (/profiles/{uid} & /usernames).
+  Future<String?> _restoreFromCloud({
+    required String uid,
+    required PlayerProfile? localProfile,
+    required String? initialUsername,
+  }) async {
+    String? effectiveUsername = initialUsername;
+    try {
+      final leaderboardRepo = ref.read(leaderboardRepositoryProvider);
+      final cloudRes = await leaderboardRepo.fetchCloudProfile(uid);
+
+      if (cloudRes is RepoSuccess<Map<String, dynamic>?> && cloudRes.value != null) {
+        final cloudData = cloudRes.value!;
+        final cloudUsername = (cloudData['username'] as String?)?.trim();
+        final cloudAvatarId = cloudData['avatar_id'] as String?;
+        final cloudLevel = ((cloudData['current_level'] ?? 1) as num).toInt();
+        final cloudXp = ((cloudData['total_xp'] ?? 0) as num).toInt();
+        final cloudScore = ((cloudData['total_score'] ?? 0) as num).toInt();
+
+        if (cloudUsername != null && cloudUsername.isNotEmpty) {
+          effectiveUsername = cloudUsername;
+        }
+
+        if (localProfile != null) {
+          final mergedLevel = cloudLevel > localProfile.currentLevel
+              ? cloudLevel
+              : localProfile.currentLevel;
+          final mergedXp = cloudXp > localProfile.totalXp
+              ? cloudXp
+              : localProfile.totalXp;
+          final mergedScore = cloudScore > localProfile.totalScore
+              ? cloudScore
+              : localProfile.totalScore;
+
+          final restoredProfile = localProfile.copyWith(
+            username: effectiveUsername ?? localProfile.username,
+            avatarId: cloudAvatarId ?? localProfile.avatarId,
+            currentLevel: mergedLevel,
+            totalXp: mergedXp,
+            totalScore: mergedScore,
+          );
+
+          await ref.read(playerRepositoryProvider).saveProfile(restoredProfile);
+          ref.read(playerProfileProvider.notifier).state = AsyncData(restoredProfile);
+        }
+      }
+    } catch (_) {
+      // Fallback jika fetch cloud profile terkendala jaringan
+    }
+    return effectiveUsername;
+  }
+
   /// Masuk secara anonim ke Firebase.
   Future<RepoResult<String>> signInAnonymously() async {
     state = const AsyncLoading();
@@ -146,13 +164,18 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
     final result = await authRepo.signInAnonymously();
 
     if (result is RepoSuccess<String>) {
+      final uid = result.value;
       final localProfile = ref.read(playerProfileProvider).valueOrNull;
-      final effectiveUsername = authRepo.currentUsername ?? localProfile?.username;
+      final effectiveUsername = await _restoreFromCloud(
+        uid: uid,
+        localProfile: localProfile,
+        initialUsername: authRepo.currentUsername ?? localProfile?.username,
+      );
 
       state = AsyncData(
         AccountState(
           status: AccountStatus.anonymous,
-          userId: result.value,
+          userId: uid,
           username: effectiveUsername,
           hasVerifiedSession: true,
         ),
@@ -179,51 +202,11 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
     if (result is RepoSuccess<String>) {
       final uid = result.value;
       final localProfile = ref.read(playerProfileProvider).valueOrNull;
-
-      // Ambil dan pulihkan data profil cloud (/profiles/{uid}) jika ada
-      String? effectiveUsername = authRepo.currentUsername ?? localProfile?.username;
-      try {
-        final leaderboardRepo = ref.read(leaderboardRepositoryProvider);
-        final cloudRes = await leaderboardRepo.fetchCloudProfile(uid);
-
-        if (cloudRes is RepoSuccess<Map<String, dynamic>?> && cloudRes.value != null) {
-          final cloudData = cloudRes.value!;
-          final cloudUsername = (cloudData['username'] as String?)?.trim();
-          final cloudAvatarId = cloudData['avatar_id'] as String?;
-          final cloudLevel = ((cloudData['current_level'] ?? 1) as num).toInt();
-          final cloudXp = ((cloudData['total_xp'] ?? 0) as num).toInt();
-          final cloudScore = ((cloudData['total_score'] ?? 0) as num).toInt();
-
-          if (cloudUsername != null && cloudUsername.isNotEmpty) {
-            effectiveUsername = cloudUsername;
-          }
-
-          if (localProfile != null) {
-            final mergedLevel = cloudLevel > localProfile.currentLevel
-                ? cloudLevel
-                : localProfile.currentLevel;
-            final mergedXp = cloudXp > localProfile.totalXp
-                ? cloudXp
-                : localProfile.totalXp;
-            final mergedScore = cloudScore > localProfile.totalScore
-                ? cloudScore
-                : localProfile.totalScore;
-
-            final restoredProfile = localProfile.copyWith(
-              username: effectiveUsername ?? localProfile.username,
-              avatarId: cloudAvatarId ?? localProfile.avatarId,
-              currentLevel: mergedLevel,
-              totalXp: mergedXp,
-              totalScore: mergedScore,
-            );
-
-            await ref.read(playerRepositoryProvider).saveProfile(restoredProfile);
-            ref.read(playerProfileProvider.notifier).state = AsyncData(restoredProfile);
-          }
-        }
-      } catch (_) {
-        // Fallback jika fetch cloud profile terkendala jaringan
-      }
+      final effectiveUsername = await _restoreFromCloud(
+        uid: uid,
+        localProfile: localProfile,
+        initialUsername: authRepo.currentUsername ?? localProfile?.username,
+      );
 
       state = AsyncData(
         AccountState(

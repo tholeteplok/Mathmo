@@ -228,6 +228,16 @@ class FirebaseAuthRepository implements AuthRepository {
       if (doc.exists) {
         _cachedUsername = doc.data()?['username'] as String?;
       }
+      if (_cachedUsername == null || _cachedUsername!.trim().isEmpty) {
+        final query = await firestore
+            .collection('usernames')
+            .where('uid', isEqualTo: uid)
+            .limit(1)
+            .get();
+        if (query.docs.isNotEmpty) {
+          _cachedUsername = query.docs.first.data()['username'] as String?;
+        }
+      }
     } catch (_) {
       // Graceful offline fallback
     }

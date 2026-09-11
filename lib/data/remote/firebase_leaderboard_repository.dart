@@ -336,10 +336,30 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
           .doc(uid)
           .get()
           .timeout(const Duration(seconds: 10));
-      if (!doc.exists) {
-        return const RepoSuccess(null);
+      Map<String, dynamic>? data = doc.exists ? doc.data() : null;
+
+      // Fallback: jika profil belum ada atau belum memiliki username,
+      // cari di koleksi /usernames berdasarkan uid pemilik
+      if (data == null || data['username'] == null || (data['username'] as String).trim().isEmpty) {
+        final uQuery = await firestore
+            .collection('usernames')
+            .where('uid', isEqualTo: uid)
+            .limit(1)
+            .get()
+            .timeout(const Duration(seconds: 10));
+        if (uQuery.docs.isNotEmpty) {
+          final uData = uQuery.docs.first.data();
+          final foundUsername = (uData['username'] as String?)?.trim();
+          if (foundUsername != null && foundUsername.isNotEmpty) {
+            data = {
+              ...?data,
+              'username': foundUsername,
+            };
+          }
+        }
       }
-      return RepoSuccess(doc.data());
+
+      return RepoSuccess(data);
     } catch (e) {
       return RepoFailure(
         FirebaseErrorMapper.map(e, defaultMessage: 'Gagal memuat profil pemain dari cloud'),

@@ -256,7 +256,7 @@ class LeaderboardLockedView extends ConsumerWidget {
                               .read(accountStatusProvider.notifier)
                               .signInWithGoogle();
                           if (res.isSuccess && context.mounted) {
-                            await showSetUsernameDialog(context);
+                            await handlePostSignInFlow(context, ref);
                           }
                         },
                         backgroundColor: AppTheme.colorSage,
@@ -289,7 +289,7 @@ class LeaderboardLockedView extends ConsumerWidget {
                               .read(accountStatusProvider.notifier)
                               .signInAnonymously();
                           if (res.isSuccess && context.mounted) {
-                            await showSetUsernameDialog(context);
+                            await handlePostSignInFlow(context, ref);
                           }
                         },
                         backgroundColor: AppTheme.colorWoodMedium,

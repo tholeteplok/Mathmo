@@ -10,6 +10,49 @@ import '../../shared/widgets/chunky_button.dart';
 import '../../shared/widgets/chunky_card.dart';
 import '../providers/account_status_provider.dart';
 
+/// Menampilkan notifikasi selamat datang kembali kepada pemain yang sudah memiliki akun/username.
+void showWelcomeBackGreeting(BuildContext context, String username) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Row(
+        children: [
+          const Icon(Icons.celebration_rounded, color: Colors.white, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Selamat datang kembali, petualang $username!',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: AppTheme.colorWoodDark,
+      duration: const Duration(seconds: 3),
+    ),
+  );
+}
+
+/// Menangani alur setelah proses sign-in berhasil:
+/// - Jika akun belum memiliki username, tampilkan [showSetUsernameDialog].
+/// - Jika akun sudah memiliki username, tampilkan pesan sambutan [showWelcomeBackGreeting].
+Future<void> handlePostSignInFlow(BuildContext context, WidgetRef ref) async {
+  if (!context.mounted) return;
+  final stateAsync = ref.read(accountStatusProvider);
+  final updated = stateAsync.hasValue
+      ? stateAsync.requireValue
+      : await ref.read(accountStatusProvider.future);
+  if (!context.mounted) return;
+  if (!updated.hasUsername) {
+    await showSetUsernameDialog(context);
+  } else if (updated.hasUsername) {
+    showWelcomeBackGreeting(context, updated.username!);
+  }
+}
+
 /// Menampilkan dialog popup pembuatan/pengubahan username pemain.
 Future<String?> showSetUsernameDialog(
   BuildContext context, {

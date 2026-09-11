@@ -28,10 +28,7 @@ class _CreateAccountCtaState extends ConsumerState<CreateAccountCta> {
     setState(() => _isLoading = false);
 
     if (result is RepoSuccess<String>) {
-      final updated = ref.read(accountStatusProvider).valueOrNull;
-      if (updated != null && !updated.hasUsername) {
-        await showSetUsernameDialog(context);
-      }
+      await handlePostSignInFlow(context, ref);
     } else {
       final reason = (result as RepoFailure).reason;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -47,10 +44,7 @@ class _CreateAccountCtaState extends ConsumerState<CreateAccountCta> {
     setState(() => _isLoading = false);
 
     if (result is RepoSuccess<String>) {
-      final updated = ref.read(accountStatusProvider).valueOrNull;
-      if (updated != null && !updated.hasUsername) {
-        await showSetUsernameDialog(context);
-      }
+      await handlePostSignInFlow(context, ref);
     } else {
       final reason = (result as RepoFailure).reason;
       ScaffoldMessenger.of(context).showSnackBar(
