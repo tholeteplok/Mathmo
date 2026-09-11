@@ -7,6 +7,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../../domain/models/leaderboard_entry.dart';
+import '../../../domain/repositories/repo_result.dart';
 import '../../game/providers/level_band_theme_provider.dart';
 import '../../profile/providers/account_status_provider.dart';
 import '../../profile/widgets/set_username_dialog.dart';
@@ -255,8 +256,8 @@ class LeaderboardLockedView extends ConsumerWidget {
                           final res = await ref
                               .read(accountStatusProvider.notifier)
                               .signInWithGoogle();
-                          if (res.isSuccess && context.mounted) {
-                            await handlePostSignInFlow(context, ref);
+                          if (res is RepoSuccess<AccountState> && context.mounted) {
+                            await handlePostSignInFlow(context, ref, accountState: res.value);
                           }
                         },
                         backgroundColor: AppTheme.colorSage,
@@ -288,8 +289,8 @@ class LeaderboardLockedView extends ConsumerWidget {
                           final res = await ref
                               .read(accountStatusProvider.notifier)
                               .signInAnonymously();
-                          if (res.isSuccess && context.mounted) {
-                            await handlePostSignInFlow(context, ref);
+                          if (res is RepoSuccess<AccountState> && context.mounted) {
+                            await handlePostSignInFlow(context, ref, accountState: res.value);
                           }
                         },
                         backgroundColor: AppTheme.colorWoodMedium,

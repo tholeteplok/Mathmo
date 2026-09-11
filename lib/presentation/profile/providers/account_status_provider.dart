@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/models/player_profile.dart';
@@ -72,8 +73,9 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
   FutureOr<AccountState> build() async {
     final authRepo = ref.watch(authRepositoryProvider);
 
-    // Dapatkan username dari profil lokal jika ada
-    final localProfile = ref.watch(playerProfileProvider).valueOrNull;
+    // Dapatkan username dari profil lokal tanpa memasang reactive watch
+    // untuk mencegah circular invalidation loop.
+    final localProfile = ref.read(playerProfileProvider).valueOrNull;
 
     if (!authRepo.isLoggedIn) {
       // Tidak ada sesi Firebase — username lokal boleh ditampilkan di UI
@@ -128,37 +130,44 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
           effectiveUsername = cloudUsername;
         }
 
-        if (localProfile != null) {
-          final mergedLevel = cloudLevel > localProfile.currentLevel
-              ? cloudLevel
-              : localProfile.currentLevel;
-          final mergedXp = cloudXp > localProfile.totalXp
-              ? cloudXp
-              : localProfile.totalXp;
-          final mergedScore = cloudScore > localProfile.totalScore
-              ? cloudScore
-              : localProfile.totalScore;
-
-          final restoredProfile = localProfile.copyWith(
-            username: effectiveUsername ?? localProfile.username,
-            avatarId: cloudAvatarId ?? localProfile.avatarId,
-            currentLevel: mergedLevel,
-            totalXp: mergedXp,
-            totalScore: mergedScore,
-          );
-
-          await ref.read(playerRepositoryProvider).saveProfile(restoredProfile);
-          ref.read(playerProfileProvider.notifier).state = AsyncData(restoredProfile);
+        // Pastikan basis profil tersedia meskipun baru diinstal atau data terhapus
+        final repo = ref.read(playerRepositoryProvider);
+        PlayerProfile baseProfile = localProfile ?? PlayerProfile.initial(playerId: uid);
+        if (localProfile == null) {
+          final res = await repo.getProfile();
+          if (res is RepoSuccess<PlayerProfile>) {
+            baseProfile = res.value;
+          }
         }
+
+        final mergedLevel = cloudLevel > baseProfile.currentLevel
+            ? cloudLevel
+            : baseProfile.currentLevel;
+        final mergedXp = cloudXp > baseProfile.totalXp
+            ? cloudXp
+            : baseProfile.totalXp;
+        final mergedScore = cloudScore > baseProfile.totalScore
+            ? cloudScore
+            : baseProfile.totalScore;
+
+        final restoredProfile = baseProfile.copyWith(
+          username: effectiveUsername ?? baseProfile.username,
+          avatarId: cloudAvatarId ?? baseProfile.avatarId,
+          currentLevel: mergedLevel,
+          totalXp: mergedXp,
+          totalScore: mergedScore,
+        );
+
+        await ref.read(playerProfileProvider.notifier).updateProfile(restoredProfile);
       }
-    } catch (_) {
-      // Fallback jika fetch cloud profile terkendala jaringan
+    } catch (e, stack) {
+      debugPrint('[_restoreFromCloud] Gagal memulihkan profil dari cloud: $e\n$stack');
     }
     return effectiveUsername;
   }
 
   /// Masuk secara anonim ke Firebase.
-  Future<RepoResult<String>> signInAnonymously() async {
+  Future<RepoResult<AccountState>> signInAnonymously() async {
     state = const AsyncLoading();
     final authRepo = ref.read(authRepositoryProvider);
     final result = await authRepo.signInAnonymously();
@@ -172,29 +181,29 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
         initialUsername: authRepo.currentUsername ?? localProfile?.username,
       );
 
-      state = AsyncData(
-        AccountState(
-          status: AccountStatus.anonymous,
-          userId: uid,
-          username: effectiveUsername,
-          hasVerifiedSession: true,
-        ),
+      final accountState = AccountState(
+        status: AccountStatus.anonymous,
+        userId: uid,
+        username: effectiveUsername,
+        hasVerifiedSession: true,
       );
-    } else {
-      state = AsyncData(
-        AccountState(
-          status: AccountStatus.guest,
-          username: ref.read(playerProfileProvider).valueOrNull?.username,
-          hasVerifiedSession: false,
-        ),
-      );
-    }
 
-    return result;
+      state = AsyncData(accountState);
+      return RepoSuccess(accountState);
+    } else {
+      final failure = result as RepoFailure<String>;
+      final guestState = AccountState(
+        status: AccountStatus.guest,
+        username: ref.read(playerProfileProvider).valueOrNull?.username,
+        hasVerifiedSession: false,
+      );
+      state = AsyncData(guestState);
+      return RepoFailure(failure.reason, failure.exception);
+    }
   }
 
   /// Masuk dengan Google.
-  Future<RepoResult<String>> signInWithGoogle() async {
+  Future<RepoResult<AccountState>> signInWithGoogle() async {
     state = const AsyncLoading();
     final authRepo = ref.read(authRepositoryProvider);
     final result = await authRepo.signInWithGoogle();
@@ -208,25 +217,25 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
         initialUsername: authRepo.currentUsername ?? localProfile?.username,
       );
 
-      state = AsyncData(
-        AccountState(
-          status: AccountStatus.linked,
-          userId: uid,
-          username: effectiveUsername,
-          hasVerifiedSession: true,
-        ),
+      final accountState = AccountState(
+        status: AccountStatus.linked,
+        userId: uid,
+        username: effectiveUsername,
+        hasVerifiedSession: true,
       );
-    } else {
-      state = AsyncData(
-        AccountState(
-          status: AccountStatus.guest,
-          username: ref.read(playerProfileProvider).valueOrNull?.username,
-          hasVerifiedSession: false,
-        ),
-      );
-    }
 
-    return result;
+      state = AsyncData(accountState);
+      return RepoSuccess(accountState);
+    } else {
+      final failure = result as RepoFailure<String>;
+      final guestState = AccountState(
+        status: AccountStatus.guest,
+        username: ref.read(playerProfileProvider).valueOrNull?.username,
+        hasVerifiedSession: false,
+      );
+      state = AsyncData(guestState);
+      return RepoFailure(failure.reason, failure.exception);
+    }
   }
 
   /// Keluar dari akun.
@@ -263,9 +272,7 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
       final profile = ref.read(playerProfileProvider).valueOrNull;
       if (profile != null) {
         final updated = profile.copyWith(username: clean);
-        final playerRepo = ref.read(playerRepositoryProvider);
-        await playerRepo.saveProfile(updated);
-        ref.read(playerProfileProvider.notifier).state = AsyncData(updated);
+        await ref.read(playerProfileProvider.notifier).updateProfile(updated);
       }
     }
 

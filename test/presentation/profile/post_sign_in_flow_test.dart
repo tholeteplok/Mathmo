@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mathmo_app/domain/repositories/repo_result.dart';
@@ -18,15 +18,15 @@ class MockAccountStatusNotifier extends AccountStatusNotifier {
   AccountState build() => _initialState;
 
   @override
-  Future<RepoResult<String>> signInWithGoogle() async {
+  Future<RepoResult<AccountState>> signInWithGoogle() async {
     state = AsyncData(_afterSignInState);
-    return const RepoSuccess('uid_123');
+    return RepoSuccess(_afterSignInState);
   }
 
   @override
-  Future<RepoResult<String>> signInAnonymously() async {
+  Future<RepoResult<AccountState>> signInAnonymously() async {
     state = AsyncData(_afterSignInState);
-    return const RepoSuccess('uid_anon');
+    return RepoSuccess(_afterSignInState);
   }
 }
 

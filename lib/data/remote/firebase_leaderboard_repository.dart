@@ -340,7 +340,8 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
 
       // Fallback: jika profil belum ada atau belum memiliki username,
       // cari di koleksi /usernames berdasarkan uid pemilik
-      if (data == null || data['username'] == null || (data['username'] as String).trim().isEmpty) {
+      final existingUsername = data?['username']?.toString().trim();
+      if (data == null || existingUsername == null || existingUsername.isEmpty) {
         final uQuery = await firestore
             .collection('usernames')
             .where('uid', isEqualTo: uid)
@@ -349,7 +350,7 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
             .timeout(const Duration(seconds: 10));
         if (uQuery.docs.isNotEmpty) {
           final uData = uQuery.docs.first.data();
-          final foundUsername = (uData['username'] as String?)?.trim();
+          final foundUsername = uData['username']?.toString().trim();
           if (foundUsername != null && foundUsername.isNotEmpty) {
             data = {
               ...?data,

@@ -24,6 +24,13 @@ class PlayerProfileNotifier extends AsyncNotifier<PlayerProfile> {
     }
   }
 
+  /// Memperbarui profil pemain di state dan menyimpannya ke penyimpanan lokal (Hive).
+  Future<void> updateProfile(PlayerProfile profile) async {
+    state = AsyncData(profile);
+    final repo = ref.read(playerRepositoryProvider);
+    await repo.saveProfile(profile);
+  }
+
   /// Menyelesaikan sesi gameplay secara atomik: menambahkan XP, skor delta, dan menaikkan level
   /// jika performa memenuhi syarat (akurasi >= 70% dan level yang dimainkan >= level saat ini).
   Future<void> completeSession({

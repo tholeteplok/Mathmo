@@ -224,18 +224,23 @@ class FirebaseAuthRepository implements AuthRepository {
 
   Future<void> _loadUsernameForUid(String uid) async {
     try {
-      final doc = await firestore.collection('profiles').doc(uid).get();
+      final doc = await firestore
+          .collection('profiles')
+          .doc(uid)
+          .get()
+          .timeout(const Duration(seconds: 10));
       if (doc.exists) {
-        _cachedUsername = doc.data()?['username'] as String?;
+        _cachedUsername = doc.data()?['username']?.toString().trim();
       }
-      if (_cachedUsername == null || _cachedUsername!.trim().isEmpty) {
+      if (_cachedUsername == null || _cachedUsername!.isEmpty) {
         final query = await firestore
             .collection('usernames')
             .where('uid', isEqualTo: uid)
             .limit(1)
-            .get();
+            .get()
+            .timeout(const Duration(seconds: 10));
         if (query.docs.isNotEmpty) {
-          _cachedUsername = query.docs.first.data()['username'] as String?;
+          _cachedUsername = query.docs.first.data()['username']?.toString().trim();
         }
       }
     } catch (_) {

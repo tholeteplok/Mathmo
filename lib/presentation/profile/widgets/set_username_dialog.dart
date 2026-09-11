@@ -39,17 +39,19 @@ void showWelcomeBackGreeting(BuildContext context, String username) {
 /// Menangani alur setelah proses sign-in berhasil:
 /// - Jika akun belum memiliki username, tampilkan [showSetUsernameDialog].
 /// - Jika akun sudah memiliki username, tampilkan pesan sambutan [showWelcomeBackGreeting].
-Future<void> handlePostSignInFlow(BuildContext context, WidgetRef ref) async {
+Future<void> handlePostSignInFlow(
+  BuildContext context,
+  WidgetRef ref, {
+  AccountState? accountState,
+}) async {
   if (!context.mounted) return;
-  final stateAsync = ref.read(accountStatusProvider);
-  final updated = stateAsync.hasValue
-      ? stateAsync.requireValue
-      : await ref.read(accountStatusProvider.future);
+  final AccountState state = accountState ??
+      await ref.read(accountStatusProvider.future);
   if (!context.mounted) return;
-  if (!updated.hasUsername) {
+  if (!state.hasUsername) {
     await showSetUsernameDialog(context);
-  } else if (updated.hasUsername) {
-    showWelcomeBackGreeting(context, updated.username!);
+  } else {
+    showWelcomeBackGreeting(context, state.username!);
   }
 }
 
