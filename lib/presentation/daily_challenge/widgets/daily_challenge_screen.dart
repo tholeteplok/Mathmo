@@ -8,6 +8,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../../domain/models/daily_challenge.dart';
 import '../../../domain/models/distractor.dart';
+import '../../../domain/models/leaderboard_entry.dart';
 import '../../../domain/models/question.dart';
 import '../../game/providers/game_dependencies_provider.dart';
 import '../../game/providers/level_band_theme_provider.dart';
@@ -157,6 +158,30 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
         // (bukan snapshot awal _finishChallenge).
         final freshTotal = ref.read(playerProfileProvider).valueOrNull?.totalScore
             ?? profile?.totalScore;
+
+        // Injeksi update optimistik seketika (Zero Delay)
+        final optimisticEntry = LeaderboardEntry(
+          rank: 1, // Akan dihitung ulang secara virtual di notifier
+          username: username,
+          avatarId: avatarId,
+          correctCount: _correctCount,
+          totalTimeMs: _totalTimeMs,
+          isCurrentPlayer: true,
+        );
+        ref
+            .read(leaderboardEntriesProvider(bandId).notifier)
+            .addOptimisticEntry(optimisticEntry);
+
+        if (freshTotal != null) {
+          ref
+              .read(allTimeEntriesProvider.notifier)
+              .addOptimisticScore(
+                username: username,
+                newTotalScore: freshTotal,
+                avatarId: avatarId,
+              );
+        }
+
         final submitResult = await ref
             .read(leaderboardRepositoryProvider)
             .submitDailyResult(
@@ -167,8 +192,13 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
             );
         if (submitResult case RepoFailure(:final reason)) {
           submitErrMsg = reason;
+          // Batalkan entri optimistik karena gagal upload
+          ref
+              .read(leaderboardEntriesProvider(bandId).notifier)
+              .rollbackOptimisticEntry(username);
+          ref.invalidate(allTimeEntriesProvider);
         } else {
-          // Invalidate cache leaderboard agar data baru langsung muncul
+          // Sinkronisasi data otoritatif dari server secara senyap
           ref.invalidate(leaderboardEntriesProvider(bandId));
           ref.invalidate(allTimeEntriesProvider);
         }

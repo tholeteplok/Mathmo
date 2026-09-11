@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +16,22 @@ class FakeAccountStatusNotifier extends AccountStatusNotifier {
 
   @override
   Future<AccountState> build() async => _state;
+}
+
+class FakeLeaderboardEntriesNotifier extends LeaderboardEntriesNotifier {
+  FakeLeaderboardEntriesNotifier(this._entries);
+  final List<LeaderboardEntry> _entries;
+
+  @override
+  FutureOr<List<LeaderboardEntry>> build(String arg) => _entries;
+}
+
+class FakeAllTimeEntriesNotifier extends AllTimeEntriesNotifier {
+  FakeAllTimeEntriesNotifier(this._entries);
+  final List<LeaderboardEntry> _entries;
+
+  @override
+  FutureOr<List<LeaderboardEntry>> build() => _entries;
 }
 
 void main() {
@@ -84,8 +101,8 @@ void main() {
             (ref) async => const LevelBandsConfig([testBand]),
           ),
           leaderboardSelectedBandProvider.overrideWith((ref) => 'basic'),
-          leaderboardEntriesProvider('basic').overrideWith(
-            (ref) async => mockEntries,
+          leaderboardEntriesProvider.overrideWith(
+            () => FakeLeaderboardEntriesNotifier(mockEntries),
           ),
         ],
         child: const MaterialApp(
@@ -158,7 +175,7 @@ void main() {
           ),
           leaderboardModeProvider.overrideWith((ref) => LeaderboardMode.allTime),
           allTimeEntriesProvider.overrideWith(
-            (ref) async => mockAllTimeEntries,
+            () => FakeAllTimeEntriesNotifier(mockAllTimeEntries),
           ),
         ],
         child: const MaterialApp(
@@ -179,5 +196,114 @@ void main() {
     // Band tabs should NOT be rendered in all-time mode
     expect(find.text('Basic'), findsNothing);
   });
+
+  group('Optimistic update tests', () {
+    test('LeaderboardEntriesNotifier adds and rollbacks optimistic entry with virtual rank', () async {
+      final container = ProviderContainer(
+        overrides: [
+          leaderboardEntriesProvider.overrideWith(
+            () => FakeLeaderboardEntriesNotifier([
+              const LeaderboardEntry(
+                rank: 1,
+                username: 'alice',
+                correctCount: 12,
+                totalTimeMs: 20000,
+                isCurrentPlayer: false,
+              ),
+              const LeaderboardEntry(
+                rank: 2,
+                username: 'bob',
+                correctCount: 10,
+                totalTimeMs: 15000,
+                isCurrentPlayer: false,
+              ),
+            ]),
+          ),
+        ],
+      );
+
+      // Initial read
+      final initial = await container.read(leaderboardEntriesProvider('basic').future);
+      expect(initial.length, 2);
+      expect(initial[0].username, 'alice');
+      expect(initial[1].username, 'bob');
+
+      // Add optimistic entry that beats alice
+      final notifier = container.read(leaderboardEntriesProvider('basic').notifier);
+      notifier.addOptimisticEntry(
+        const LeaderboardEntry(
+          rank: 1,
+          username: 'player_me',
+          correctCount: 12,
+          totalTimeMs: 15000,
+          isCurrentPlayer: true,
+        ),
+      );
+
+      final optimistic = container.read(leaderboardEntriesProvider('basic')).value!;
+      expect(optimistic.length, 3);
+      expect(optimistic[0].username, 'player_me');
+      expect(optimistic[0].rank, 1);
+      expect(optimistic[1].username, 'alice');
+      expect(optimistic[1].rank, 2);
+      expect(optimistic[2].username, 'bob');
+      expect(optimistic[2].rank, 3);
+
+      // Rollback
+      notifier.rollbackOptimisticEntry('player_me');
+      final rolledBack = container.read(leaderboardEntriesProvider('basic')).value!;
+      expect(rolledBack.length, 2);
+      expect(rolledBack[0].username, 'alice');
+      expect(rolledBack[0].rank, 1);
+      expect(rolledBack[1].username, 'bob');
+      expect(rolledBack[1].rank, 2);
+    });
+
+    test('AllTimeEntriesNotifier adds optimistic score and re-ranks', () async {
+      final container = ProviderContainer(
+        overrides: [
+          allTimeEntriesProvider.overrideWith(
+            () => FakeAllTimeEntriesNotifier([
+              const LeaderboardEntry(
+                rank: 1,
+                username: 'top_player',
+                correctCount: 0,
+                totalTimeMs: 0,
+                totalScore: 5000,
+                isCurrentPlayer: false,
+              ),
+              const LeaderboardEntry(
+                rank: 2,
+                username: 'second_player',
+                correctCount: 0,
+                totalTimeMs: 0,
+                totalScore: 3000,
+                isCurrentPlayer: false,
+              ),
+            ]),
+          ),
+        ],
+      );
+
+      await container.read(allTimeEntriesProvider.future);
+
+      final notifier = container.read(allTimeEntriesProvider.notifier);
+      notifier.addOptimisticScore(
+        username: 'player_me',
+        newTotalScore: 4000,
+      );
+
+      final list = container.read(allTimeEntriesProvider).value!;
+      expect(list.length, 3);
+      expect(list[0].username, 'top_player');
+      expect(list[0].rank, 1);
+      expect(list[1].username, 'player_me');
+      expect(list[1].rank, 2);
+      expect(list[1].totalScore, 4000);
+      expect(list[2].username, 'second_player');
+      expect(list[2].rank, 3);
+    });
+  });
 }
+
 

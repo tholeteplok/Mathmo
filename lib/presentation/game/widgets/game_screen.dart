@@ -7,6 +7,7 @@ import '../../../core/theme/app_tokens.dart';
 import '../../../domain/models/session_result.dart';
 import '../../home/providers/level_stars_provider.dart';
 import '../../home/providers/player_profile_provider.dart';
+import '../../leaderboard/providers/leaderboard_provider.dart';
 import '../../profile/providers/account_status_provider.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/exit_confirm_dialog.dart';
@@ -107,6 +108,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             final latest =
                 ref.read(playerProfileProvider).valueOrNull;
             if (latest == null) return;
+
+            // Injeksi update optimistik seketika ke papan peringkat all-time
+            ref.read(allTimeEntriesProvider.notifier).addOptimisticScore(
+                  username: username,
+                  newTotalScore: latest.totalScore,
+                  avatarId: latest.avatarId,
+                );
+
             await ref.read(leaderboardRepositoryProvider).syncProfileTotal(
                   username: username,
                   avatarId: latest.avatarId,
