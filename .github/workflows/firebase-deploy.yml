@@ -1,0 +1,27 @@
+﻿name: Auto Deploy Firebase Rules & Indexes
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+      - 'firebase.json'
+  workflow_dispatch:
+
+jobs:
+  deploy-firebase:
+    name: Deploy Firestore Rules & Indexes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@v14.0.0
+        with:
+          args: deploy --only firestore:rules,firestore:indexes --project teplok-games
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

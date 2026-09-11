@@ -167,7 +167,8 @@ void main() {
       // Verify About Card
       expect(find.text('iTHUNG'), findsOneWidget);
       expect(find.text('Fast Math. Sharp Mind.'), findsOneWidget);
-      expect(find.text('Versi 0.1.0 (Beta)'), findsOneWidget);
+      expect(find.textContaining('v0.1.0'), findsOneWidget);
+      expect(find.text('Periksa Update'), findsOneWidget);
       expect(find.byType(Image), findsNWidgets(3));
       expect(
         find.text('Aset Audio & SFX: Creative Commons CC0'),

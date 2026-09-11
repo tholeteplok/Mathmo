@@ -7,7 +7,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../game/providers/level_band_theme_provider.dart';
 import '../../settings/providers/settings_provider.dart';
+import '../../../data/services/update_service.dart';
 import '../../shared/widgets/app_header.dart';
+import '../../shared/widgets/update_dialog.dart';
 import '../providers/level_stars_provider.dart';
 import '../providers/player_profile_provider.dart';
 import 'avatar_callout_pin.dart';
@@ -224,12 +226,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   int _currentStageIndex = 0;
   bool _initializedPage = false;
 
+  static bool _hasCheckedUpdateThisSession = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _pageController = PageController();
     _bgmService = ref.read(bgmServiceProvider);
+    _checkPassiveUpdate();
+  }
+
+  void _checkPassiveUpdate() {
+    if (_hasCheckedUpdateThisSession) return;
+    _hasCheckedUpdateThisSession = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      try {
+        final updateService = ref.read(updateServiceProvider);
+        final info = await updateService.checkForUpdate();
+        if (info.hasUpdate && mounted) {
+          await showUpdateNotificationDialog(
+            context: context,
+            info: info,
+            onUpdate: () {
+              showUpdateProgressDialog(context: context, info: info);
+            },
+          );
+        }
+      } catch (_) {
+        // Silently ignore passive check errors
+      }
+    });
   }
 
   @override

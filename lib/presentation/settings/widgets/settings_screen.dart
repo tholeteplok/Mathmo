@@ -5,11 +5,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/developer_contact.dart';
 import '../../../core/services/external_link_service.dart';
+import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
+import '../../../data/services/update_service.dart';
 import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/chunky_button.dart';
 import '../../shared/widgets/chunky_card.dart';
+import '../../shared/widgets/update_dialog.dart';
 import '../providers/settings_provider.dart';
 
 /// Layar pengaturan preferensi audio, haptik, dan informasi aplikasi iTHUNG.
@@ -499,11 +502,64 @@ class _GameplayCard extends StatelessWidget {
 }
 
 /// Kartu identitas brand dan informasi versi aplikasi iTHUNG.
-class _AboutCard extends StatelessWidget {
+class _AboutCard extends ConsumerStatefulWidget {
   const _AboutCard();
 
   @override
+  ConsumerState<_AboutCard> createState() => _AboutCardState();
+}
+
+class _AboutCardState extends ConsumerState<_AboutCard> {
+  bool _isChecking = false;
+
+  Future<void> _handleCheckUpdate() async {
+    if (_isChecking) return;
+    setState(() => _isChecking = true);
+
+    try {
+      final updateService = ref.read(updateServiceProvider);
+      final info = await updateService.checkForUpdate();
+
+      if (!mounted) return;
+      setState(() => _isChecking = false);
+
+      if (info.hasUpdate) {
+        await showUpdateNotificationDialog(
+          context: context,
+          info: info,
+          onUpdate: () {
+            showUpdateProgressDialog(context: context, info: info);
+          },
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              info.errorMessage != null
+                  ? 'Gagal memeriksa pembaruan: ${info.errorMessage}'
+                  : 'Aplikasi sudah versi terbaru (v${info.currentVersion})! 🚀',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isChecking = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Terjadi kesalahan: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final updateService = ref.watch(updateServiceProvider);
+
     return ChunkyCard(
       variant: ChunkyCardVariant.wood,
       padding: const EdgeInsets.all(20),
@@ -558,26 +614,89 @@ class _AboutCard extends StatelessWidget {
               letterSpacing: 0.4,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // Versi Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppTheme.colorWoodPlank,
-              borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-              border: Border.all(
-                color: AppTheme.colorCardBorder,
-                width: AppTokens.borderWidthSubtle,
-              ),
-            ),
-            child: Text(
-              'Versi 0.1.0 (Beta)',
-              style: AppTheme.statNumberStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+          // Versi Badge & Tombol Periksa Pembaruan
+          FutureBuilder<String>(
+            future: updateService.getCurrentVersion(),
+            builder: (context, snapshot) {
+              final version = snapshot.data ?? '0.1.0';
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.colorWoodPlank,
+                      borderRadius:
+                          BorderRadius.circular(AppTokens.radiusPill),
+                      border: Border.all(
+                        color: AppTheme.colorCardBorder,
+                        width: AppTokens.borderWidthSubtle,
+                      ),
+                    ),
+                    child: Text(
+                      'v$version',
+                      style: AppTheme.statNumberStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  InkWell(
+                    key: const Key('btn_check_update'),
+                    onTap: _isChecking ? null : _handleCheckUpdate,
+                    borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.colorSage.withValues(alpha: 0.15),
+                        borderRadius:
+                            BorderRadius.circular(AppTokens.radiusPill),
+                        border: Border.all(
+                          color: AppTheme.colorSage.withValues(alpha: 0.45),
+                          width: AppTokens.borderWidthSubtle,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_isChecking)
+                            const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppTheme.colorSage,
+                              ),
+                            )
+                          else
+                            const Icon(
+                              AppIcons.refresh,
+                              size: 13,
+                              color: AppTheme.colorSage,
+                            ),
+                          const SizedBox(width: 5),
+                          Text(
+                            _isChecking ? 'Memeriksa...' : 'Periksa Update',
+                            style: GoogleFonts.quicksand(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.colorWoodDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
           const Divider(color: AppTheme.darkBorder, height: 1),

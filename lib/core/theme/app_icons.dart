@@ -117,4 +117,18 @@ class AppIcons {
 
   /// Ikon level berikutnya pada ResultsScreen.
   static const IconData nextLevel = TablerIcons.arrowRight;
+
+  // ── In-App Updater ──────────────────────────────────────────────
+
+  /// Ikon roket / pembaruan tersedia.
+  static const IconData rocket = TablerIcons.rocket;
+
+  /// Ikon unduh pembaruan.
+  static const IconData download = TablerIcons.cloudDownload;
+
+  /// Ikon prosesor / arsitektur ABI.
+  static const IconData cpu = TablerIcons.cpu;
+
+  /// Ikon segarkan / periksa pembaruan.
+  static const IconData refresh = TablerIcons.refresh;
 }
