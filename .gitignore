@@ -52,4 +52,6 @@ key.properties
 *.jks
 .env*
 local.properties
+.kotlin/
+android/.kotlin/
 
