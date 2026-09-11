@@ -100,7 +100,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   level: widget.level,
                   sessionScore: next.result.totalScore,
                 );
-            if (delta <= 0) return;
             final accountState =
                 ref.read(accountStatusProvider).valueOrNull;
             final username = accountState?.username;
@@ -109,20 +108,25 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ref.read(playerProfileProvider).valueOrNull;
             if (latest == null) return;
 
-            // Injeksi update optimistik seketika ke papan peringkat all-time
-            ref.read(allTimeEntriesProvider.notifier).addOptimisticScore(
-                  username: username,
-                  newTotalScore: latest.totalScore,
-                  avatarId: latest.avatarId,
-                );
+            if (delta > 0) {
+              // Injeksi update optimistik seketika ke papan peringkat all-time
+              ref.read(allTimeEntriesProvider.notifier).addOptimisticScore(
+                    username: username,
+                    newTotalScore: latest.totalScore,
+                    avatarId: latest.avatarId,
+                  );
+            }
 
-            await ref.read(leaderboardRepositoryProvider).syncProfileTotal(
+            // Sync progres lengkap (skor, level, xp) ke cloud profil pemain
+            await ref.read(leaderboardRepositoryProvider).syncProfileProgress(
                   username: username,
                   avatarId: latest.avatarId,
                   totalScore: latest.totalScore,
+                  currentLevel: latest.currentLevel,
+                  totalXp: latest.totalXp,
                 );
           } catch (_) {
-            // Abaikan: skor lokal sudah tersimpan, sinkron bisa susul.
+            // Abaikan: progres lokal sudah tersimpan, sinkron bisa susul.
           }
         })();
 

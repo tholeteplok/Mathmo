@@ -293,6 +293,20 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
     required String username,
     String? avatarId,
     required int totalScore,
+  }) =>
+      syncProfileProgress(
+        username: username,
+        avatarId: avatarId,
+        totalScore: totalScore,
+      );
+
+  @override
+  Future<RepoResult<void>> syncProfileProgress({
+    required String username,
+    String? avatarId,
+    required int totalScore,
+    int? currentLevel,
+    int? totalXp,
   }) async {
     try {
       final currentUid = auth.currentUser?.uid;
@@ -302,35 +316,75 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
         username: username,
         avatarId: avatarId,
         totalScore: totalScore,
+        currentLevel: currentLevel,
+        totalXp: totalXp,
       );
       return const RepoSuccess(null);
     } catch (e) {
       return RepoFailure(
-        FirebaseErrorMapper.map(e, defaultMessage: 'Gagal menyinkronkan total skor'),
+        FirebaseErrorMapper.map(e, defaultMessage: 'Gagal menyinkronkan profil pemain'),
+        e,
+      );
+    }
+  }
+
+  @override
+  Future<RepoResult<Map<String, dynamic>?>> fetchCloudProfile(String uid) async {
+    try {
+      final doc = await firestore
+          .collection(profilesCollection)
+          .doc(uid)
+          .get()
+          .timeout(const Duration(seconds: 10));
+      if (!doc.exists) {
+        return const RepoSuccess(null);
+      }
+      return RepoSuccess(doc.data());
+    } catch (e) {
+      return RepoFailure(
+        FirebaseErrorMapper.map(e, defaultMessage: 'Gagal memuat profil pemain dari cloud'),
         e,
       );
     }
   }
 
   /// Menulis profil dengan semantik max() via transaksi agar nilai lama
-  /// dari snapshot usang tidak pernah menimpa total_score yang lebih baru.
+  /// dari snapshot usang tidak pernah menimpa total_score, level, atau xp yang lebih baru.
   Future<void> _mergeProfileTotalMax({
     required String uid,
     required String username,
     String? avatarId,
     required int totalScore,
+    int? currentLevel,
+    int? totalXp,
   }) async {
     final ref = firestore.collection(profilesCollection).doc(uid);
     await firestore.runTransaction((tx) async {
       final snap = await tx.get(ref);
-      final existing = snap.exists
+      final existingScore = snap.exists
           ? (((snap.data()?['total_score'] ?? 0) as num).toInt())
           : 0;
-      final merged = totalScore > existing ? totalScore : existing;
+      final existingLevel = snap.exists
+          ? (((snap.data()?['current_level'] ?? 1) as num).toInt())
+          : 1;
+      final existingXp = snap.exists
+          ? (((snap.data()?['total_xp'] ?? 0) as num).toInt())
+          : 0;
+
+      final mergedScore = totalScore > existingScore ? totalScore : existingScore;
+      final mergedLevel = (currentLevel != null && currentLevel > existingLevel)
+          ? currentLevel
+          : existingLevel;
+      final mergedXp = (totalXp != null && totalXp > existingXp)
+          ? totalXp
+          : existingXp;
+
       tx.set(ref, {
         'username': username,
         'avatar_id': avatarId,
-        'total_score': merged,
+        'total_score': mergedScore,
+        'current_level': mergedLevel,
+        'total_xp': mergedXp,
         'updated_at': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }).timeout(const Duration(seconds: 10));
