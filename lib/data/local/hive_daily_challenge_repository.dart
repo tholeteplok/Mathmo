@@ -127,10 +127,14 @@ class HiveDailyChallengeRepository implements DailyChallengeRepository {
     try {
       final box = await _getPendingBox();
       final results = <DailyChallengeResult>[];
-      for (final raw in box.values) {
-        results.add(
-          DailyChallengeResult.fromJson(Map<String, dynamic>.from(raw)),
-        );
+      for (final key in box.keys) {
+        final raw = box.get(key);
+        if (raw != null) {
+          final parsed = DailyChallengeResult.fromJson(
+            Map<String, dynamic>.from(raw),
+          );
+          results.add(parsed.copyWith(id: key.toString()));
+        }
       }
       return RepoSuccess(results);
     } catch (e) {

@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mathmo_app/data/local/hive_daily_challenge_repository.dart';
@@ -72,6 +72,30 @@ void main() {
       final tomorrow = DateTime(2026, 9, 11);
       final getRes = await repository.getResult(tomorrow, 'basic');
       expect((getRes as RepoSuccess<DailyChallengeResult?>).value, isNull);
+    });
+
+    test('getPendingSubmissions returns results with key id and markSubmissionSynced removes them', () async {
+      final date = DateTime(2026, 9, 11);
+      final result = DailyChallengeResult(
+        playerId: 'player-1',
+        date: date,
+        band: 'basic',
+        correctCount: 12,
+        totalTimeMs: 12000,
+      );
+
+      await repository.saveResult(result);
+
+      final pendingRes = await repository.getPendingSubmissions();
+      expect(pendingRes, isA<RepoSuccess<List<DailyChallengeResult>>>());
+      final items = (pendingRes as RepoSuccess<List<DailyChallengeResult>>).value;
+      expect(items.length, equals(1));
+      expect(items.first.id, equals('2026-09-11_basic'));
+      expect(items.first.correctCount, equals(12));
+
+      await repository.markSubmissionSynced(items.first.id!);
+      final afterSync = await repository.getPendingSubmissions();
+      expect((afterSync as RepoSuccess<List<DailyChallengeResult>>).value, isEmpty);
     });
   });
 }

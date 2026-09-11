@@ -37,17 +37,29 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
     try {
       final dateKey = _formatDateKey(date);
 
-      // Query server-side dengan orderBy + limit (butuh composite index
-      // band ASC + date ASC + correct_count DESC, lihat firestore.indexes.json).
-      // Tie-break total_time_ms tetap di memori untuk halaman teratas.
-      final snapshot = await firestore
-          .collection(collectionName)
-          .where('band', isEqualTo: band)
-          .where('date', isEqualTo: dateKey)
-          .orderBy('correct_count', descending: true)
-          .limit(limit)
-          .get()
-          .timeout(const Duration(seconds: 10));
+      // Query server-side dengan orderBy + limit (menggunakan composite index).
+      // Disertai fallback jika indeks komposit sedang dibangun atau terjadi issue query server.
+      QuerySnapshot<Map<String, dynamic>> snapshot;
+      try {
+        snapshot = await firestore
+            .collection(collectionName)
+            .where('band', isEqualTo: band)
+            .where('date', isEqualTo: dateKey)
+            .orderBy('correct_count', descending: true)
+            .limit(limit)
+            .get()
+            .timeout(const Duration(seconds: 10));
+      } catch (_) {
+        // Fallback: ambil dokumen berdasarkan band & date tanpa orderBy server,
+        // lalu urutkan sepenuhnya di memori.
+        snapshot = await firestore
+            .collection(collectionName)
+            .where('band', isEqualTo: band)
+            .where('date', isEqualTo: dateKey)
+            .limit(limit)
+            .get()
+            .timeout(const Duration(seconds: 10));
+      }
 
       // Parsing dan sorting di memori (correct_count desc, total_time_ms asc)
       final sortedDocs = snapshot.docs.map((doc) => doc.data()).toList()
@@ -253,31 +265,34 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
 
       final currentUid = auth.currentUser?.uid ?? result.playerId;
 
-      // Jalankan kedua write secara paralel — tidak ada dependensi antar keduanya.
-      await Future.wait([
-        // 1. Simpan hasil daily challenge
-        firestore.collection(collectionName).doc(docId).set({
-          'player_id': currentUid,
-          'username': username,
-          'avatar_id': avatarId,
-          'band': result.band,
-          'date': dateKey,
-          'correct_count': result.correctCount,
-          'total_time_ms': result.totalTimeMs,
-          'submitted_at': FieldValue.serverTimestamp(),
-        }).timeout(const Duration(seconds: 10)),
+      // 1. Simpan hasil daily challenge (prioritas utama, terisolasi)
+      await firestore.collection(collectionName).doc(docId).set({
+        'player_id': currentUid,
+        'username': username,
+        'avatar_id': avatarId,
+        'band': result.band,
+        'date': dateKey,
+        'correct_count': result.correctCount,
+        'total_time_ms': result.totalTimeMs,
+        'submitted_at': FieldValue.serverTimestamp(),
+      }).timeout(const Duration(seconds: 10));
 
-        // 2. Best-effort sinkronisasi total_score ke /profiles/{currentUid}
-        //    Daily TIDAK menambah skor — ini hanya menyelaraskan agar all-time
-        //    tidak tertinggal. Wajib semantik max(): nilai lama tidak menimpa baru.
-        if (totalScore != null)
-          _mergeProfileTotalMax(
+      // 2. Best-effort sinkronisasi total_score ke /profiles/{currentUid}
+      //    Daily TIDAK menambah skor — ini hanya menyelaraskan agar all-time
+      //    tidak tertinggal. Terisolasi agar kegagalan sinkronisasi profil tidak membatalkan
+      //    pencatatan daily challenge yang sudah berhasil.
+      if (totalScore != null) {
+        try {
+          await _mergeProfileTotalMax(
             uid: currentUid,
             username: username,
             avatarId: avatarId,
             totalScore: totalScore,
-          ),
-      ]);
+          );
+        } catch (_) {
+          // Abaikan kegagalan sinkronisasi profil sekunder agar daily result tetap valid
+        }
+      }
 
       return const RepoSuccess(null);
     } catch (e) {

@@ -15,6 +15,7 @@ import '../../shared/widgets/app_header.dart';
 import '../../shared/widgets/chunky_button.dart';
 import '../../shared/widgets/chunky_card.dart';
 import '../../shared/widgets/segmented_pill.dart';
+import '../../daily_challenge/providers/daily_sync_provider.dart';
 import '../providers/leaderboard_provider.dart';
 
 /// Layar Papan Peringkat Global / Kohor Harian (LeaderboardScreen - /leaderboard).
@@ -30,6 +31,9 @@ class LeaderboardScreen extends ConsumerWidget {
     if (accountState.isGuest || !accountState.hasUsername) {
       return LeaderboardLockedView(accountState: accountState);
     }
+
+    // Picu auto-sync hasil tantangan harian lokal/pending di latar belakang
+    ref.read(dailySyncServiceProvider).syncPendingSubmissions();
 
     // 2. Jika sudah terhubung, tampilkan Leaderboard dengan mode toggle
     final mode = ref.watch(leaderboardModeProvider);
@@ -83,9 +87,25 @@ class LeaderboardScreen extends ConsumerWidget {
                       }
                     },
                   ),
-                  data: (entries) => LeaderboardListView(
-                    entries: entries,
-                    mode: mode,
+                  data: (entries) => RefreshIndicator(
+                    color: AppTheme.colorWoodMedium,
+                    backgroundColor: AppTheme.colorVanillaCard,
+                    onRefresh: () async {
+                      if (mode == LeaderboardMode.daily) {
+                        await ref
+                            .read(dailySyncServiceProvider)
+                            .syncPendingSubmissions();
+                        ref.invalidate(leaderboardEntriesProvider(selectedBand));
+                        await ref.read(leaderboardEntriesProvider(selectedBand).future);
+                      } else {
+                        ref.invalidate(allTimeEntriesProvider);
+                        await ref.read(allTimeEntriesProvider.future);
+                      }
+                    },
+                    child: LeaderboardListView(
+                      entries: entries,
+                      mode: mode,
+                    ),
                   ),
                 ),
               ),
@@ -110,8 +130,18 @@ class _ModeToggle extends ConsumerWidget {
       child: SegmentedPill(
         labels: const ['🏆  Harian', '⭐  Semua Waktu'],
         selectedIndex: mode == LeaderboardMode.daily ? 0 : 1,
-        onSelected: (i) => ref.read(leaderboardModeProvider.notifier).state =
-            i == 0 ? LeaderboardMode.daily : LeaderboardMode.allTime,
+        onSelected: (i) {
+          final nextMode =
+              i == 0 ? LeaderboardMode.daily : LeaderboardMode.allTime;
+          ref.read(leaderboardModeProvider.notifier).state = nextMode;
+          if (nextMode == LeaderboardMode.allTime) {
+            ref.invalidate(allTimeEntriesProvider);
+          } else {
+            ref.read(dailySyncServiceProvider).syncPendingSubmissions();
+            final band = ref.read(leaderboardSelectedBandProvider);
+            ref.invalidate(leaderboardEntriesProvider(band));
+          }
+        },
       ),
     );
   }
@@ -454,38 +484,47 @@ class LeaderboardListView extends StatelessWidget {
           ? 'Selesaikan tantangan harian untuk mencatat rekor skor!'
           : 'Jadilah petualang pertama yang menaklukkan tantangan ini!';
 
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                AppIcons.trophy,
-                size: 48,
-                color: Color(0xFFDECFA8),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                emptyTitle,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.colorEspresso,
+      return LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      AppIcons.trophy,
+                      size: 48,
+                      color: Color(0xFFDECFA8),
                     ),
+                    const SizedBox(height: 12),
+                    Text(
+                      emptyTitle,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.colorEspresso,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      emptySubtitle,
+                      style: const TextStyle(color: AppTheme.colorTaupe, fontSize: 13),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                emptySubtitle,
-                style: const TextStyle(color: AppTheme.colorTaupe, fontSize: 13),
-                textAlign: TextAlign.center,
-              ),
-            ],
+            ),
           ),
         ),
       );
     }
 
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       itemCount: entries.length,
       itemBuilder: (context, index) {

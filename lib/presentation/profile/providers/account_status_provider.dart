@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../domain/models/player_profile.dart';
 import '../../../domain/repositories/repo_result.dart';
+import '../../daily_challenge/providers/daily_sync_provider.dart';
 import '../../game/providers/game_dependencies_provider.dart';
 import '../../home/providers/player_profile_provider.dart';
 
@@ -99,6 +100,14 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
       );
     }
 
+    if (authRepo.isLoggedIn &&
+        effectiveUsername != null &&
+        effectiveUsername.isNotEmpty) {
+      Future.microtask(() {
+        ref.read(dailySyncServiceProvider).syncPendingSubmissions();
+      });
+    }
+
     return AccountState(
       status: authRepo.isAnonymous ? AccountStatus.anonymous : AccountStatus.linked,
       userId: uid,
@@ -189,6 +198,7 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
       );
 
       state = AsyncData(accountState);
+      ref.read(dailySyncServiceProvider).syncPendingSubmissions();
       return RepoSuccess(accountState);
     } else {
       final failure = result as RepoFailure<String>;
@@ -225,6 +235,7 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
       );
 
       state = AsyncData(accountState);
+      ref.read(dailySyncServiceProvider).syncPendingSubmissions();
       return RepoSuccess(accountState);
     } else {
       final failure = result as RepoFailure<String>;

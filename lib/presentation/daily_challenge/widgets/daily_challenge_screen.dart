@@ -25,6 +25,7 @@ import '../../shared/widgets/exit_confirm_dialog.dart';
 import '../../../domain/repositories/repo_result.dart';
 import '../../leaderboard/providers/leaderboard_provider.dart';
 import '../providers/daily_challenge_provider.dart';
+import '../providers/daily_sync_provider.dart';
 
 /// Layar tantangan harian (DailyChallengeScreen).
 ///
@@ -149,15 +150,26 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
 
       // Jika pemain sudah memiliki username akun DAN sesi Firebase aktif,
       // submit ke papan peringkat cloud.
-      final accountState = ref.read(accountStatusProvider).valueOrNull;
-      final username = accountState?.username;
-      if (accountState?.canSubmitToCloud == true && username != null) {
+      AccountState? accountState;
+      try {
+        accountState = await ref.read(accountStatusProvider.future);
+      } catch (_) {
+        accountState = ref.read(accountStatusProvider).valueOrNull;
+      }
+
+      final authRepo = ref.read(authRepositoryProvider);
+      final isAuthed =
+          (accountState?.hasVerifiedSession ?? false) || authRepo.isLoggedIn;
+      final username = accountState?.username ?? profile?.username;
+
+      if (isAuthed && username != null && username.trim().length >= 4) {
         submitErrMsg = null; // tandai bahwa submit dicoba
         final avatarId = profile?.avatarId;
         // Baca ulang profil agar totalScore yang dikirim adalah nilai terbaru
         // (bukan snapshot awal _finishChallenge).
-        final freshTotal = ref.read(playerProfileProvider).valueOrNull?.totalScore
-            ?? profile?.totalScore;
+        final freshTotal =
+            ref.read(playerProfileProvider).valueOrNull?.totalScore ??
+                profile?.totalScore;
 
         // Injeksi update optimistik seketika (Zero Delay)
         final optimisticEntry = LeaderboardEntry(
@@ -198,12 +210,18 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
               .rollbackOptimisticEntry(username);
           ref.invalidate(allTimeEntriesProvider);
         } else {
+          // Tandai antrean submission lokal telah tersinkronisasi
+          final dateKey =
+              '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+          await ref
+              .read(dailyChallengeRepositoryProvider)
+              .markSubmissionSynced('${dateKey}_$bandId');
+
           // Sinkronisasi data otoritatif dari server secara senyap
           ref.invalidate(leaderboardEntriesProvider(bandId));
           ref.invalidate(allTimeEntriesProvider);
         }
-      } else if (username != null && username.isNotEmpty &&
-          accountState?.hasVerifiedSession == false) {
+      } else if (username != null && username.isNotEmpty && !isAuthed) {
         // Username lokal ada tapi sesi Firebase sudah tidak aktif.
         // Kegagalan diam-diam lebih buruk daripada pesan yang jelas.
         submitErrMsg =
@@ -532,13 +550,31 @@ class DailyChallengeGate extends ConsumerWidget {
 }
 
 /// Tampilan saat pemain membuka Daily Challenge yang sudah diselesaikan hari ini.
-class DailyChallengeLockedView extends ConsumerWidget {
+class DailyChallengeLockedView extends ConsumerStatefulWidget {
   const DailyChallengeLockedView({super.key, required this.result});
 
   final DailyChallengeResult result;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DailyChallengeLockedView> createState() =>
+      _DailyChallengeLockedViewState();
+}
+
+class _DailyChallengeLockedViewState
+    extends ConsumerState<DailyChallengeLockedView> {
+  @override
+  void initState() {
+    super.initState();
+    // Otomatis sinkronkan skor hari ini / pending ke Firestore di latar belakang
+    Future.microtask(() {
+      if (mounted) {
+        ref.read(dailySyncServiceProvider).syncPendingSubmissions();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final now = DateTime.now();
     final nextMidnight = DateTime(now.year, now.month, now.day + 1);
     final hoursLeft = nextMidnight.difference(now).inHours;
@@ -589,7 +625,7 @@ class DailyChallengeLockedView extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Skor Akhir: ${result.correctCount} / 12 Benar',
+                      'Skor Akhir: ${widget.result.correctCount} / 12 Benar',
                       style: AppTheme.statNumberStyle(
                         fontSize: 24,
                         color: AppTheme.colorSage,
@@ -597,7 +633,7 @@ class DailyChallengeLockedView extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Total Waktu: ${(result.totalTimeMs / 1000).toStringAsFixed(1)} detik',
+                      'Total Waktu: ${(widget.result.totalTimeMs / 1000).toStringAsFixed(1)} detik',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.colorTaupe,
                             fontWeight: FontWeight.w600,
@@ -632,20 +668,46 @@ class DailyChallengeLockedView extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
 
-              // Tombol Kembali ke Beranda
+              // Tombol Lihat Papan Peringkat
               ChunkyButton(
-                onPressed: () => context.go('/'),
+                onPressed: () => context.go('/leaderboard'),
                 backgroundColor: AppTheme.colorWoodMedium,
                 borderColor: AppTheme.colorWoodDark,
                 shadowColor: AppTheme.colorWoodDark,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(AppIcons.trophy, size: 20, color: Colors.white),
+                    SizedBox(width: 8),
+                    Text(
+                      'Lihat Papan Peringkat',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Tombol Kembali ke Beranda
+              ChunkyButton(
+                onPressed: () => context.go('/'),
+                backgroundColor: AppTheme.colorVanillaCard,
+                borderColor: AppTheme.darkBorder,
+                shadowColor: AppTheme.darkBorder,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
                 child: const Text(
                   'Kembali ke Beranda',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: Colors.white,
+                    color: AppTheme.colorWoodDark,
                   ),
                 ),
               ),

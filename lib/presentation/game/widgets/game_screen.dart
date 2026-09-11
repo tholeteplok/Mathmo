@@ -125,6 +125,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   currentLevel: latest.currentLevel,
                   totalXp: latest.totalXp,
                 );
+
+            // Invalidate allTimeEntriesProvider agar daftar all-time selalu fresh saat dibuka
+            ref.invalidate(allTimeEntriesProvider);
           } catch (_) {
             // Abaikan: progres lokal sudah tersimpan, sinkron bisa susul.
           }
