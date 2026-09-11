@@ -169,18 +169,16 @@ void main() {
       expect(find.text('iTHUNG'), findsOneWidget);
       expect(find.text('Fast Math. Sharp Mind.'), findsOneWidget);
       expect(find.text('Versi 0.1.0 (Beta)'), findsOneWidget);
-      expect(find.byType(Image), findsOneWidget);
+      expect(find.byType(Image), findsNWidgets(3));
       expect(
         find.text('Aset Audio & SFX: Creative Commons CC0'),
         findsOneWidget,
       );
 
-      // Verify Contact Card
+      // Verify Contact Section
       expect(find.text('Hubungi Developer'), findsOneWidget);
-      expect(find.text('Telegram'), findsOneWidget);
-      expect(find.text(DeveloperContact.telegramHandle), findsOneWidget);
-      expect(find.text('WhatsApp'), findsOneWidget);
-      expect(find.text(DeveloperContact.whatsappDisplay), findsOneWidget);
+      expect(find.byKey(const ValueKey('btn_contact_telegram')), findsOneWidget);
+      expect(find.byKey(const ValueKey('btn_contact_whatsapp')), findsOneWidget);
     });
 
     testWidgets('contact buttons open telegram and whatsapp links', (
@@ -193,9 +191,9 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Telegram'));
+      await tester.tap(find.byKey(const ValueKey('btn_contact_telegram')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('WhatsApp'));
+      await tester.tap(find.byKey(const ValueKey('btn_contact_whatsapp')));
       await tester.pumpAndSettle();
 
       expect(openedLinks, contains(DeveloperContact.telegramUrl));

@@ -633,7 +633,9 @@ class _StageCanvasView extends StatelessWidget {
               child: LevelNode(
                 level: level,
                 status: status,
-                accentColor: stage.accentColor,
+                accentColor: status == LevelNodeStatus.active
+                    ? AppTheme.colorSage
+                    : stage.accentColor,
                 starCount: starCount,
                 onTap: () {
                   if (status != LevelNodeStatus.locked) {
@@ -655,7 +657,7 @@ class _StageCanvasView extends StatelessWidget {
               child: AvatarCalloutPin(
                 avatarId: avatarId,
                 avatarLetter: avatarLetter,
-                accentColor: stage.accentColor,
+                accentColor: AppTheme.colorSage,
                 onTap: () => context.go('/game/$level'),
               ),
             ),

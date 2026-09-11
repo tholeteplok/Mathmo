@@ -93,7 +93,10 @@ class LevelNode extends StatelessWidget {
   }
 
   Widget _buildActiveNode(BuildContext context) {
-    final hsl = HSLColor.fromColor(accentColor);
+    // Tombol aktif selalu menggunakan warna hijau AppTheme.colorSage agar kontras
+    // dan langsung dikenali pemain sebagai tombol utama (Call-to-Action) di semua zona.
+    const activeColor = AppTheme.colorSage;
+    final hsl = HSLColor.fromColor(activeColor);
     final baseColor = hsl
         .withLightness((hsl.lightness - 0.20).clamp(0.0, 1.0))
         .toColor();
@@ -115,7 +118,7 @@ class LevelNode extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: accentColor.withValues(alpha: 0.35),
+                  color: activeColor.withValues(alpha: 0.35),
                   width: 3.5,
                 ),
               ),
@@ -125,7 +128,7 @@ class LevelNode extends StatelessWidget {
               onTap: onTap,
               diameter: 76,
               depth: 7,
-              capColor: accentColor,
+              capColor: activeColor,
               baseColor: baseColor,
               borderColor: borderColor,
               child: const Icon(

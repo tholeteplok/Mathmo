@@ -69,10 +69,10 @@ class SettingsScreen extends ConsumerWidget {
 
                       // ── KARTU 3: TENTANG APLIKASI ──────────────────────
                       const _AboutCard(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                      // ── KARTU 4: HUBUNGI DEVELOPER ───────────────────
-                      const _ContactCard(),
+                      // ── KONTAK DEVELOPER (MINIMALIS) ─────────────────
+                      const _ContactSection(),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -604,12 +604,12 @@ class _AboutCard extends StatelessWidget {
   }
 }
 
-/// Kartu kontak developer — link Telegram & WhatsApp via aplikasi eksternal.
+/// Bagian kontak developer minimalis — icon Telegram & WhatsApp yang ringkas dan tidak dominan.
 ///
 /// URL/handle terpusat di [DeveloperContact]; pembuka link via
 /// [externalLinkServiceProvider] agar testable.
-class _ContactCard extends ConsumerWidget {
-  const _ContactCard();
+class _ContactSection extends ConsumerWidget {
+  const _ContactSection();
 
   Future<void> _open(BuildContext context, WidgetRef ref, Uri uri) async {
     final opened = await ref.read(externalLinkServiceProvider).open(uri);
@@ -622,145 +622,70 @@ class _ContactCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ChunkyCard(
-      variant: ChunkyCardVariant.wood,
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Section
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE3F2FD),
-                  borderRadius: BorderRadius.circular(AppTokens.radiusIcon),
-                  border: Border.all(
-                    color: AppTheme.darkBorder,
-                    width: AppTokens.borderWidthSubtle,
-                  ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          'Hubungi Developer',
+          style: GoogleFonts.quicksand(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Icon Telegram
+            Tooltip(
+              message: 'Telegram (${DeveloperContact.telegramHandle})',
+              child: ChunkyButton(
+                key: const ValueKey('btn_contact_telegram'),
+                onPressed: () => _open(
+                  context,
+                  ref,
+                  DeveloperContact.telegramUrl,
                 ),
-                child: const Icon(
-                  Icons.support_agent_rounded,
-                  color: Color(0xFF1565C0),
-                  size: 22,
+                width: 44,
+                height: 44,
+                padding: EdgeInsets.zero,
+                borderRadius: AppTokens.radiusIcon,
+                child: Image.asset(
+                  'assets/icon/ic_tele.png',
+                  width: 26,
+                  height: 26,
+                  fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Hubungi Developer',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.darkBorder,
-                  ),
+            ),
+            const SizedBox(width: 16),
+
+            // Icon WhatsApp
+            Tooltip(
+              message: 'WhatsApp (${DeveloperContact.whatsappDisplay})',
+              child: ChunkyButton(
+                key: const ValueKey('btn_contact_whatsapp'),
+                onPressed: () => _open(
+                  context,
+                  ref,
+                  DeveloperContact.whatsappUrl,
+                ),
+                width: 44,
+                height: 44,
+                padding: EdgeInsets.zero,
+                borderRadius: AppTokens.radiusIcon,
+                child: Image.asset(
+                  'assets/icon/ic_wa.png',
+                  width: 26,
+                  height: 26,
+                  fit: BoxFit.contain,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(color: AppTheme.darkBorder, height: 1),
-          const SizedBox(height: 16),
-
-          // Tombol Telegram
-          ChunkyButton(
-            onPressed: () => _open(
-              context,
-              ref,
-              DeveloperContact.telegramUrl,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.send_rounded,
-                  size: 20,
-                  color: Color(0xFF229ED9),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Telegram',
-                        style: GoogleFonts.quicksand(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.darkBorder,
-                        ),
-                      ),
-                      Text(
-                        DeveloperContact.telegramHandle,
-                        style: GoogleFonts.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Icons.open_in_new_rounded,
-                  size: 18,
-                  color: AppTheme.darkBorder,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Tombol WhatsApp
-          ChunkyButton(
-            onPressed: () => _open(
-              context,
-              ref,
-              DeveloperContact.whatsappUrl,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.chat_rounded,
-                  size: 20,
-                  color: Color(0xFF25D366),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'WhatsApp',
-                        style: GoogleFonts.quicksand(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.darkBorder,
-                        ),
-                      ),
-                      Text(
-                        DeveloperContact.whatsappDisplay,
-                        style: GoogleFonts.quicksand(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Icons.open_in_new_rounded,
-                  size: 18,
-                  color: AppTheme.darkBorder,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }
