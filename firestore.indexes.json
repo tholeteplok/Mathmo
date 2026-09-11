@@ -15,7 +15,7 @@
       "fields": [
         { "fieldPath": "band", "order": "ASCENDING" },
         { "fieldPath": "date", "order": "ASCENDING" },
-        { "fieldPath": "correct_count", "order": "ASCENDING" },
+        { "fieldPath": "correct_count", "order": "DESCENDING" },
         { "fieldPath": "total_time_ms", "order": "ASCENDING" }
       ]
     },
