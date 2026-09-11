@@ -13,14 +13,19 @@ service cloud.firestore {
     // 2. Profil Pemain & Papan Peringkat All-Time
     // Terbuka untuk dibaca agar leaderboard Semua Waktu bisa melakukan query.
     // Hanya pemilik akun yang berhak memperbarui profil miliknya sendiri.
+    // Validasi tipe total_score agar tidak bisa diisi sembarang string/nilai.
     match /profiles/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+        && request.auth.uid == userId
+        && (!('total_score' in request.resource.data)
+            || request.resource.data.total_score is int);
     }
 
     // 3. Hasil Tantangan Harian (Papan Peringkat Harian)
     // Terbuka untuk dibaca publik.
-    // Validasi kepemilikan player_id, tipe data, batas skor 0..12, dan waktu non-negatif.
+    // Validasi kepemilikan player_id, tipe data, batas skor 0..12, waktu non-negatif,
+    // dan tanggal harus sama dengan hari ini (server time).
     // Dibuat immutable (tidak dapat ditimpa atau dihapus dari client).
     match /daily_challenge_results/{resultId} {
       allow read: if true;
@@ -30,7 +35,8 @@ service cloud.firestore {
         && request.resource.data.correct_count >= 0
         && request.resource.data.correct_count <= 12
         && request.resource.data.total_time_ms is int
-        && request.resource.data.total_time_ms >= 0;
+        && request.resource.data.total_time_ms >= 0
+        && request.resource.data.date == request.time.toDate().toString().split('T')[0];
       allow update: if false;
       allow delete: if false;
     }

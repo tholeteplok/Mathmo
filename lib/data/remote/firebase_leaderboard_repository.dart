@@ -253,29 +253,31 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
 
       final currentUid = auth.currentUser?.uid ?? result.playerId;
 
-      // 1. Simpan hasil daily challenge
-      await firestore.collection(collectionName).doc(docId).set({
-        'player_id': currentUid,
-        'username': username,
-        'avatar_id': avatarId,
-        'band': result.band,
-        'date': dateKey,
-        'correct_count': result.correctCount,
-        'total_time_ms': result.totalTimeMs,
-        'submitted_at': FieldValue.serverTimestamp(),
-      }).timeout(const Duration(seconds: 10));
+      // Jalankan kedua write secara paralel — tidak ada dependensi antar keduanya.
+      await Future.wait([
+        // 1. Simpan hasil daily challenge
+        firestore.collection(collectionName).doc(docId).set({
+          'player_id': currentUid,
+          'username': username,
+          'avatar_id': avatarId,
+          'band': result.band,
+          'date': dateKey,
+          'correct_count': result.correctCount,
+          'total_time_ms': result.totalTimeMs,
+          'submitted_at': FieldValue.serverTimestamp(),
+        }).timeout(const Duration(seconds: 10)),
 
-      // 2. Best-effort sinkronisasi total_score ke /profiles/{currentUid}
-      //    Daily TIDAK menambah skor — ini hanya menyelaraskan agar all-time
-      //    tidak tertinggal. Wajib semantik max(): nilai lama tidak menimpa baru.
-      if (totalScore != null) {
-        await _mergeProfileTotalMax(
-          uid: currentUid,
-          username: username,
-          avatarId: avatarId,
-          totalScore: totalScore,
-        );
-      }
+        // 2. Best-effort sinkronisasi total_score ke /profiles/{currentUid}
+        //    Daily TIDAK menambah skor — ini hanya menyelaraskan agar all-time
+        //    tidak tertinggal. Wajib semantik max(): nilai lama tidak menimpa baru.
+        if (totalScore != null)
+          _mergeProfileTotalMax(
+            uid: currentUid,
+            username: username,
+            avatarId: avatarId,
+            totalScore: totalScore,
+          ),
+      ]);
 
       return const RepoSuccess(null);
     } catch (e) {

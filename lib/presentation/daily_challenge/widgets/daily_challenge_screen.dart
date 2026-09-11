@@ -146,10 +146,11 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
       await ref.read(dailyChallengeRepositoryProvider).saveResult(result);
       ref.invalidate(dailyChallengeCompletionProvider);
 
-      // Jika pemain sudah memiliki username akun, submit ke papan peringkat cloud
+      // Jika pemain sudah memiliki username akun DAN sesi Firebase aktif,
+      // submit ke papan peringkat cloud.
       final accountState = ref.read(accountStatusProvider).valueOrNull;
       final username = accountState?.username;
-      if (username != null && username.isNotEmpty) {
+      if (accountState?.canSubmitToCloud == true && username != null) {
         submitErrMsg = null; // tandai bahwa submit dicoba
         final avatarId = profile?.avatarId;
         // Baca ulang profil agar totalScore yang dikirim adalah nilai terbaru
@@ -171,6 +172,12 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
           ref.invalidate(leaderboardEntriesProvider(bandId));
           ref.invalidate(allTimeEntriesProvider);
         }
+      } else if (username != null && username.isNotEmpty &&
+          accountState?.hasVerifiedSession == false) {
+        // Username lokal ada tapi sesi Firebase sudah tidak aktif.
+        // Kegagalan diam-diam lebih buruk daripada pesan yang jelas.
+        submitErrMsg =
+            'Sesi akun terputus — skor tersimpan lokal, coba masuk ulang di halaman Profil';
       }
     } catch (_) {
       // Graceful degradation: kegagalan IO tidak menghalangi transisi UI

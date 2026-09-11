@@ -23,24 +23,40 @@ class AccountState {
     required this.status,
     this.userId,
     this.username,
+    this.hasVerifiedSession = false,
   });
 
   final AccountStatus status;
   final String? userId;
   final String? username;
 
+  /// True hanya jika ada sesi Firebase Auth aktif (bukan sekadar cache lokal).
+  ///
+  /// Bedakan dari [username] yang bisa berasal dari Hive lokal walau sesi cloud
+  /// sudah hilang (reinstall, token dicabut, dsb.).
+  final bool hasVerifiedSession;
+
   bool get isGuest => status == AccountStatus.guest;
   bool get hasUsername => username != null && username!.trim().length >= 4;
+
+  /// True hanya jika aman untuk mengirim data ke Firestore.
+  ///
+  /// Dipakai di semua titik submission cloud (daily challenge, sync total_score)
+  /// agar tidak mengandalkan cek `username != null` yang bisa misleading saat
+  /// sesi Firebase sudah hilang tapi cache Hive masih ada.
+  bool get canSubmitToCloud => hasVerifiedSession && hasUsername;
 
   AccountState copyWith({
     AccountStatus? status,
     String? userId,
     String? username,
+    bool? hasVerifiedSession,
   }) {
     return AccountState(
       status: status ?? this.status,
       userId: userId ?? this.userId,
       username: username ?? this.username,
+      hasVerifiedSession: hasVerifiedSession ?? this.hasVerifiedSession,
     );
   }
 }
@@ -59,9 +75,12 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
     final localProfile = ref.watch(playerProfileProvider).valueOrNull;
 
     if (!authRepo.isLoggedIn) {
+      // Tidak ada sesi Firebase — username lokal boleh ditampilkan di UI
+      // tapi TIDAK boleh dipakai untuk submission cloud.
       return AccountState(
         status: AccountStatus.guest,
         username: localProfile?.username,
+        hasVerifiedSession: false,
       );
     }
 
@@ -73,6 +92,7 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
       status: authRepo.isAnonymous ? AccountStatus.anonymous : AccountStatus.linked,
       userId: uid,
       username: effectiveUsername,
+      hasVerifiedSession: true,
     );
   }
 
@@ -91,6 +111,7 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
           status: AccountStatus.anonymous,
           userId: result.value,
           username: effectiveUsername,
+          hasVerifiedSession: true,
         ),
       );
     } else {
@@ -98,6 +119,7 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
         AccountState(
           status: AccountStatus.guest,
           username: ref.read(playerProfileProvider).valueOrNull?.username,
+          hasVerifiedSession: false,
         ),
       );
     }
@@ -120,6 +142,7 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
           status: AccountStatus.linked,
           userId: result.value,
           username: effectiveUsername,
+          hasVerifiedSession: true,
         ),
       );
     } else {
@@ -127,6 +150,7 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
         AccountState(
           status: AccountStatus.guest,
           username: ref.read(playerProfileProvider).valueOrNull?.username,
+          hasVerifiedSession: false,
         ),
       );
     }
@@ -143,6 +167,7 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
       AccountState(
         status: AccountStatus.guest,
         username: ref.read(playerProfileProvider).valueOrNull?.username,
+        hasVerifiedSession: false,
       ),
     );
 
