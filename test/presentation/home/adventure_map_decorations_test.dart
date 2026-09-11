@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mathmo_app/core/theme/app_icons.dart';
+import 'package:mathmo_app/core/theme/app_tokens.dart';
 import 'package:mathmo_app/domain/models/session_result.dart';
 import 'package:mathmo_app/domain/repositories/repo_result.dart';
 import 'package:mathmo_app/domain/repositories/session_repository.dart';
@@ -195,5 +196,41 @@ void main() {
       expect(find.byIcon(AppIcons.starFilled), findsNWidgets(3));
       expect(find.byIcon(AppIcons.starEmpty), findsNothing);
     });
+
+    testWidgets(
+      'LevelNode active renders woodTokenPlay and Level label, triggers onTap',
+      (tester) async {
+        var tapped = false;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: LevelNode(
+                level: 4,
+                status: LevelNodeStatus.active,
+                onTap: () {
+                  tapped = true;
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(find.text('Level 4'), findsOneWidget);
+
+        final imageFinder = find.byWidgetPredicate(
+          (widget) =>
+              widget is Image &&
+              widget.image is AssetImage &&
+              (widget.image as AssetImage).assetName == AppAssets.woodTokenPlay,
+        );
+        expect(imageFinder, findsOneWidget);
+
+        await tester.tap(imageFinder);
+        await tester.pump();
+        expect(tapped, isTrue);
+      },
+    );
   });
 }

@@ -106,4 +106,15 @@ class AppIcons {
 
   /// Ikon edit / pensil.
   static const IconData edit = TablerIcons.pencil;
+
+  // ── Session Results Action Buttons ──────────────────────────────
+
+  /// Ikon beranda pada ResultsScreen.
+  static const IconData home = TablerIcons.home;
+
+  /// Ikon ulangi / replay level pada ResultsScreen.
+  static const IconData replay = TablerIcons.rotate;
+
+  /// Ikon level berikutnya pada ResultsScreen.
+  static const IconData nextLevel = TablerIcons.arrowRight;
 }

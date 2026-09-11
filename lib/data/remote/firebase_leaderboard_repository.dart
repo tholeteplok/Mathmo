@@ -322,6 +322,7 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
     required int totalScore,
     int? currentLevel,
     int? totalXp,
+    Map<String, dynamic>? levelRecords,
   }) async {
     try {
       final currentUid = auth.currentUser?.uid;
@@ -333,6 +334,7 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
         totalScore: totalScore,
         currentLevel: currentLevel,
         totalXp: totalXp,
+        levelRecords: levelRecords,
       );
       return const RepoSuccess(null);
     } catch (e) {
@@ -385,7 +387,7 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
   }
 
   /// Menulis profil dengan semantik max() via transaksi agar nilai lama
-  /// dari snapshot usang tidak pernah menimpa total_score, level, atau xp yang lebih baru.
+  /// dari snapshot usang tidak pernah menimpa total_score, level, xp, atau level_records.
   Future<void> _mergeProfileTotalMax({
     required String uid,
     required String username,
@@ -393,6 +395,7 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
     required int totalScore,
     int? currentLevel,
     int? totalXp,
+    Map<String, dynamic>? levelRecords,
   }) async {
     final ref = firestore.collection(profilesCollection).doc(uid);
     await firestore.runTransaction((tx) async {
@@ -415,14 +418,50 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
           ? totalXp
           : existingXp;
 
-      tx.set(ref, {
+      final existingLevelRecords = snap.exists
+          ? (snap.data()?['level_records'] as Map<String, dynamic>? ?? {})
+          : <String, dynamic>{};
+
+      final mergedLevelRecords = Map<String, dynamic>.from(existingLevelRecords);
+      if (levelRecords != null) {
+        for (final entry in levelRecords.entries) {
+          final k = entry.key;
+          if (entry.value is! Map) continue;
+          final newVal = Map<String, dynamic>.from(entry.value as Map);
+          final oldVal = mergedLevelRecords[k] is Map
+              ? Map<String, dynamic>.from(mergedLevelRecords[k] as Map)
+              : null;
+          if (oldVal == null) {
+            mergedLevelRecords[k] = newVal;
+          } else {
+            final oldBest = ((oldVal['best_score'] ?? 0) as num).toInt();
+            final newBest = ((newVal['best_score'] ?? 0) as num).toInt();
+            final oldStars = ((oldVal['stars'] ?? 0) as num).toInt();
+            final newStars = ((newVal['stars'] ?? 0) as num).toInt();
+            final oldAttempts = ((oldVal['attempts'] ?? 0) as num).toInt();
+            final newAttempts = ((newVal['attempts'] ?? 0) as num).toInt();
+            mergedLevelRecords[k] = {
+              'best_score': newBest > oldBest ? newBest : oldBest,
+              'stars': newStars > oldStars ? newStars : oldStars,
+              'attempts': newAttempts > oldAttempts ? newAttempts : oldAttempts,
+            };
+          }
+        }
+      }
+
+      final profilePayload = <String, dynamic>{
         'username': username,
         'avatar_id': avatarId,
         'total_score': mergedScore,
         'current_level': mergedLevel,
         'total_xp': mergedXp,
         'updated_at': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      };
+      if (mergedLevelRecords.isNotEmpty) {
+        profilePayload['level_records'] = mergedLevelRecords;
+      }
+
+      tx.set(ref, profilePayload, SetOptions(merge: true));
     }).timeout(const Duration(seconds: 10));
   }
 }

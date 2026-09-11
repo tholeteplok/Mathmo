@@ -46,7 +46,7 @@ abstract class LeaderboardRepository {
     required int totalScore,
   });
 
-  /// Mendorong progres pemain lokal terbaru (skor, level, xp) ke /profiles/{uid} di cloud.
+  /// Mendorong progres pemain lokal terbaru (skor, level, xp, dan rekor per level) ke /profiles/{uid} di cloud.
   /// Implementasi wajib memakai semantik max(): nilai lama tidak menimpa baru.
   Future<RepoResult<void>> syncProfileProgress({
     required String username,
@@ -54,6 +54,7 @@ abstract class LeaderboardRepository {
     required int totalScore,
     int? currentLevel,
     int? totalXp,
+    Map<String, dynamic>? levelRecords,
   });
 
   /// Mengambil data dokumen profil pemain dari /profiles/{uid} di Firestore.

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/models/level_score_record.dart';
 import '../../../domain/models/player_profile.dart';
 import '../../../domain/repositories/repo_result.dart';
+import '../../../domain/services/scoring_service.dart';
 import '../../game/providers/game_dependencies_provider.dart';
 
 /// Provider state untuk profil pemain yang sedang aktif.
@@ -49,8 +50,9 @@ class PlayerProfileNotifier extends AsyncNotifier<PlayerProfile> {
     }
     if (current == null) return;
 
+    final earnedStars = ScoringService.calculateStars(accuracy);
     final shouldAdvance =
-        accuracy >= 0.7 && playedLevel >= current.currentLevel;
+        earnedStars >= 1 && playedLevel >= current.currentLevel;
     final newLevel = shouldAdvance ? playedLevel + 1 : current.currentLevel;
 
     final updated = current.copyWith(
@@ -65,9 +67,11 @@ class PlayerProfileNotifier extends AsyncNotifier<PlayerProfile> {
   }
 
   /// Mencatat hasil attempt skor level dan menerapkan delta skor terbaik ke profil pemain.
-  Future<int> recordLevelScore({
+  Future<({int scoreDelta, int? previousBestScore, bool isFirstPlay})>
+  recordLevelScore({
     required int level,
     required int sessionScore,
+    double? accuracy,
   }) async {
     final scoreRepo = ref.read(levelScoreRepositoryProvider);
     final scoringService = ref.read(scoringServiceProvider);
@@ -78,10 +82,16 @@ class PlayerProfileNotifier extends AsyncNotifier<PlayerProfile> {
       RepoFailure() => LevelScoreRecord.initial(level),
     };
 
-    final (:scoreDelta, :updatedRecord) = scoringService.computeLevelReplayDelta(
-      currentRecord: currentRecord,
-      newSessionScore: sessionScore,
-    );
+    final isFirstPlay =
+        currentRecord.attempts == 0 || currentRecord.bestScore == 0;
+    final previousBestScore = isFirstPlay ? null : currentRecord.bestScore;
+
+    final (:scoreDelta, :updatedRecord) = scoringService
+        .computeLevelReplayDelta(
+          currentRecord: currentRecord,
+          newSessionScore: sessionScore,
+          accuracy: accuracy,
+        );
 
     await scoreRepo.saveRecord(updatedRecord);
 
@@ -89,7 +99,11 @@ class PlayerProfileNotifier extends AsyncNotifier<PlayerProfile> {
       await addScore(scoreDelta);
     }
 
-    return scoreDelta;
+    return (
+      scoreDelta: scoreDelta,
+      previousBestScore: previousBestScore,
+      isFirstPlay: isFirstPlay,
+    );
   }
 
   /// Menambahkan skor total pemain.

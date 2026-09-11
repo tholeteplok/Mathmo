@@ -59,12 +59,14 @@ void main() {
         level: 3,
         bestScore: 250,
         attempts: 4,
+        stars: 3,
       );
 
       final json = record.toJson();
       expect(json['level'], equals(3));
       expect(json['best_score'], equals(250));
       expect(json['attempts'], equals(4));
+      expect(json['stars'], equals(3));
 
       final deserialized = LevelScoreRecord.fromJson(json);
       expect(deserialized, equals(record));

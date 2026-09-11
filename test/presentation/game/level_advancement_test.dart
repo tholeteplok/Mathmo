@@ -197,36 +197,54 @@ void main() {
     await container.read(playerProfileProvider.future);
 
     // First attempt on level 1: 150 points
-    final delta1 = await container.read(playerProfileProvider.notifier).recordLevelScore(
-      level: 1,
-      sessionScore: 150,
-    );
+    final res1 =
+        await container.read(playerProfileProvider.notifier).recordLevelScore(
+          level: 1,
+          sessionScore: 150,
+        );
 
-    expect(delta1, equals(150));
+    expect(res1.scoreDelta, equals(150));
+    expect(res1.previousBestScore, isNull);
+    expect(res1.isFirstPlay, isTrue);
     expect(fakeScoreRepo.records[1]?.bestScore, equals(150));
     expect(fakeScoreRepo.records[1]?.attempts, equals(1));
-    expect(container.read(playerProfileProvider).valueOrNull?.totalScore, equals(350));
+    expect(
+      container.read(playerProfileProvider).valueOrNull?.totalScore,
+      equals(350),
+    );
 
     // Second attempt on level 1 with lower score: 120 points
-    final delta2 = await container.read(playerProfileProvider.notifier).recordLevelScore(
-      level: 1,
-      sessionScore: 120,
-    );
+    final res2 =
+        await container.read(playerProfileProvider.notifier).recordLevelScore(
+          level: 1,
+          sessionScore: 120,
+        );
 
-    expect(delta2, equals(0));
+    expect(res2.scoreDelta, equals(0));
+    expect(res2.previousBestScore, equals(150));
+    expect(res2.isFirstPlay, isFalse);
     expect(fakeScoreRepo.records[1]?.bestScore, equals(150));
     expect(fakeScoreRepo.records[1]?.attempts, equals(2));
-    expect(container.read(playerProfileProvider).valueOrNull?.totalScore, equals(350));
-
-    // Third attempt on level 1 with higher score: 180 points (+30 delta)
-    final delta3 = await container.read(playerProfileProvider.notifier).recordLevelScore(
-      level: 1,
-      sessionScore: 180,
+    expect(
+      container.read(playerProfileProvider).valueOrNull?.totalScore,
+      equals(350),
     );
 
-    expect(delta3, equals(30));
+    // Third attempt on level 1 with higher score: 180 points (+30 delta)
+    final res3 =
+        await container.read(playerProfileProvider.notifier).recordLevelScore(
+          level: 1,
+          sessionScore: 180,
+        );
+
+    expect(res3.scoreDelta, equals(30));
+    expect(res3.previousBestScore, equals(150));
+    expect(res3.isFirstPlay, isFalse);
     expect(fakeScoreRepo.records[1]?.bestScore, equals(180));
     expect(fakeScoreRepo.records[1]?.attempts, equals(3));
-    expect(container.read(playerProfileProvider).valueOrNull?.totalScore, equals(380));
+    expect(
+      container.read(playerProfileProvider).valueOrNull?.totalScore,
+      equals(380),
+    );
   });
 }

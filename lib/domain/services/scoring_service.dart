@@ -40,9 +40,24 @@ class ScoringService {
       );
     }
 
-    // base_points = 10 * level_multiplier (skala bertahap setiap 5 level)
-    final levelMultiplier = 1.0 + (level ~/ 5) * 0.2;
-    final basePoints = (10 * levelMultiplier).round();
+    // Skala Base Points berbasis Level Band (Opsi A - Proporsional Tingkat Kesulitan):
+    // - Onboarding (Level 1–5): Base 10 (1.0x)
+    // - Basic (Level 6–15): Base 20 (2.0x)
+    // - Intermediate (Level 16–30): Base 40 (4.0x)
+    // - Advanced (Level 31–50): Base 70 (7.0x)
+    // - Expert (Level 51+): Base 100 (10.0x)
+    final int basePoints;
+    if (level <= 5) {
+      basePoints = 10;
+    } else if (level <= 15) {
+      basePoints = 20;
+    } else if (level <= 30) {
+      basePoints = 40;
+    } else if (level <= 50) {
+      basePoints = 70;
+    } else {
+      basePoints = 100;
+    }
 
     // speed_bonus = round(base_points * 0.3 * (time_left / time_total))
     final timeRatio = timeTotalMs > 0
@@ -53,8 +68,10 @@ class ScoringService {
     // mastery_bonus = fact.box <= 2 ? 8 : 0 (insentif melatih fakta yang masih lemah)
     final masteryBonus = (factBox != null && factBox <= 2) ? 8 : 0;
 
-    // streak_bonus = min(streak_correct * 2, 20)
-    final streakBonus = min(streakCorrect * 2, 20);
+    // streak_bonus = round(base_points * min(streak_correct * 0.05, 0.5))
+    // Maksimal 50% dari basePoints (proporsional per band, tidak flat lagi!)
+    final streakRatio = (min(streakCorrect, 10) / 10.0) * 0.5;
+    final streakBonus = (basePoints * streakRatio).round();
 
     final total = basePoints + speedBonus + masteryBonus + streakBonus;
 
@@ -100,8 +117,30 @@ class ScoringService {
   ({int scoreDelta, LevelScoreRecord updatedRecord}) computeLevelReplayDelta({
     required LevelScoreRecord currentRecord,
     required int newSessionScore,
+    double? accuracy,
   }) {
-    final result = currentRecord.applyAttempt(newSessionScore);
+    final earnedStars = accuracy != null ? calculateStars(accuracy) : null;
+    final result = currentRecord.applyAttempt(
+      newSessionScore,
+      earnedStars: earnedStars,
+    );
     return (scoreDelta: result.delta, updatedRecord: result.record);
+  }
+
+  /// Menghitung jumlah bintang berdasarkan akurasi (0.0 .. 1.0) — Opsi A:
+  /// - Akurasi >= 90% (0.90): 3 Bintang (★★★)
+  /// - Akurasi >= 70% (0.70): 2 Bintang (★★☆)
+  /// - Akurasi >= 50% (0.50): 1 Bintang (★☆☆) — syarat minimal lolos level
+  /// - Akurasi < 50%: 0 Bintang (☆☆☆) — gagal
+  static int calculateStars(double accuracy) {
+    if (accuracy >= 0.9) {
+      return 3;
+    } else if (accuracy >= 0.7) {
+      return 2;
+    } else if (accuracy >= 0.5) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
 }

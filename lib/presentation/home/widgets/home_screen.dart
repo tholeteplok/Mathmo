@@ -6,8 +6,8 @@ import '../../../core/services/bgm_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
 import '../../game/providers/level_band_theme_provider.dart';
+import '../../settings/providers/settings_provider.dart';
 import '../../shared/widgets/app_header.dart';
-import '../providers/bgm_provider.dart';
 import '../providers/level_stars_provider.dart';
 import '../providers/player_profile_provider.dart';
 import 'avatar_callout_pin.dart';
@@ -240,6 +240,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       precacheImage(AssetImage(stage.assetPath), context);
     }
     // Precache aset taktil
+    precacheImage(const AssetImage(AppAssets.woodTokenPlay), context);
     precacheImage(const AssetImage(AppAssets.woodTokenChecked), context);
     precacheImage(const AssetImage(AppAssets.woodTokenLocked), context);
   }
@@ -673,13 +674,13 @@ class _MuteToggleButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMuted = ref.watch(bgmMuteProvider);
+    final isMuted = ref.watch(audioSettingsProvider.select((s) => s.bgmMuted));
     return Tooltip(
       message: isMuted ? 'Nyalakan Musik' : 'Matikan Musik',
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => ref.read(bgmMuteProvider.notifier).toggle(),
+          onTap: () => ref.read(audioSettingsProvider.notifier).toggleBgm(),
           customBorder: const CircleBorder(),
           child: Container(
             width: 38,

@@ -6,7 +6,6 @@ import 'package:mathmo_app/core/services/bgm_service.dart';
 import 'package:mathmo_app/core/services/sfx_service.dart';
 import 'package:mathmo_app/core/theme/app_theme.dart';
 import 'package:mathmo_app/domain/models/player_profile.dart';
-import 'package:mathmo_app/presentation/home/providers/bgm_provider.dart';
 import 'package:mathmo_app/presentation/home/providers/player_profile_provider.dart';
 import 'package:mathmo_app/presentation/settings/providers/settings_provider.dart';
 import 'package:mathmo_app/core/constants/developer_contact.dart';

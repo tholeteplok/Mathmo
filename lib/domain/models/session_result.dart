@@ -161,6 +161,8 @@ class SessionResult {
     required this.bestStreak,
     required this.xpEarned,
     required this.xpBreakdown,
+    this.scoreDelta,
+    this.previousBestScore,
   });
 
   /// ID unik sesi permainan (mis. 's_20260908_1').
@@ -183,6 +185,12 @@ class SessionResult {
 
   /// Total akumulasi skor dari seluruh ronde.
   final int totalScore;
+
+  /// Delta peningkatan skor yang ditambahkan ke skor total akun (jika rekor baru).
+  final int? scoreDelta;
+
+  /// Rekor skor terbaik sebelum sesi ini dimainkan (null jika first-time play).
+  final int? previousBestScore;
 
   /// Rasio akurasi jawaban (0.0 sampai 1.0).
   final double accuracy;
@@ -238,6 +246,9 @@ class SessionResult {
       bestStreak: ((json['best_streak'] ?? json['bestStreak']) as num).toInt(),
       xpEarned: ((json['xp_earned'] ?? json['xpEarned']) as num).toInt(),
       xpBreakdown: xpBreakdown,
+      scoreDelta: (json['score_delta'] ?? json['scoreDelta']) as int?,
+      previousBestScore:
+          (json['previous_best_score'] ?? json['previousBestScore']) as int?,
     );
   }
 
@@ -256,6 +267,8 @@ class SessionResult {
       'best_streak': bestStreak,
       'xp_earned': xpEarned,
       'xp_breakdown': xpBreakdown.toJson(),
+      if (scoreDelta != null) 'score_delta': scoreDelta,
+      if (previousBestScore != null) 'previous_best_score': previousBestScore,
     };
   }
 
@@ -273,6 +286,8 @@ class SessionResult {
     int? bestStreak,
     int? xpEarned,
     XpBreakdown? xpBreakdown,
+    int? scoreDelta,
+    int? previousBestScore,
   }) {
     return SessionResult(
       sessionId: sessionId ?? this.sessionId,
@@ -287,6 +302,8 @@ class SessionResult {
       bestStreak: bestStreak ?? this.bestStreak,
       xpEarned: xpEarned ?? this.xpEarned,
       xpBreakdown: xpBreakdown ?? this.xpBreakdown,
+      scoreDelta: scoreDelta ?? this.scoreDelta,
+      previousBestScore: previousBestScore ?? this.previousBestScore,
     );
   }
 
@@ -303,6 +320,8 @@ class SessionResult {
         endedAt != other.endedAt ||
         levelReached != other.levelReached ||
         totalScore != other.totalScore ||
+        scoreDelta != other.scoreDelta ||
+        previousBestScore != other.previousBestScore ||
         accuracy != other.accuracy ||
         avgResponseTimeMs != other.avgResponseTimeMs ||
         bestStreak != other.bestStreak ||
@@ -328,6 +347,8 @@ class SessionResult {
     levelReached,
     Object.hashAll(rounds),
     totalScore,
+    scoreDelta,
+    previousBestScore,
     accuracy,
     avgResponseTimeMs,
     bestStreak,

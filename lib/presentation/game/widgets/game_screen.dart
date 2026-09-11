@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_tokens.dart';
+import '../../../domain/models/level_score_record.dart';
 import '../../../domain/models/session_result.dart';
+import '../../../domain/repositories/repo_result.dart';
 import '../../home/providers/level_stars_provider.dart';
 import '../../home/providers/player_profile_provider.dart';
 import '../../leaderboard/providers/leaderboard_provider.dart';
@@ -89,17 +91,32 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               accuracy: next.result.accuracy,
             );
 
+        // Perbarui bintang level secara instan di memori (0 ms delay)
+        ref.read(levelStarsProvider.notifier).recordStars(
+              level: widget.level,
+              accuracy: next.result.accuracy,
+            );
+
         // Catat rekor skor level & terapkan best-score delta, lalu dorong
         // total terbaru ke cloud agar tab Semua Waktu sinkron (max-safety).
-        // Fire-and-forget: kegagalan jaringan tidak menghalangi hasil.
         (() async {
           try {
-            final delta = await ref
+            final deltaResult = await ref
                 .read(playerProfileProvider.notifier)
                 .recordLevelScore(
                   level: widget.level,
                   sessionScore: next.result.totalScore,
+                  accuracy: next.result.accuracy,
                 );
+
+            if (context.mounted) {
+              final enrichedResult = next.result.copyWith(
+                scoreDelta: deltaResult.scoreDelta,
+                previousBestScore: deltaResult.previousBestScore,
+              );
+              context.go('/results', extra: enrichedResult);
+            }
+
             final accountState =
                 ref.read(accountStatusProvider).valueOrNull;
             final username = accountState?.username;
@@ -108,7 +125,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                 ref.read(playerProfileProvider).valueOrNull;
             if (latest == null) return;
 
-            if (delta > 0) {
+            if (deltaResult.scoreDelta > 0) {
               // Injeksi update optimistik seketika ke papan peringkat all-time
               ref.read(allTimeEntriesProvider.notifier).addOptimisticScore(
                     username: username,
@@ -117,29 +134,35 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                   );
             }
 
-            // Sync progres lengkap (skor, level, xp) ke cloud profil pemain
+            // Ambil seluruh rekor level lokal untuk disinkronkan ke cloud
+            final scoreRepo = ref.read(levelScoreRepositoryProvider);
+            final recordsResult = await scoreRepo.getAllRecords();
+            final Map<String, dynamic> levelRecordsPayload = {};
+            if (recordsResult is RepoSuccess<Map<int, LevelScoreRecord>>) {
+              for (final entry in recordsResult.value.entries) {
+                levelRecordsPayload[entry.key.toString()] = entry.value.toJson();
+              }
+            }
+
+            // Sync progres lengkap (skor, level, xp, dan rekor per level) ke cloud profil pemain
             await ref.read(leaderboardRepositoryProvider).syncProfileProgress(
                   username: username,
                   avatarId: latest.avatarId,
                   totalScore: latest.totalScore,
                   currentLevel: latest.currentLevel,
                   totalXp: latest.totalXp,
+                  levelRecords: levelRecordsPayload.isNotEmpty ? levelRecordsPayload : null,
                 );
 
             // Invalidate allTimeEntriesProvider agar daftar all-time selalu fresh saat dibuka
             ref.invalidate(allTimeEntriesProvider);
           } catch (_) {
-            // Abaikan: progres lokal sudah tersimpan, sinkron bisa susul.
+            // Jika terjadi kegagalan lokal tidak terduga, tetap navigasikan ke results
+            if (context.mounted) {
+              context.go('/results', extra: next.result);
+            }
           }
         })();
-
-        // Perbarui bintang level secara instan di memori (0 ms delay)
-        ref.read(levelStarsProvider.notifier).recordStars(
-              level: widget.level,
-              accuracy: next.result.accuracy,
-            );
-
-        context.go('/results', extra: next.result);
       }
     });
 

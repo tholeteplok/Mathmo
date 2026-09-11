@@ -141,6 +141,8 @@ class _AudioCard extends ConsumerWidget {
 
           // Baris BGM Switch & Slider
           _AudioControlRow(
+            key: const Key('row_bgm'),
+            toggleKey: const Key('switch_bgm'),
             title: 'Musik Latar (BGM)',
             subtitle: 'Lagu suasana tema adaptif di setiap zona',
             icon: Icons.music_note_rounded,
@@ -153,6 +155,8 @@ class _AudioCard extends ConsumerWidget {
 
           // Baris SFX Switch & Slider
           _AudioControlRow(
+            key: const Key('row_sfx'),
+            toggleKey: const Key('switch_sfx'),
             title: 'Efek Suara (SFX)',
             subtitle: 'Respon ketukan, jawaban benar/salah, & hadiah',
             icon: Icons.graphic_eq_rounded,
@@ -170,6 +174,7 @@ class _AudioCard extends ConsumerWidget {
 /// Baris kontrol audio dengan switch on/off dan slider volume.
 class _AudioControlRow extends StatelessWidget {
   const _AudioControlRow({
+    super.key,
     required this.title,
     required this.subtitle,
     required this.icon,
@@ -177,6 +182,7 @@ class _AudioControlRow extends StatelessWidget {
     required this.volume,
     required this.onToggle,
     required this.onVolumeChanged,
+    this.toggleKey,
   });
 
   final String title;
@@ -186,6 +192,7 @@ class _AudioControlRow extends StatelessWidget {
   final double volume;
   final VoidCallback onToggle;
   final ValueChanged<double> onVolumeChanged;
+  final Key? toggleKey;
 
   @override
   Widget build(BuildContext context) {
@@ -227,6 +234,7 @@ class _AudioControlRow extends StatelessWidget {
             const SizedBox(width: 8),
             // Neobrutalist Toggle Switch
             GestureDetector(
+              key: toggleKey,
               onTap: onToggle,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
@@ -530,7 +538,7 @@ class _AboutCard extends StatelessWidget {
             ),
           ),
 
-          // Logo Brand iTHUNG (Baberry Font)
+          // Logo Brand iTHUNG (Coffee Spark Font)
           Text(
             'iTHUNG',
             style: AppTheme.brandTitleStyle(

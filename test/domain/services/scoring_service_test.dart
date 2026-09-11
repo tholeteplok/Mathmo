@@ -25,9 +25,9 @@ void main() {
         // Level 1: base = 10
         // timeLeft = 2000 / 4000 = 0.5 ratio
         // speed_bonus = round(10 * 0.3 * 0.5) = round(1.5) = 2
-        // streak = 3 -> streakBonus = min(3*2, 20) = 6
+        // streak = 3 -> streakRatio = (3 / 10.0) * 0.5 = 0.15 -> streakBonus = round(10 * 0.15) = 2
         // masteryBonus = 0 (no factBox)
-        // total = 10 + 2 + 0 + 6 = 18
+        // total = 10 + 2 + 0 + 2 = 14
         final result = scoringService.computeRoundScore(
           level: 1,
           timeLeftMs: 2000,
@@ -38,9 +38,9 @@ void main() {
 
         expect(result.breakdown.basePoints, equals(10));
         expect(result.breakdown.speedBonus, equals(2));
-        expect(result.breakdown.streakBonus, equals(6));
+        expect(result.breakdown.streakBonus, equals(2));
         expect(result.breakdown.masteryBonus, equals(0));
-        expect(result.roundScore, equals(18));
+        expect(result.roundScore, equals(14));
       },
     );
 
@@ -58,16 +58,61 @@ void main() {
       expect(result.roundScore, greaterThan(8));
     });
 
-    test('caps streak bonus at 20', () {
-      final result = scoringService.computeRoundScore(
+    test('scales base points and caps streak bonus at 50% across bands', () {
+      // Level 1 (Onboarding): base = 10 -> max streak = 5
+      final onbResult = scoringService.computeRoundScore(
         level: 1,
         timeLeftMs: 0,
         timeTotalMs: 4000,
-        streakCorrect: 15, // 15 * 2 = 30 -> capped at 20
+        streakCorrect: 15,
         isCorrect: true,
       );
+      expect(onbResult.breakdown.basePoints, equals(10));
+      expect(onbResult.breakdown.streakBonus, equals(5));
 
-      expect(result.breakdown.streakBonus, equals(20));
+      // Level 10 (Basic): base = 20 -> max streak = 10
+      final basicResult = scoringService.computeRoundScore(
+        level: 10,
+        timeLeftMs: 0,
+        timeTotalMs: 4000,
+        streakCorrect: 15,
+        isCorrect: true,
+      );
+      expect(basicResult.breakdown.basePoints, equals(20));
+      expect(basicResult.breakdown.streakBonus, equals(10));
+
+      // Level 20 (Intermediate): base = 40 -> max streak = 20
+      final interResult = scoringService.computeRoundScore(
+        level: 20,
+        timeLeftMs: 0,
+        timeTotalMs: 4000,
+        streakCorrect: 15,
+        isCorrect: true,
+      );
+      expect(interResult.breakdown.basePoints, equals(40));
+      expect(interResult.breakdown.streakBonus, equals(20));
+
+      // Level 40 (Advanced): base = 70 -> max streak = 35
+      final advResult = scoringService.computeRoundScore(
+        level: 40,
+        timeLeftMs: 0,
+        timeTotalMs: 4000,
+        streakCorrect: 15,
+        isCorrect: true,
+      );
+      expect(advResult.breakdown.basePoints, equals(70));
+      expect(advResult.breakdown.streakBonus, equals(35));
+
+      // Level 55 (Expert): base = 100 -> max streak = 50
+      final expResult = scoringService.computeRoundScore(
+        level: 55,
+        timeLeftMs: 0,
+        timeTotalMs: 4000,
+        streakCorrect: 15,
+        isCorrect: true,
+      );
+      expect(expResult.breakdown.basePoints, equals(100));
+      expect(expResult.breakdown.streakBonus, equals(50));
     });
   });
 
@@ -101,17 +146,19 @@ void main() {
   });
 
   group('ScoringService.computeLevelReplayDelta', () {
-    test('computes positive delta when new score beats record', () {
+    test('computes positive delta when new score beats record and updates stars', () {
       final initial = LevelScoreRecord.initial(1);
       final (:scoreDelta, :updatedRecord) =
           scoringService.computeLevelReplayDelta(
         currentRecord: initial,
         newSessionScore: 200,
+        accuracy: 0.95,
       );
 
       expect(scoreDelta, equals(200));
       expect(updatedRecord.bestScore, equals(200));
       expect(updatedRecord.attempts, equals(1));
+      expect(updatedRecord.stars, equals(3));
     });
 
     test('computes zero delta when new score is less than record', () {
@@ -119,17 +166,20 @@ void main() {
         level: 1,
         bestScore: 200,
         attempts: 1,
+        stars: 3,
       );
 
       final (:scoreDelta, :updatedRecord) =
           scoringService.computeLevelReplayDelta(
         currentRecord: existing,
         newSessionScore: 150,
+        accuracy: 0.75, // 2 stars, but existing is 3 stars -> stays 3
       );
 
       expect(scoreDelta, equals(0));
       expect(updatedRecord.bestScore, equals(200));
       expect(updatedRecord.attempts, equals(2));
+      expect(updatedRecord.stars, equals(3));
     });
 
     test('computes incremental delta when new score exceeds previous best', () {
@@ -137,17 +187,34 @@ void main() {
         level: 2,
         bestScore: 120,
         attempts: 2,
+        stars: 1,
       );
 
       final (:scoreDelta, :updatedRecord) =
           scoringService.computeLevelReplayDelta(
         currentRecord: existing,
         newSessionScore: 180,
+        accuracy: 0.8, // 2 stars -> upgrades from 1 to 2
       );
 
       expect(scoreDelta, equals(60));
       expect(updatedRecord.bestScore, equals(180));
       expect(updatedRecord.attempts, equals(3));
+      expect(updatedRecord.stars, equals(2));
+    });
+  });
+
+  group('ScoringService.calculateStars', () {
+    test('maps accuracy thresholds correctly to 3, 2, 1, 0 stars', () {
+      expect(ScoringService.calculateStars(1.0), equals(3));
+      expect(ScoringService.calculateStars(0.90), equals(3));
+      expect(ScoringService.calculateStars(0.89), equals(2));
+      expect(ScoringService.calculateStars(0.70), equals(2));
+      expect(ScoringService.calculateStars(0.69), equals(1));
+      expect(ScoringService.calculateStars(0.50), equals(1));
+      expect(ScoringService.calculateStars(0.49), equals(0));
+      expect(ScoringService.calculateStars(0.20), equals(0));
+      expect(ScoringService.calculateStars(0.0), equals(0));
     });
   });
 }

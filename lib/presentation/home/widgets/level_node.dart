@@ -93,16 +93,7 @@ class LevelNode extends StatelessWidget {
   }
 
   Widget _buildActiveNode(BuildContext context) {
-    // Tombol aktif selalu menggunakan warna hijau AppTheme.colorSage agar kontras
-    // dan langsung dikenali pemain sebagai tombol utama (Call-to-Action) di semua zona.
-    const activeColor = AppTheme.colorSage;
-    final hsl = HSLColor.fromColor(activeColor);
-    final baseColor = hsl
-        .withLightness((hsl.lightness - 0.20).clamp(0.0, 1.0))
-        .toColor();
-    final borderColor = hsl
-        .withLightness((hsl.lightness - 0.28).clamp(0.0, 1.0))
-        .toColor();
+    final haloColor = accentColor;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -111,31 +102,18 @@ class LevelNode extends StatelessWidget {
           alignment: Alignment.center,
           clipBehavior: Clip.none,
           children: [
-            // Cincin halo ambient dinamis
-            Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: activeColor.withValues(alpha: 0.35),
-                  width: 3.5,
-                ),
-              ),
+            // Cincin halo ambient dinamis bernapas lembut
+            _PulsingHalo(
+              color: haloColor,
+              width: 88,
+              height: 68,
             ),
-            // Tombol 3D Stepping Disc
-            _SteppingDiscButton(
+            // Tactile Wood Token Play (Hero CTA)
+            _TactileWoodToken(
+              assetPath: AppAssets.woodTokenPlay,
+              width: 76,
+              height: 58,
               onTap: onTap,
-              diameter: 76,
-              depth: 7,
-              capColor: activeColor,
-              baseColor: baseColor,
-              borderColor: borderColor,
-              child: const Icon(
-                AppIcons.levelActive,
-                color: Colors.white,
-                size: 38,
-              ),
             ),
           ],
         ),
@@ -241,120 +219,83 @@ class _TactileWoodTokenState extends State<_TactileWoodToken> {
   }
 }
 
-/// Komponen tombol 3D stepping disc silinder fisik dengan animasi pegas empuk.
-class _SteppingDiscButton extends StatefulWidget {
-  const _SteppingDiscButton({
-    required this.onTap,
-    required this.diameter,
-    required this.depth,
-    required this.capColor,
-    required this.baseColor,
-    required this.borderColor,
-    required this.child,
+/// Cincin halo ambient yang berdenyut lembut (pulsing) di belakang token aktif.
+class _PulsingHalo extends StatefulWidget {
+  const _PulsingHalo({
+    required this.color,
+    this.width = 88,
+    this.height = 68,
   });
 
-  final VoidCallback? onTap;
-  final double diameter;
-  final double depth;
-  final Color capColor;
-  final Color baseColor;
-  final Color borderColor;
-  final Widget child;
+  final Color color;
+  final double width;
+  final double height;
 
   @override
-  State<_SteppingDiscButton> createState() => _SteppingDiscButtonState();
+  State<_PulsingHalo> createState() => _PulsingHaloState();
 }
 
-class _SteppingDiscButtonState extends State<_SteppingDiscButton> {
-  bool _isPressed = false;
+class _PulsingHaloState extends State<_PulsingHalo>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _opacityAnimation;
 
-  void _handleTapDown(TapDownDetails _) {
-    if (widget.onTap == null) return;
-    HapticFeedback.selectionClick();
-    setState(() => _isPressed = true);
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.10).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 0.20, end: 0.50).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
   }
 
-  void _handleTapUp(TapUpDetails _) {
-    if (widget.onTap == null) return;
-    setState(() => _isPressed = false);
-    widget.onTap?.call();
-  }
-
-  void _handleTapCancel() {
-    if (widget.onTap == null) return;
-    setState(() => _isPressed = false);
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isPressed = _isPressed;
-    final totalHeight = widget.diameter + widget.depth;
-
-    return GestureDetector(
-      onTapDown: _handleTapDown,
-      onTapUp: _handleTapUp,
-      onTapCancel: _handleTapCancel,
-      child: SizedBox(
-        width: widget.diameter,
-        height: totalHeight,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // 1. Alas Silinder 3D (Extruded Base Lip) + Ambient Shadow
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: widget.diameter,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: widget.baseColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: widget.borderColor,
-                    width: 2.0,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.colorWoodDark.withValues(alpha: 0.20),
-                      offset: const Offset(0, 4),
-                      blurRadius: 6,
-                    ),
-                  ],
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final scale = _scaleAnimation.value;
+          final opacity = _opacityAnimation.value;
+          return Transform.scale(
+            scale: scale,
+            child: Container(
+              width: widget.width,
+              height: widget.height,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(
+                  Radius.elliptical(widget.width / 2, widget.height / 2),
                 ),
+                border: Border.all(
+                  color: widget.color.withValues(alpha: opacity),
+                  width: 3.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.color.withValues(alpha: opacity * 0.45),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
             ),
-
-            // 2. Permukaan Cap (Moving Top Face)
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 70),
-              curve: Curves.easeOutQuad,
-              top: isPressed ? widget.depth : 0.0,
-              left: 0,
-              right: 0,
-              height: widget.diameter,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: widget.capColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: widget.borderColor,
-                    width: 2.0,
-                  ),
-                  gradient: RadialGradient(
-                    center: const Alignment(-0.2, -0.4),
-                    radius: 0.85,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.20),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-                child: Center(child: widget.child),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

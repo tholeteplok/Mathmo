@@ -94,6 +94,9 @@ class ChunkyShadow {
 
   /// State tombol saat ditekan (shadow menghilang rata permukaan).
   static const List<BoxShadow> pressed = [];
+
+  /// Path gambar kanvas latar belakang splash screen.
+  static const String splashCanvasBackground = AppAssets.splashCanvasBackground;
 }
 
 /// Helper konversi derajat ke radian.
@@ -134,7 +137,11 @@ class AppAssets {
   // Legacy (dijaga agar backward-compatible bila ada referensi lama)
   static const String woodTokenLocked = 'assets/images/wood_token_locked.png';
   static const String woodTokenChecked = 'assets/images/wood_token_checked.png';
+  static const String woodTokenPlay = 'assets/images/wood_token_play.png';
   static const String woodBoardSquare = 'assets/images/wood_board_square.png';
   static const String woodSignHanging = 'assets/images/wood_sign_hanging.png';
+
+  /// Path gambar kanvas latar belakang splash screen.
+  static const String splashCanvasBackground = 'assets/images/hill_canvas.png';
 }
 

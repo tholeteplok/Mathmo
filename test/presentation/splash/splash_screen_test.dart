@@ -6,9 +6,9 @@ import 'package:mathmo_app/presentation/splash/widgets/splash_screen.dart';
 
 void main() {
   group('SplashScreen Widget Tests', () {
-    test('AppTheme.brandTitleStyle uses Baberry font', () {
+    test('AppTheme.brandTitleStyle uses CoffeeSpark font', () {
       final style = AppTheme.brandTitleStyle(fontSize: 60);
-      expect(style.fontFamily, equals('Baberry'));
+      expect(style.fontFamily, equals('CoffeeSpark'));
       expect(style.fontSize, equals(60));
       expect(style.color, equals(AppTheme.colorHoney));
     });

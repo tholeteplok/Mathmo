@@ -10,7 +10,9 @@ void main() {
       expect(LevelStarsNotifier.calculateStars(0.89), 2);
       expect(LevelStarsNotifier.calculateStars(0.70), 2);
       expect(LevelStarsNotifier.calculateStars(0.69), 1);
-      expect(LevelStarsNotifier.calculateStars(0.0), 1);
+      expect(LevelStarsNotifier.calculateStars(0.50), 1);
+      expect(LevelStarsNotifier.calculateStars(0.49), 0);
+      expect(LevelStarsNotifier.calculateStars(0.0), 0);
     });
 
     test('recordStars updates in-memory stars map instantly (0ms delay)', () async {
@@ -43,6 +45,29 @@ void main() {
       final updated2 = container.read(levelStarsProvider).valueOrNull;
       expect(updated2?[2], 2);
       expect(updated2?[1], 3);
+    });
+
+    test('restoreStars merges restored cloud stars into in-memory map', () async {
+      final container = ProviderContainer(
+        overrides: [
+          levelStarsProvider.overrideWith(
+            () => _MockLevelStarsNotifier({1: 1}),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final initial = await container.read(levelStarsProvider.future);
+      expect(initial[1], 1);
+
+      // Restore from cloud: Level 1 has 3 stars, Level 2 has 2 stars
+      container
+          .read(levelStarsProvider.notifier)
+          .restoreStars({1: 3, 2: 2});
+
+      final updated = container.read(levelStarsProvider).valueOrNull;
+      expect(updated?[1], 3);
+      expect(updated?[2], 2);
     });
   });
 }

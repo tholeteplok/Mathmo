@@ -2,10 +2,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../domain/models/level_score_record.dart';
 import '../../../domain/models/player_profile.dart';
 import '../../../domain/repositories/repo_result.dart';
 import '../../daily_challenge/providers/daily_sync_provider.dart';
 import '../../game/providers/game_dependencies_provider.dart';
+import '../../home/providers/level_stars_provider.dart';
 import '../../home/providers/player_profile_provider.dart';
 
 /// Status akun pemain.
@@ -168,6 +170,30 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
         );
 
         await ref.read(playerProfileProvider.notifier).updateProfile(restoredProfile);
+
+        // 2. Pulihkan rekor skor & bintang per level dari Cloud ke Hive lokal
+        final cloudRecords = cloudData['level_records'] as Map<String, dynamic>?;
+        if (cloudRecords != null && cloudRecords.isNotEmpty) {
+          final scoreRepo = ref.read(levelScoreRepositoryProvider);
+          final restoredStarsMap = <int, int>{};
+
+          for (final entry in cloudRecords.entries) {
+            final lvl = int.tryParse(entry.key);
+            if (lvl != null && entry.value is Map) {
+              final recMap = Map<String, dynamic>.from(entry.value as Map);
+              recMap['level'] = lvl;
+              final record = LevelScoreRecord.fromJson(recMap);
+              await scoreRepo.saveRecord(record);
+              if (record.stars > 0) {
+                restoredStarsMap[lvl] = record.stars;
+              }
+            }
+          }
+
+          if (restoredStarsMap.isNotEmpty) {
+            ref.read(levelStarsProvider.notifier).restoreStars(restoredStarsMap);
+          }
+        }
       }
     } catch (e, stack) {
       debugPrint('[_restoreFromCloud] Gagal memulihkan profil dari cloud: $e\n$stack');

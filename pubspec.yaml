@@ -54,9 +54,9 @@ flutter:
     - assets/icon/
 
   fonts:
-    - family: Baberry
+    - family: CoffeeSpark
       fonts:
-        - asset: assets/font/baberry/Baberry.ttf
+        - asset: "assets/font/coffee_spark/Coffee Spark.ttf"
     - family: Catboo
       fonts:
         - asset: assets/font/catboo/Catboo.ttf

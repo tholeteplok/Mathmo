@@ -176,17 +176,38 @@ class AppTheme {
     );
   }
 
-  /// TextStyle khusus untuk nama brand aplikasi "iTHUNG" menggunakan font kustom Baberry.
+  /// Family font brand "iTHUNG" tersentralisasi (Coffee Spark).
+  static const String brandFontFamily = 'CoffeeSpark';
+
+  /// TextStyle khusus untuk nama brand aplikasi "iTHUNG" menggunakan font kustom Coffee Spark.
   static TextStyle brandTitleStyle({
     double fontSize = 62,
     Color color = colorHoney,
     double? letterSpacing,
   }) {
     return TextStyle(
-      fontFamily: 'Baberry',
+      fontFamily: brandFontFamily,
       fontSize: fontSize,
       color: color,
       letterSpacing: letterSpacing,
+    );
+  }
+
+  /// TextStyle outline stroke untuk nama brand aplikasi "iTHUNG".
+  static TextStyle brandOutlineStyle({
+    double fontSize = 66,
+    double strokeWidth = 5.2,
+    Color color = colorWoodDark,
+    double? letterSpacing,
+  }) {
+    return TextStyle(
+      fontFamily: brandFontFamily,
+      fontSize: fontSize,
+      letterSpacing: letterSpacing,
+      foreground: Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..color = color,
     );
   }
 
