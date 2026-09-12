@@ -48,4 +48,15 @@ class HiveSessionRepository implements SessionRepository {
       return RepoFailure('Gagal memuat riwayat sesi', e);
     }
   }
+
+  @override
+  Future<RepoResult<void>> clearAll() async {
+    try {
+      final box = await _getBox();
+      await box.clear();
+      return const RepoSuccess(null);
+    } catch (e) {
+      return RepoFailure('Gagal mengosongkan riwayat sesi', e);
+    }
+  }
 }

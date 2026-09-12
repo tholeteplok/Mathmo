@@ -94,4 +94,26 @@ class HivePlayerRepository implements PlayerRepository {
       return RepoFailure('Gagal memperbarui streak aktivitas harian', e);
     }
   }
+
+  @override
+  Future<RepoResult<PlayerProfile>> resetProfile() async {
+    try {
+      final defaultProfile = PlayerProfile(
+        playerId: 'p_${const Uuid().v4().substring(0, 8)}',
+        currentLevel: 1,
+        totalXp: 0,
+        streak: const StreakState(
+          currentStreak: 0,
+          freezeTokens: 1,
+          lastPlayedDate: null,
+        ),
+        confidenceScore: 0,
+        createdAt: DateTime.now(),
+      );
+      await saveProfile(defaultProfile);
+      return RepoSuccess(defaultProfile);
+    } catch (e) {
+      return RepoFailure('Gagal mereset profil pemain', e);
+    }
+  }
 }

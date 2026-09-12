@@ -9,6 +9,7 @@ import '../../daily_challenge/providers/daily_sync_provider.dart';
 import '../../game/providers/game_dependencies_provider.dart';
 import '../../home/providers/level_stars_provider.dart';
 import '../../home/providers/player_profile_provider.dart';
+import 'profile_stats_provider.dart';
 
 /// Status akun pemain.
 enum AccountStatus {
@@ -194,6 +195,7 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
             ref.read(levelStarsProvider.notifier).restoreStars(restoredStarsMap);
           }
         }
+        ref.invalidate(profileStatsProvider);
       }
     } catch (e, stack) {
       debugPrint('[_restoreFromCloud] Gagal memulihkan profil dari cloud: $e\n$stack');
@@ -275,15 +277,43 @@ class AccountStatusNotifier extends AsyncNotifier<AccountState> {
     }
   }
 
-  /// Keluar dari akun.
+  /// Keluar dari akun pemain dan membersihkan data gameplay lokal ke status Tamu baru.
+  ///
+  /// Progres akun cloud (Google) tetap aman di Firestore dan akan dipulihkan utuh saat login ulang.
   Future<RepoResult<void>> signOut() async {
+    // 1. Sinkronisasi akhir untuk pending submissions jika ada sesi aktif
+    try {
+      await ref.read(dailySyncServiceProvider).syncPendingSubmissions();
+    } catch (_) {}
+
+    // 2. Putus sesi autentikasi Firebase
     final authRepo = ref.read(authRepositoryProvider);
     final result = await authRepo.signOut();
 
-    state = AsyncData(
+    // 3. Reset repositori data gameplay lokal ke default
+    final playerRepo = ref.read(playerRepositoryProvider);
+    final resetResult = await playerRepo.resetProfile();
+    final newProfile = switch (resetResult) {
+      RepoSuccess(:final value) => value,
+      RepoFailure() => PlayerProfile.initial(
+          playerId: 'p_${DateTime.now().millisecondsSinceEpoch.toRadixString(36)}',
+        ),
+    };
+
+    await ref.read(levelScoreRepositoryProvider).clearAll();
+    await ref.read(masteryRepositoryProvider).clearAll();
+    await ref.read(sessionRepositoryProvider).clearAll();
+    await ref.read(dailyChallengeRepositoryProvider).clearUserData();
+
+    // 4. Perbarui state reaktif di memori
+    ref.read(playerProfileProvider.notifier).resetProfile(newProfile);
+    ref.read(levelStarsProvider.notifier).resetStars();
+    ref.invalidate(profileStatsProvider);
+
+    state = const AsyncData(
       AccountState(
         status: AccountStatus.guest,
-        username: ref.read(playerProfileProvider).valueOrNull?.username,
+        username: null,
         hasVerifiedSession: false,
       ),
     );

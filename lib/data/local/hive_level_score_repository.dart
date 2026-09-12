@@ -58,4 +58,15 @@ class HiveLevelScoreRepository implements LevelScoreRepository {
       return RepoFailure('Gagal memuat seluruh rekor skor level', e);
     }
   }
+
+  @override
+  Future<RepoResult<void>> clearAll() async {
+    try {
+      final box = await _getBox();
+      await box.clear();
+      return const RepoSuccess(null);
+    } catch (e) {
+      return RepoFailure('Gagal mengosongkan rekor skor level', e);
+    }
+  }
 }

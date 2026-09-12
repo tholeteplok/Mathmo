@@ -152,4 +152,17 @@ class HiveDailyChallengeRepository implements DailyChallengeRepository {
       return RepoFailure('Gagal menghapus antrian submission terkirim', e);
     }
   }
+
+  @override
+  Future<RepoResult<void>> clearUserData() async {
+    try {
+      final resBox = await _getResultBox();
+      final pendBox = await _getPendingBox();
+      await resBox.clear();
+      await pendBox.clear();
+      return const RepoSuccess(null);
+    } catch (e) {
+      return RepoFailure('Gagal mengosongkan data tantangan harian pemain', e);
+    }
+  }
 }

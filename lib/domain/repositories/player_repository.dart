@@ -15,4 +15,7 @@ abstract interface class PlayerRepository {
 
   /// Helper untuk mencatat aktivitas harian dan memperbarui streak.
   Future<RepoResult<PlayerProfile>> recordDailyActivity(DateTime playedDate);
+
+  /// Mereset profil pemain ke kondisi awal default (mis. saat sign out).
+  Future<RepoResult<PlayerProfile>> resetProfile();
 }

@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../domain/repositories/repo_result.dart';
 import '../../shared/widgets/chunky_button.dart';
 import '../../shared/widgets/chunky_card.dart';
+import '../../shared/widgets/sign_out_confirm_dialog.dart';
 import '../providers/account_status_provider.dart';
 import 'set_username_dialog.dart';
 
@@ -54,26 +55,21 @@ class _CreateAccountCtaState extends ConsumerState<CreateAccountCta> {
   }
 
   Future<void> _handleSignOut() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Keluar dari Akun?'),
-        content: const Text('Progres gameplay lokalmu tetap aman di perangkat ini.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text('Keluar', style: TextStyle(color: AppTheme.colorCoral)),
-          ),
-        ],
-      ),
+    final action = await showSignOutConfirmDialog(
+      context,
+      accountStatus: widget.accountState.status,
     );
 
-    if (confirmed == true) {
+    if (!mounted) return;
+
+    if (action == SignOutAction.linkGoogle) {
+      await _handleGoogleSignIn();
+    } else if (action == SignOutAction.signOut) {
+      setState(() => _isLoading = true);
       await ref.read(accountStatusProvider.notifier).signOut();
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 

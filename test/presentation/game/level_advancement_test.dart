@@ -31,6 +31,12 @@ class _FakePlayerRepository implements PlayerRepository {
   Future<RepoResult<PlayerProfile>> recordDailyActivity(DateTime date) async {
     return RepoSuccess(_profile);
   }
+
+  @override
+  Future<RepoResult<PlayerProfile>> resetProfile() async {
+    _profile = PlayerProfile.initial(playerId: 'test_p');
+    return RepoSuccess(_profile);
+  }
 }
 
 class _FakeLevelScoreRepository implements LevelScoreRepository {
@@ -49,6 +55,12 @@ class _FakeLevelScoreRepository implements LevelScoreRepository {
   @override
   Future<RepoResult<Map<int, LevelScoreRecord>>> getAllRecords() async =>
       RepoSuccess(Map.unmodifiable(records));
+
+  @override
+  Future<RepoResult<void>> clearAll() async {
+    records.clear();
+    return const RepoSuccess(null);
+  }
 }
 
 void main() {

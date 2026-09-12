@@ -29,6 +29,12 @@ class _FakeSessionRepository implements SessionRepository {
   }) async {
     return RepoSuccess(sessions);
   }
+
+  @override
+  Future<RepoResult<void>> clearAll() async {
+    sessions.clear();
+    return const RepoSuccess(null);
+  }
 }
 
 SessionResult _createSession({

@@ -84,4 +84,9 @@ class LevelStarsNotifier extends AsyncNotifier<Map<int, int>> {
     }
     state = AsyncData(currentMap);
   }
+
+  /// Mengosongkan seluruh bintang saat pemain logout atau mereset data.
+  void resetStars() {
+    state = const AsyncData({});
+  }
 }

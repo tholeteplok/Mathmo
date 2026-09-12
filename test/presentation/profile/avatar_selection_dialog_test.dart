@@ -55,4 +55,10 @@ class _MockPlayerRepo implements PlayerRepository {
   @override
   Future<RepoResult<PlayerProfile>> updateLevel(int newLevel) async =>
       RepoSuccess(_profile);
+
+  @override
+  Future<RepoResult<PlayerProfile>> resetProfile() async {
+    _profile = PlayerProfile.initial(playerId: 'test_player');
+    return RepoSuccess(_profile);
+  }
 }

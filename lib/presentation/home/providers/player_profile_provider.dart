@@ -32,6 +32,11 @@ class PlayerProfileNotifier extends AsyncNotifier<PlayerProfile> {
     await repo.saveProfile(profile);
   }
 
+  /// Mereset state profil ke profil baru (mis. saat sign out / reset data).
+  void resetProfile(PlayerProfile profile) {
+    state = AsyncData(profile);
+  }
+
   /// Menyelesaikan sesi gameplay secara atomik: menambahkan XP, skor delta, dan menaikkan level
   /// jika performa memenuhi syarat (akurasi >= 70% dan level yang dimainkan >= level saat ini).
   Future<void> completeSession({

@@ -23,4 +23,7 @@ abstract interface class MasteryRepository {
 
   /// Menyimpan batch record sekaligus.
   Future<RepoResult<void>> saveAll(List<MasteryRecord> records);
+
+  /// Menghapus seluruh data mastery (mis. saat sign out).
+  Future<RepoResult<void>> clearAll();
 }

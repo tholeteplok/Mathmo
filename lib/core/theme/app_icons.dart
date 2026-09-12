@@ -131,4 +131,7 @@ class AppIcons {
 
   /// Ikon segarkan / periksa pembaruan.
   static const IconData refresh = TablerIcons.refresh;
+
+  /// Ikon keluar akun / logout.
+  static const IconData logout = TablerIcons.logout;
 }

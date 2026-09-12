@@ -28,4 +28,7 @@ abstract interface class DailyChallengeRepository {
 
   /// Menghapus submission dari antrian setelah berhasil terkirim.
   Future<RepoResult<void>> markSubmissionSynced(String id);
+
+  /// Menghapus seluruh riwayat hasil dan antrean submission pemain (mis. saat sign out).
+  Future<RepoResult<void>> clearUserData();
 }

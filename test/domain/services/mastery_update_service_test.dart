@@ -43,6 +43,12 @@ class FakeMasteryRepository implements MasteryRepository {
     }
     return const RepoSuccess(null);
   }
+
+  @override
+  Future<RepoResult<void>> clearAll() async {
+    storage.clear();
+    return const RepoSuccess(null);
+  }
 }
 
 void main() {

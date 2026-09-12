@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,6 +33,12 @@ class _MockPlayerRepo implements PlayerRepository {
 
   @override
   Future<RepoResult<PlayerProfile>> recordDailyActivity(DateTime date) async {
+    return RepoSuccess(profile);
+  }
+
+  @override
+  Future<RepoResult<PlayerProfile>> resetProfile() async {
+    profile = PlayerProfile.initial(playerId: 'p_test');
     return RepoSuccess(profile);
   }
 }

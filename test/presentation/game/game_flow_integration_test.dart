@@ -35,6 +35,12 @@ class _MockPlayerRepo implements PlayerRepository {
   Future<RepoResult<PlayerProfile>> recordDailyActivity(DateTime date) async {
     return RepoSuccess(profile);
   }
+
+  @override
+  Future<RepoResult<PlayerProfile>> resetProfile() async {
+    profile = PlayerProfile.initial(playerId: 'p_test');
+    return RepoSuccess(profile);
+  }
 }
 
 void main() {

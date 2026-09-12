@@ -8,4 +8,7 @@ abstract interface class SessionRepository {
 
   /// Mengambil daftar sesi terbaru untuk halaman statistik / riwayat.
   Future<RepoResult<List<SessionResult>>> getRecentSessions({int limit = 20});
+
+  /// Menghapus seluruh riwayat sesi (mis. saat sign out).
+  Future<RepoResult<void>> clearAll();
 }

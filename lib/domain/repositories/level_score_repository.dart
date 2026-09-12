@@ -13,4 +13,7 @@ abstract interface class LevelScoreRepository {
 
   /// Mengambil seluruh rekor skor level yang tersimpan (dimetakan berdasarkan nomor level).
   Future<RepoResult<Map<int, LevelScoreRecord>>> getAllRecords();
+
+  /// Menghapus seluruh rekor skor level (mis. saat sign out).
+  Future<RepoResult<void>> clearAll();
 }
