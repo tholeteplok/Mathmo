@@ -45,11 +45,11 @@ class PublicProfile {
 
   /// Nama zona band berdasarkan level pemain.
   String get bandTitle {
-    if (currentLevel <= 5) return 'Tunas Padang Rumput (Band 1)';
-    if (currentLevel <= 15) return 'Ngarai Matahari Emas (Band 2)';
-    if (currentLevel <= 30) return 'Tebing Angin Kering (Band 3)';
-    if (currentLevel <= 50) return 'Lembah Senja Ungu (Band 4)';
-    return 'Kawah Bintang Abadi (Band 5)';
+    if (currentLevel <= 5) return 'Fresh Sprout Meadow (Zona 1)';
+    if (currentLevel <= 15) return 'Golden Sun Canyon (Zona 2)';
+    if (currentLevel <= 30) return 'Coral Sunset Ridge (Zona 3)';
+    if (currentLevel <= 50) return 'Twilight Forest (Zona 4)';
+    return 'Cosmic Mystic Peak (Zona 5)';
   }
 
   factory PublicProfile.fromJson(Map<String, dynamic> json) {

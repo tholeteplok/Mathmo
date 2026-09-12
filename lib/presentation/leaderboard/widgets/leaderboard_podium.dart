@@ -50,7 +50,7 @@ class LeaderboardPodium extends StatelessWidget {
                     rankOrdinal: 2,
                     rankColor: const Color(0xFF5A5A5A),
                     rankBgColor: const Color(0xFFE0E0E0),
-                    pedestalColor: AppTheme.colorPastelSky,
+                    pedestalColor: AppTheme.colorPodiumSilver,
                     onTap: () => onPlayerTap(rank2),
                   )
                 : const SizedBox.shrink(),
@@ -69,7 +69,7 @@ class LeaderboardPodium extends StatelessWidget {
               hasCrown: true,
               rankColor: const Color(0xFF8C5F00),
               rankBgColor: const Color(0xFFFFD54F),
-              pedestalColor: AppTheme.colorPastelHoney,
+              pedestalColor: AppTheme.colorPodiumGold,
               onTap: () => onPlayerTap(rank1),
             ),
           ),
@@ -87,7 +87,7 @@ class LeaderboardPodium extends StatelessWidget {
                     rankOrdinal: 3,
                     rankColor: const Color(0xFF6D3C14),
                     rankBgColor: const Color(0xFFFFCCBC),
-                    pedestalColor: AppTheme.colorPastelCoral,
+                    pedestalColor: AppTheme.colorPodiumBronze,
                     onTap: () => onPlayerTap(rank3),
                   )
                 : const SizedBox.shrink(),
@@ -219,16 +219,49 @@ class _PodiumColumn extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Username
-          Text(
-            '@${entry.username}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight:
-                  entry.isCurrentPlayer ? FontWeight.w900 : FontWeight.w800,
-              color: AppTheme.colorEspresso,
+          // Username & Chip "Kamu" (jika pemain aktif)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (entry.isCurrentPlayer) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 1.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.colorWoodDark,
+                      borderRadius:
+                          BorderRadius.circular(AppTokens.radiusPill),
+                    ),
+                    child: const Text(
+                      'Kamu',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                Flexible(
+                  child: Text(
+                    '@${entry.username}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight:
+                          entry.isCurrentPlayer ? FontWeight.w900 : FontWeight.w800,
+                      color: AppTheme.colorEspresso,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 4),

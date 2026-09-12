@@ -98,6 +98,16 @@ class AppTheme {
   /// Pastel Clay untuk Peningkatan Kenyamanan & Kestabilan Umum.
   static const Color colorPastelClay = Color(0xFFC8B8AB);
 
+  // ── Warna Balok Podium (Harmonis dengan Badge Lingkaran Peringkat) ──
+  /// Balok Podium 1: Emas lembut matching badge rank 1 (#FFD54F).
+  static const Color colorPodiumGold = Color(0xFFFFE28A);
+
+  /// Balok Podium 2: Perak lembut matching badge rank 2 (#E0E0E0).
+  static const Color colorPodiumSilver = Color(0xFFE6E9EC);
+
+  /// Balok Podium 3: Perunggu peach lembut matching badge rank 3 (#FFCCBC).
+  static const Color colorPodiumBronze = Color(0xFFFFD5C8);
+
   /// Menghasilkan [ThemeData] utama aplikasi.
   static ThemeData get lightTheme {
     final baseTextTheme = GoogleFonts.quicksandTextTheme();

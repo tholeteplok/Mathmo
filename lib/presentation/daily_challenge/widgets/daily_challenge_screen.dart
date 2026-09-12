@@ -258,12 +258,20 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         if (_isFinished) {
-          context.go('/');
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/challenges');
+          }
           return;
         }
         final shouldExit = await showExitConfirmDialog(context);
         if (shouldExit && context.mounted) {
-          context.go('/');
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/challenges');
+          }
         }
       },
       child: Scaffold(
@@ -300,7 +308,11 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                               context,
                             );
                             if (shouldExit && context.mounted) {
-                              context.go('/');
+                              if (context.canPop()) {
+                                context.pop();
+                              } else {
+                                context.go('/challenges');
+                              }
                             }
                           },
                         ),
@@ -501,11 +513,17 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
             ),
             const SizedBox(height: 24),
             ChunkyButton(
-              onPressed: () => context.go('/'),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/challenges');
+                }
+              },
               backgroundColor: accentColor,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               child: const Text(
-                'Kembali ke Beranda',
+                'Kembali ke Tantangan',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -584,7 +602,11 @@ class _DailyChallengeLockedViewState
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
-          context.go('/');
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/challenges');
+          }
         }
       },
       child: Scaffold(
@@ -598,7 +620,13 @@ class _DailyChallengeLockedViewState
               AppHeader(
                 title: 'Tantangan Harian',
                 showStats: false,
-                onBackTap: () => context.go('/'),
+                onBackTap: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/challenges');
+                  }
+                },
               ),
               const Spacer(),
 
