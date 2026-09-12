@@ -1,4 +1,4 @@
-﻿name: iTHUNG Auto Build & Release
+name: iTHUNG Auto Build & Release
 
 on:
   push:
@@ -124,6 +124,8 @@ jobs:
           mkdir -p android/app
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > android/app/ithung_release.jks
+          else
+            echo "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" | base64 -d > android/app/ithung_release.jks
           fi
 
       - name: Install Dependencies
@@ -156,14 +158,63 @@ jobs:
           cp "$OUT/app-release.apk" "$OUT/iTHUNG-${TAG_NAME}-universal.apk" || true
           cp "$OUT/app-release.apk" "$OUT/iTHUNG-${TAG_NAME}.apk" || true
 
+      - name: Generate Friendly Release Notes
+        id: notes
+        run: |
+          LATEST_TAG=$(git tag -l "v*.*.*" --sort=-v:refname | sed -n '2p')
+          if [ -z "$LATEST_TAG" ]; then
+            COMMITS=$(git log -n 5 --pretty=format:"%s")
+          else
+            COMMITS=$(git log "${LATEST_TAG}..HEAD" --pretty=format:"%s")
+          fi
+
+          NOTES=""
+          HAS_NOTES=false
+
+          while IFS= read -r line; do
+            [ -z "$line" ] && continue
+            LOWER=$(echo "$line" | tr '[:upper:]' '[:lower:]')
+
+            if [[ "$LOWER" =~ ^fix ]]; then
+              CLEAN=$(echo "$line" | sed -E 's/^fix(\([^)]*\))?:\s*//I')
+              NOTES="${NOTES}\n- [FIX] ${CLEAN}"
+              HAS_NOTES=true
+            elif [[ "$LOWER" =~ ^feat ]]; then
+              CLEAN=$(echo "$line" | sed -E 's/^feat(\([^)]*\))?:\s*//I')
+              NOTES="${NOTES}\n- [FEAT] ${CLEAN}"
+              HAS_NOTES=true
+            elif [[ "$LOWER" =~ ^perf ]]; then
+              CLEAN=$(echo "$line" | sed -E 's/^perf(\([^)]*\))?:\s*//I')
+              NOTES="${NOTES}\n- [PERF] ${CLEAN}"
+              HAS_NOTES=true
+            elif [[ "$LOWER" =~ ^(ui|style) ]]; then
+              CLEAN=$(echo "$line" | sed -E 's/^(ui|style)(\([^)]*\))?:\s*//I')
+              NOTES="${NOTES}\n- [UI] ${CLEAN}"
+              HAS_NOTES=true
+            elif [[ "$LOWER" =~ ^(chore|refactor) ]]; then
+              CLEAN=$(echo "$line" | sed -E 's/^(chore|refactor)(\([^)]*\))?:\s*//I')
+              NOTES="${NOTES}\n- [GENERAL] ${CLEAN}"
+              HAS_NOTES=true
+            fi
+          done <<< "$COMMITS"
+
+          if [ "$HAS_NOTES" = false ]; then
+            NOTES="- [PERF] Peningkatan performa & respon gameplay lebih mulus\n- [FIX] Optimalisasi kestabilan koneksi dan penyimpanan progres\n- [UI] Penyempurnaan kenyamanan visual antarmuka petualangan"
+          fi
+
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.semver.outputs.new_version }}
           name: iTHUNG ${{ steps.semver.outputs.new_version }}
+          body: ${{ steps.notes.outputs.release_notes }}
           draft: false
           prerelease: false
-          generate_release_notes: true
+          generate_release_notes: false
           files: |
             build/app/outputs/flutter-apk/iTHUNG-*-arm64-v8a.apk
             build/app/outputs/flutter-apk/iTHUNG-*-armeabi-v7a.apk

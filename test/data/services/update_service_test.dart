@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mathmo_app/data/services/update_service.dart';
 
 void main() {
@@ -83,6 +83,67 @@ void main() {
 
       expect(service.formatApkSize(bytes18Mb), contains('Hemat ~65%'));
       expect(service.formatApkSize(bytes55Mb), contains('55.0 MB'));
+    });
+  });
+
+  group('UpdateService Friendly Release Notes Parsing', () {
+    test('parses categorized notes with tags into ReleaseNoteItems', () {
+      const raw = '''
+- [FIX] Perbaikan autentikasi Google Sign-In
+- [FEAT] Level baru Fresh Sprout Meadow
+- [PERF] Gameplay 60fps lebih mulus
+- [UI] Nomor versi lebih bersih
+- [GENERAL] Pemeliharaan kode berkala
+''';
+
+      final items = service.parseReleaseNotes(raw);
+      expect(items.length, equals(5));
+
+      expect(items[0].category, equals(ReleaseCategory.fix));
+      expect(items[0].categoryLabel, equals('Perbaikan Penting'));
+      expect(items[0].text, contains('Perbaikan autentikasi Google Sign-In'));
+
+      expect(items[1].category, equals(ReleaseCategory.feat));
+      expect(items[1].categoryLabel, equals('Fitur Baru'));
+
+      expect(items[2].category, equals(ReleaseCategory.perf));
+      expect(items[2].categoryLabel, equals('Peningkatan Performa'));
+
+      expect(items[3].category, equals(ReleaseCategory.ui));
+      expect(items[3].categoryLabel, equals('Penyempurnaan Tampilan'));
+
+      expect(items[4].category, equals(ReleaseCategory.general));
+    });
+
+    test('strips raw changelog urls and headers, uses friendly fallback if empty', () {
+      const raw = '**Full Changelog**: https://github.com/tholeteplok/iTHUNG/compare/v0.4.0...v0.4.1';
+
+      final items = service.parseReleaseNotes(raw);
+      expect(items, isNotEmpty);
+      // Ensures no url is present
+      for (final item in items) {
+        expect(item.text.contains('http'), isFalse);
+        expect(item.text.contains('Full Changelog'), isFalse);
+      }
+      expect(items.any((i) => i.category == ReleaseCategory.perf), isTrue);
+      expect(items.any((i) => i.category == ReleaseCategory.fix), isTrue);
+      expect(items.any((i) => i.category == ReleaseCategory.ui), isTrue);
+    });
+
+    test('parses conventional commit prefixes correctly', () {
+      const raw = '''
+fix(auth): resolve sha1 credential issue
+feat(game): add new sound effect
+perf: improve frame rendering speed
+style(ui): align badge padding
+''';
+
+      final items = service.parseReleaseNotes(raw);
+      expect(items.length, equals(4));
+      expect(items[0].category, equals(ReleaseCategory.fix));
+      expect(items[1].category, equals(ReleaseCategory.feat));
+      expect(items[2].category, equals(ReleaseCategory.perf));
+      expect(items[3].category, equals(ReleaseCategory.ui));
     });
   });
 }

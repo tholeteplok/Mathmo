@@ -79,6 +79,22 @@ class AppTheme {
   static const Color badgeInfoBg = Color(0xFFE5F1F8);
   static const Color badgeInfoFg = Color(0xFF2C6D9E);
 
+  // ── Token Warna Pastel Priority Dot (Catatan Rilis Ramah) ─────────
+  /// Pastel Coral untuk Perbaikan Masalah Penting (Bugfix, koneksi, auth).
+  static const Color colorPastelCoral = Color(0xFFF29994);
+
+  /// Pastel Sage untuk Fitur & Konten Baru.
+  static const Color colorPastelSage = Color(0xFF94C9A9);
+
+  /// Pastel Honey untuk Peningkatan Performa (kecepatan, hemat daya).
+  static const Color colorPastelHoney = Color(0xFFF6D075);
+
+  /// Pastel Sky untuk Penyempurnaan Tampilan & UX (visual, tata letak).
+  static const Color colorPastelSky = Color(0xFF92BFDD);
+
+  /// Pastel Clay untuk Peningkatan Kenyamanan & Kestabilan Umum.
+  static const Color colorPastelClay = Color(0xFFC8B8AB);
+
   /// Menghasilkan [ThemeData] utama aplikasi.
   static ThemeData get lightTheme {
     final baseTextTheme = GoogleFonts.quicksandTextTheme();

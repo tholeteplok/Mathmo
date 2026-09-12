@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/services.dart';
@@ -74,13 +74,17 @@ class UpdateService {
   static const MethodChannel _installerChannel =
       MethodChannel('com.tholeteplok.ithung/installer');
 
-  /// Mendapatkan versi aplikasi saat ini dari package metadata (misal "0.1.0+1")
-  Future<String> getCurrentVersion() async {
+  /// Mendapatkan versi aplikasi saat ini dari package metadata (misal "0.4.0")
+  Future<String> getCurrentVersion({bool includeBuildNumber = false}) async {
     try {
       final info = await PackageInfo.fromPlatform();
-      return '${info.version}+${info.buildNumber}';
+      final version = info.version.isNotEmpty ? info.version : '0.1.0';
+      if (includeBuildNumber && info.buildNumber.isNotEmpty) {
+        return '$version+${info.buildNumber}';
+      }
+      return version;
     } catch (_) {
-      return '0.1.0+1';
+      return includeBuildNumber ? '0.1.0+1' : '0.1.0';
     }
   }
 
@@ -390,5 +394,163 @@ class UpdateService {
     }
 
     return false;
+  }
+
+  /// Mem-parsing teks catatan rilis mentah menjadi daftar [ReleaseNoteItem] terstruktur
+  /// dengan kategori dan pembersihan otomatis dari link teknis mentah (seperti full changelog).
+  List<ReleaseNoteItem> parseReleaseNotes(String rawNotes) {
+    final cleanNotes = rawNotes.trim();
+    final items = <ReleaseNoteItem>[];
+
+    if (cleanNotes.isNotEmpty) {
+      final lines = cleanNotes.split('\n');
+      for (var line in lines) {
+        line = line.trim();
+        if (line.isEmpty) continue;
+
+        // Lewati header markdown atau link git mentah
+        if (line.startsWith('#') ||
+            line.toLowerCase().contains('full changelog') ||
+            line.toLowerCase().startsWith('http://') ||
+            line.toLowerCase().startsWith('https://')) {
+          continue;
+        }
+
+        // Hilangkan bullet standard (- , * , • )
+        if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('• ')) {
+          line = line.substring(2).trim();
+        }
+
+        // Hilangkan referensi commit hash atau author (misal (abc1234) atau by @user)
+        line = line.replaceAll(RegExp(r'\(#\d+\)'), '').trim();
+        line = line.replaceAll(RegExp(r'by @\S+'), '').trim();
+
+        if (line.isEmpty) continue;
+
+        final lower = line.toLowerCase();
+        ReleaseCategory category = ReleaseCategory.general;
+        String content = line;
+
+        if (lower.startsWith('[fix]') ||
+            lower.startsWith('fix:') ||
+            lower.startsWith('fix(') ||
+            lower.startsWith('hotfix:')) {
+          category = ReleaseCategory.fix;
+          content = _stripPrefix(line, ['[fix]', 'fix:', 'hotfix:']);
+        } else if (lower.startsWith('[feat]') ||
+            lower.startsWith('feat:') ||
+            lower.startsWith('feat(') ||
+            lower.startsWith('feature:')) {
+          category = ReleaseCategory.feat;
+          content = _stripPrefix(line, ['[feat]', 'feat:', 'feature:']);
+        } else if (lower.startsWith('[perf]') ||
+            lower.startsWith('perf:') ||
+            lower.startsWith('perf(')) {
+          category = ReleaseCategory.perf;
+          content = _stripPrefix(line, ['[perf]', 'perf:']);
+        } else if (lower.startsWith('[ui]') ||
+            lower.startsWith('ui:') ||
+            lower.startsWith('ui(') ||
+            lower.startsWith('style:') ||
+            lower.startsWith('style(') ||
+            lower.startsWith('[ux]')) {
+          category = ReleaseCategory.ui;
+          content = _stripPrefix(line, ['[ui]', '[ux]', 'ui:', 'style:']);
+        } else if (lower.startsWith('refactor:') ||
+            lower.startsWith('chore:') ||
+            lower.startsWith('[general]')) {
+          category = ReleaseCategory.general;
+          content = _stripPrefix(line, ['[general]', 'refactor:', 'chore:']);
+        }
+
+        // Bersihkan tanda kurung scope jika ada (misal "(auth): ..." -> "...")
+        if (content.startsWith('(') && content.contains('):')) {
+          content = content.substring(content.indexOf('):') + 2).trim();
+        }
+
+        content = content.trim();
+        if (content.isNotEmpty) {
+          // Format huruf pertama menjadi kapital
+          content = content[0].toUpperCase() + content.substring(1);
+          items.add(ReleaseNoteItem(category: category, text: content));
+        }
+      }
+    }
+
+    // Jika catatan kosong atau hanya link changelog mentah, sediakan fallback ramah pengguna
+    if (items.isEmpty) {
+      return const [
+        ReleaseNoteItem(
+          category: ReleaseCategory.perf,
+          text: 'Peningkatan kecepatan respon dan kelancaran gameplay',
+        ),
+        ReleaseNoteItem(
+          category: ReleaseCategory.fix,
+          text: 'Optimalisasi kestabilan koneksi dan penyimpanan progres',
+        ),
+        ReleaseNoteItem(
+          category: ReleaseCategory.ui,
+          text: 'Penyempurnaan kenyamanan visual antarmuka petualangan',
+        ),
+      ];
+    }
+
+    return items;
+  }
+
+  String _stripPrefix(String line, List<String> prefixes) {
+    var result = line.trim();
+    for (final prefix in prefixes) {
+      if (result.toLowerCase().startsWith(prefix)) {
+        result = result.substring(prefix.length).trim();
+        break;
+      }
+    }
+    return result;
+  }
+}
+
+/// Kategori perubahan rilis untuk representasi visual ramah pengguna
+enum ReleaseCategory {
+  /// Perbaikan bug, koneksi, autentikasi (Priority: High / Coral Pastel)
+  fix,
+
+  /// Fitur baru, level baru, konten baru (Priority: Feature / Sage Pastel)
+  feat,
+
+  /// Optimasi kecepatan, responsivitas, memori (Priority: Performance / Honey Pastel)
+  perf,
+
+  /// Tata letak, visual, animasi, UX (Priority: Visual / Sky Pastel)
+  ui,
+
+  /// Kestabilan umum, pemeliharaan (Priority: General / Clay Pastel)
+  general,
+}
+
+/// Model catatan rilis ramah pengguna
+class ReleaseNoteItem {
+  const ReleaseNoteItem({
+    required this.category,
+    required this.text,
+  });
+
+  final ReleaseCategory category;
+  final String text;
+
+  /// Label kategori bahasa Indonesia yang ramah pengguna awam
+  String get categoryLabel {
+    switch (category) {
+      case ReleaseCategory.fix:
+        return 'Perbaikan Penting';
+      case ReleaseCategory.feat:
+        return 'Fitur Baru';
+      case ReleaseCategory.perf:
+        return 'Peningkatan Performa';
+      case ReleaseCategory.ui:
+        return 'Penyempurnaan Tampilan';
+      case ReleaseCategory.general:
+        return 'Kenyamanan Bermain';
+    }
   }
 }

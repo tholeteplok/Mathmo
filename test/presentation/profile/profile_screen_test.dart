@@ -100,7 +100,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Profil Petualang'), findsOneWidget);
-    expect(find.text('Petualang Mathmo'), findsOneWidget);
+    expect(find.text('Petualang iTHUNG'), findsOneWidget);
     expect(find.text('Akun Tamu · Main Lokal'), findsOneWidget);
     expect(find.text('Zona Perkenalan'), findsOneWidget);
     expect(find.text('14'), findsOneWidget); // facts mastered

@@ -53,7 +53,7 @@ class ProfileHeader extends ConsumerWidget {
     final displayHandle = accountState.hasUsername
         ? '@${accountState.username}'
         : (accountState.status == AccountStatus.guest
-            ? 'Petualang Mathmo'
+            ? 'Petualang iTHUNG'
             : 'Belum ada username');
 
     return Column(

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mathmo_app/data/services/update_service.dart';
@@ -57,5 +57,42 @@ void main() {
     await tester.tap(find.text('Nanti Saja'));
     await tester.pump();
     expect(laterPressed, isTrue);
+  });
+
+  testWidgets('UpdateNotificationDialog converts raw changelog URL into friendly pastel note items',
+      (tester) async {
+    const rawChangelogInfo = AppUpdateInfo(
+      hasUpdate: true,
+      currentVersion: '0.4.0',
+      latestVersion: 'v0.4.1',
+      releaseName: 'iTHUNG v0.4.1',
+      releaseNotes:
+          '**Full Changelog**: https://github.com/tholeteplok/iTHUNG/compare/v0.4.0...v0.4.1',
+      downloadUrl: 'https://example.com/ithung.apk',
+      htmlUrl: 'https://github.com/tholeteplok/iTHUNG/releases',
+      matchedAbi: 'arm64-v8a',
+      downloadSizeBytes: 18 * 1024 * 1024,
+      formattedSize: '18.0 MB · Hemat ~65%',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: UpdateNotificationDialog(
+              info: rawChangelogInfo,
+              onUpdate: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Ensures raw URL is NOT displayed
+    expect(find.textContaining('Full Changelog'), findsNothing);
+    expect(find.textContaining('https://github.com'), findsNothing);
+
+    // Friendly fallback items are rendered
+    expect(find.textContaining('kelancaran gameplay'), findsOneWidget);
   });
 }

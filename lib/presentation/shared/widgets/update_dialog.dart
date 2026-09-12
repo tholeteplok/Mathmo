@@ -154,30 +154,7 @@ class UpdateNotificationDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Container(
-                width: double.infinity,
-                constraints: const BoxConstraints(maxHeight: 110),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.colorVanillaCard,
-                  borderRadius: BorderRadius.circular(AppTokens.radiusIcon),
-                  border: Border.all(
-                    color: AppTheme.colorWoodBorder,
-                    width: AppTokens.borderWidthSubtle,
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  child: Text(
-                    info.releaseNotes,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.colorWoodDark,
-                      height: 1.35,
-                    ),
-                  ),
-                ),
-              ),
+              _buildFriendlyReleaseNotes(info.releaseNotes),
               const SizedBox(height: 18),
 
               // Tombol Aksi Utama (Perbarui Sekarang)
@@ -251,6 +228,91 @@ class UpdateNotificationDialog extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFriendlyReleaseNotes(String rawNotes) {
+    final service = UpdateService();
+    final items = service.parseReleaseNotes(rawNotes);
+
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(maxHeight: 130),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.colorVanillaCard,
+        borderRadius: BorderRadius.circular(AppTokens.radiusIcon),
+        border: Border.all(
+          color: AppTheme.colorWoodBorder.withValues(alpha: 0.6),
+          width: AppTokens.borderWidthSubtle,
+        ),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: items.map((item) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3.5),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2.5),
+                    child: _buildPriorityDot(item.category),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      item.text,
+                      style: GoogleFonts.quicksand(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.colorWoodDark,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPriorityDot(ReleaseCategory category) {
+    final Color pastelColor;
+    switch (category) {
+      case ReleaseCategory.fix:
+        pastelColor = AppTheme.colorPastelCoral;
+      case ReleaseCategory.feat:
+        pastelColor = AppTheme.colorPastelSage;
+      case ReleaseCategory.perf:
+        pastelColor = AppTheme.colorPastelHoney;
+      case ReleaseCategory.ui:
+        pastelColor = AppTheme.colorPastelSky;
+      case ReleaseCategory.general:
+        pastelColor = AppTheme.colorPastelClay;
+    }
+
+    return Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        color: pastelColor.withValues(alpha: 0.32),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: pastelColor,
+            shape: BoxShape.circle,
+          ),
+        ),
       ),
     );
   }

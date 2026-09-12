@@ -620,7 +620,8 @@ class _AboutCardState extends ConsumerState<_AboutCard> {
           FutureBuilder<String>(
             future: updateService.getCurrentVersion(),
             builder: (context, snapshot) {
-              final version = snapshot.data ?? '0.1.0';
+              final rawVersion = snapshot.data ?? '0.1.0';
+              final cleanVersion = rawVersion.split('+').first.trim();
               return Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -640,7 +641,7 @@ class _AboutCardState extends ConsumerState<_AboutCard> {
                       ),
                     ),
                     child: Text(
-                      'v$version',
+                      'v$cleanVersion',
                       style: AppTheme.statNumberStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
