@@ -146,4 +146,30 @@ style(ui): align badge padding
       expect(items[3].category, equals(ReleaseCategory.ui));
     });
   });
+
+  group('UpdateService Resumable & Error Sanitization Tests', () {
+    test('sanitizes Connection closed and HttpException into friendly progress message', () {
+      const rawError =
+          'HttpException: Connection closed while receiving data, uri = https://release-assets.githubusercontent.com/...?sp=r&sv=2018&sig=xyz123';
+      const downloadedBytes = 8 * 1024 * 1024; // 8.0 MB
+      const totalBytes = 29 * 1024 * 1024; // 29.0 MB
+
+      final message = service.sanitizeErrorMessage(rawError, downloadedBytes, totalBytes);
+
+      expect(message, contains('Koneksi terputus saat mengunduh'));
+      expect(message, contains('8.0 MB tersimpan'));
+      expect(message, contains('29.0 MB'));
+      expect(message, isNot(contains('sp=r')));
+      expect(message, isNot(contains('sig=')));
+      expect(message, isNot(contains('https://')));
+    });
+
+    test('sanitizes long query string URLs from arbitrary exceptions', () {
+      const raw = 'Exception: Server error at https://example.com/asset?token=secret123&expire=999';
+      final message = service.sanitizeErrorMessage(raw, 0, null);
+
+      expect(message, isNot(contains('token=secret123')));
+      expect(message, contains('Server error at https://example.com/asset'));
+    });
+  });
 }

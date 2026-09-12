@@ -336,20 +336,45 @@ class _UpdateProgressDialogState extends ConsumerState<UpdateProgressDialog> {
   String _statusMessage = 'Menghubungi server rilis...';
   String? _errorMessage;
   int _lastUiUpdateTime = 0;
+  bool _isDownloading = false;
 
   @override
   void initState() {
     super.initState();
     _totalBytes = widget.info.downloadSizeBytes;
+    _initAndStartDownload();
+  }
+
+  Future<void> _initAndStartDownload() async {
+    try {
+      final updateService = ref.read(updateServiceProvider);
+      final existing =
+          await updateService.getDownloadedApkBytes(widget.info.latestVersion);
+      if (existing > 0 && mounted) {
+        setState(() {
+          _receivedBytes = existing;
+          if (_totalBytes > 0) {
+            _downloadProgress = (existing / _totalBytes).clamp(0.0, 1.0);
+            final pct = (_downloadProgress * 100).toInt();
+            _statusMessage = 'Melanjutkan unduhan $pct%...';
+          }
+        });
+      }
+    } catch (_) {}
     _startDownload();
   }
 
   Future<void> _startDownload() async {
+    if (_isDownloading) return;
     try {
       final updateService = ref.read(updateServiceProvider);
       if (mounted) {
         setState(() {
-          _statusMessage = 'Mengunduh pembaruan...';
+          _isDownloading = true;
+          _errorMessage = null;
+          _statusMessage = _receivedBytes > 0
+              ? 'Melanjutkan unduhan...'
+              : 'Mengunduh pembaruan...';
         });
       }
 
@@ -389,6 +414,7 @@ class _UpdateProgressDialogState extends ConsumerState<UpdateProgressDialog> {
       if (!mounted) return;
 
       setState(() {
+        _isDownloading = false;
         _downloadProgress = 1.0;
         _statusMessage = 'Membuka Penginstal Paket Android...';
       });
@@ -404,8 +430,11 @@ class _UpdateProgressDialogState extends ConsumerState<UpdateProgressDialog> {
       }
     } catch (e) {
       if (mounted) {
+        final errText = e.toString().replaceFirst('Exception: ', '').trim();
         setState(() {
-          _errorMessage = 'Gagal mengunduh pembaruan: $e';
+          _isDownloading = false;
+          _errorMessage = errText;
+          _statusMessage = 'Unduhan dijeda';
         });
       }
     }
@@ -499,35 +528,61 @@ class _UpdateProgressDialogState extends ConsumerState<UpdateProgressDialog> {
                 ),
               ),
 
-              // Pesan Error jika Gagal
+              // Pesan Error jika Gagal / Terputus
               if (_errorMessage != null) ...[
-                const SizedBox(height: 14),
-                Text(
-                  _errorMessage!,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.redAccent,
+                const SizedBox(height: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.colorDangerSoft,
+                    borderRadius: BorderRadius.circular(AppTokens.radiusIcon),
+                    border: Border.all(
+                      color: AppTheme.colorCoral.withValues(alpha: 0.35),
+                      width: AppTokens.borderWidthSubtle,
+                    ),
                   ),
-                  textAlign: TextAlign.center,
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.colorCoral,
+                      height: 1.35,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 const SizedBox(height: 14),
+                ChunkyButton(
+                  key: const Key('btn_resume_download'),
+                  onPressed: _isDownloading ? null : _startDownload,
+                  backgroundColor: AppTheme.colorSage,
+                  width: double.infinity,
+                  child: const Text(
+                    'Lanjutkan Unduhan',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 6),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: ChunkyButton(
-                        onPressed: _openFallbackUrl,
-                        backgroundColor: AppTheme.colorHoney,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        child: const Text(
-                          'Buka di Browser',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.colorWoodDark,
-                          ),
-                          textAlign: TextAlign.center,
+                    TextButton.icon(
+                      onPressed: _openFallbackUrl,
+                      icon: const Icon(Icons.open_in_browser,
+                          size: 15, color: AppTheme.colorTaupe),
+                      label: const Text(
+                        'Buka di Browser',
+                        style: TextStyle(
+                          color: AppTheme.colorTaupe,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -539,6 +594,7 @@ class _UpdateProgressDialogState extends ConsumerState<UpdateProgressDialog> {
                         style: TextStyle(
                           color: AppTheme.colorTaupe,
                           fontWeight: FontWeight.w700,
+                          fontSize: 12,
                         ),
                       ),
                     ),

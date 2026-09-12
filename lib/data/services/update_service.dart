@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -255,7 +256,24 @@ class UpdateService {
     }
   }
 
-  /// Mengunduh file APK langsung ke cache aplikasi dengan kalkulasi byte dan stream progress
+  /// Memeriksa berapa byte file APK yang sudah tersimpan di cache lokal untuk versi tertentu
+  Future<int> getDownloadedApkBytes(String version) async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final sanitizedVer =
+          _sanitizeVersion(version).replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+      final saveFile = File('${tempDir.path}/iTHUNG-$sanitizedVer.apk');
+      if (await saveFile.exists()) {
+        return await saveFile.length();
+      }
+      return 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// Mengunduh file APK langsung ke cache aplikasi dengan dukungan Resumable Download (HTTP Range)
+  /// dan pemulihan otomatis (Auto-Retry) jika koneksi terputus.
   Future<File> downloadApk({
     required String downloadUrl,
     required String version,
@@ -263,78 +281,185 @@ class UpdateService {
         onProgress,
     int? expectedTotalBytes,
   }) async {
-    final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 15);
-    client.idleTimeout = const Duration(seconds: 30);
-    client.autoUncompress = false;
+    final tempDir = await getTemporaryDirectory();
+    final sanitizedVer =
+        _sanitizeVersion(version).replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    final saveFile = File('${tempDir.path}/iTHUNG-$sanitizedVer.apk');
 
-    try {
-      final tempDir = await getTemporaryDirectory();
-      final sanitizedVer =
-          _sanitizeVersion(version).replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
-      final saveFile = File('${tempDir.path}/iTHUNG-$sanitizedVer.apk');
-      if (await saveFile.exists()) {
-        await saveFile.delete();
+    // Periksa file yang sudah ada sebelumnya untuk melanjutkan
+    int existingBytes = 0;
+    if (await saveFile.exists()) {
+      final len = await saveFile.length();
+      if (expectedTotalBytes != null && expectedTotalBytes > 0 && len >= expectedTotalBytes) {
+        // File sudah lengkap 100% di cache
+        onProgress(1.0, len, expectedTotalBytes);
+        return saveFile;
       }
+      existingBytes = len;
+    }
 
-      var currentUrl = downloadUrl;
-      HttpClientResponse? response;
+    int retryCount = 0;
+    const maxRetries = 3;
 
-      // Tangani redirect chain (301, 302, 307, 308) seperti GitHub S3 AWS CDN
-      for (int i = 0; i < 6; i++) {
-        final request = await client.getUrl(Uri.parse(currentUrl));
-        request.headers.set(HttpHeaders.userAgentHeader, 'iTHUNG-App');
-        request.headers.set(HttpHeaders.acceptHeader, '*/*');
-        request.followRedirects = false;
+    while (true) {
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 20);
+      client.idleTimeout = const Duration(seconds: 35);
+      client.autoUncompress = false;
+      IOSink? sink;
 
-        final res = await request.close();
-        if (res.isRedirect ||
-            res.statusCode == HttpStatus.movedPermanently ||
-            res.statusCode == HttpStatus.found ||
-            res.statusCode == HttpStatus.seeOther ||
-            res.statusCode == HttpStatus.temporaryRedirect) {
-          final location = res.headers.value(HttpHeaders.locationHeader);
-          if (location != null && location.isNotEmpty) {
-            currentUrl = location;
-            continue;
+      try {
+        if (await saveFile.exists()) {
+          existingBytes = await saveFile.length();
+        } else {
+          existingBytes = 0;
+        }
+
+        var currentUrl = downloadUrl;
+        HttpClientResponse? response;
+
+        // Tangani redirect chain (301, 302, 307, 308) seperti GitHub S3 AWS CDN
+        for (int i = 0; i < 6; i++) {
+          final request = await client.getUrl(Uri.parse(currentUrl));
+          request.headers.set(HttpHeaders.userAgentHeader, 'iTHUNG-App');
+          request.headers.set(HttpHeaders.acceptHeader, '*/*');
+          request.followRedirects = false;
+
+          // Kirim header Range jika sudah memiliki sebagian data
+          if (existingBytes > 0) {
+            request.headers.set(HttpHeaders.rangeHeader, 'bytes=$existingBytes-');
+          }
+
+          final res = await request.close();
+          if (res.isRedirect ||
+              res.statusCode == HttpStatus.movedPermanently ||
+              res.statusCode == HttpStatus.found ||
+              res.statusCode == HttpStatus.seeOther ||
+              res.statusCode == HttpStatus.temporaryRedirect) {
+            final location = res.headers.value(HttpHeaders.locationHeader);
+            if (location != null && location.isNotEmpty) {
+              currentUrl = location;
+              continue;
+            }
+          }
+          response = res;
+          break;
+        }
+
+        if (response == null) {
+          throw Exception('Tidak mendapatkan respons dari server pembaruan.');
+        }
+
+        final statusCode = response.statusCode;
+
+        // Jika server mengembalikan 416 (Range Not Satisfiable), file mungkin sudah lengkap
+        if (statusCode == HttpStatus.requestedRangeNotSatisfiable && existingBytes > 0) {
+          onProgress(1.0, existingBytes, expectedTotalBytes ?? existingBytes);
+          return saveFile;
+        }
+
+        if (statusCode != HttpStatus.ok && statusCode != HttpStatus.partialContent) {
+          throw Exception('Gagal mengunduh file APK (HTTP $statusCode)');
+        }
+
+        final isPartial = statusCode == HttpStatus.partialContent;
+        final headerContentLength = response.contentLength;
+
+        // Kalkulasi total byte efektif
+        final int effectiveTotalBytes;
+        if (isPartial) {
+          effectiveTotalBytes = expectedTotalBytes ??
+              (headerContentLength > 0 ? existingBytes + headerContentLength : existingBytes);
+        } else {
+          // Server mengirim dari awal
+          effectiveTotalBytes = headerContentLength > 0
+              ? headerContentLength
+              : (expectedTotalBytes ?? 0);
+          existingBytes = 0;
+        }
+
+        sink = saveFile.openWrite(mode: isPartial ? FileMode.append : FileMode.write);
+        int receivedBytes = existingBytes;
+
+        if (effectiveTotalBytes > 0) {
+          final initialProgress = (receivedBytes / effectiveTotalBytes).clamp(0.0, 1.0);
+          onProgress(initialProgress, receivedBytes, effectiveTotalBytes);
+        }
+
+        await for (final chunk in response) {
+          sink.add(chunk);
+          receivedBytes += chunk.length;
+          if (effectiveTotalBytes > 0) {
+            final progress =
+                (receivedBytes / effectiveTotalBytes).clamp(0.0, 1.0);
+            onProgress(progress, receivedBytes, effectiveTotalBytes);
+          } else {
+            onProgress(-1.0, receivedBytes, 0);
           }
         }
-        response = res;
-        break;
-      }
 
-      if (response == null || response.statusCode != 200) {
-        throw Exception(
-            'Gagal mengunduh file APK (HTTP ${response?.statusCode ?? 0})');
-      }
+        await sink.flush();
+        await sink.close();
+        sink = null;
 
-      final headerContentLength = response.contentLength;
-      final effectiveTotalBytes = headerContentLength > 0
-          ? headerContentLength
-          : (expectedTotalBytes ?? 0);
+        return saveFile;
+      } catch (e) {
+        try {
+          await sink?.close();
+        } catch (_) {}
+        sink = null;
 
-      int receivedBytes = 0;
-      final sink = saveFile.openWrite();
-
-      await for (final chunk in response) {
-        sink.add(chunk);
-        receivedBytes += chunk.length;
-        if (effectiveTotalBytes > 0) {
-          final progress =
-              (receivedBytes / effectiveTotalBytes).clamp(0.0, 1.0);
-          onProgress(progress, receivedBytes, effectiveTotalBytes);
-        } else {
-          onProgress(-1.0, receivedBytes, 0);
+        retryCount++;
+        if (retryCount <= maxRetries) {
+          // Tunggu sebentar lalu sambung otomatis (auto-retry)
+          await Future<void>.delayed(Duration(milliseconds: 1000 * retryCount));
+          continue;
         }
+
+        // Jika seluruh percobaan retry gagal, bersihkan pesan error dari link mentah AWS S3
+        final sanitized = _sanitizeErrorMessage(
+          e.toString(),
+          existingBytes,
+          expectedTotalBytes,
+        );
+        throw Exception(sanitized);
+      } finally {
+        client.close();
       }
-
-      await sink.flush();
-      await sink.close();
-
-      return saveFile;
-    } finally {
-      client.close();
     }
+  }
+
+  /// Membersihkan pesan error unduhan dari string URL teknis AWS yang panjang
+  String _sanitizeErrorMessage(
+    String rawError,
+    int downloadedBytes,
+    int? totalBytes,
+  ) {
+    final downloadedMb = (downloadedBytes / (1024 * 1024)).toStringAsFixed(1);
+    final totalMb = (totalBytes != null && totalBytes > 0)
+        ? '${(totalBytes / (1024 * 1024)).toStringAsFixed(1)} MB'
+        : 'ukuran penuh';
+
+    if (rawError.contains('Connection closed') ||
+        rawError.contains('SocketException') ||
+        rawError.contains('ClientException') ||
+        rawError.contains('TimeoutException') ||
+        rawError.contains('HttpException')) {
+      return 'Koneksi terputus saat mengunduh ($downloadedMb MB tersimpan dari $totalMb). Anda dapat melanjutkan unduhan kapan saja.';
+    }
+
+    // Buang parameter query AWS yang panjang (?sp=...&sig=...)
+    final clean = rawError.replaceAll(RegExp(r'\?[^ ]+'), '');
+    return clean.replaceFirst('Exception: ', '').trim();
+  }
+
+  @visibleForTesting
+  String sanitizeErrorMessage(
+    String rawError,
+    int downloadedBytes,
+    int? totalBytes,
+  ) {
+    return _sanitizeErrorMessage(rawError, downloadedBytes, totalBytes);
   }
 
   /// Membuka file APK untuk instalasi melalui Android Package Installer

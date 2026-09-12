@@ -95,4 +95,33 @@ void main() {
     // Friendly fallback items are rendered
     expect(find.textContaining('kelancaran gameplay'), findsOneWidget);
   });
+
+  testWidgets('UpdateProgressDialog renders download title and progress bar',
+      (tester) async {
+    const dummyInfo = AppUpdateInfo(
+      hasUpdate: true,
+      currentVersion: '0.4.0',
+      latestVersion: 'v0.4.1',
+      releaseName: 'iTHUNG v0.4.1',
+      releaseNotes: 'Catatan rilis',
+      downloadUrl: 'https://example.com/ithung.apk',
+      htmlUrl: 'https://github.com/tholeteplok/iTHUNG/releases',
+      matchedAbi: 'arm64-v8a',
+      downloadSizeBytes: 29 * 1024 * 1024,
+      formattedSize: '29.7 MB · Hemat ~65%',
+    );
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: UpdateProgressDialog(info: dummyInfo),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Mengunduh iTHUNG'), findsOneWidget);
+    expect(find.textContaining('29.0 MB'), findsOneWidget);
+  });
 }
