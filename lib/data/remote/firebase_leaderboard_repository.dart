@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/errors/firebase_error_mapper.dart';
 import '../../domain/models/daily_challenge.dart';
 import '../../domain/models/leaderboard_entry.dart';
+import '../../domain/models/public_profile.dart';
 import '../../domain/repositories/leaderboard_repository.dart';
 import '../../domain/repositories/repo_result.dart';
 
@@ -463,5 +464,37 @@ class FirebaseLeaderboardRepository implements LeaderboardRepository {
 
       tx.set(ref, profilePayload, SetOptions(merge: true));
     }).timeout(const Duration(seconds: 10));
+  }
+
+  @override
+  Future<RepoResult<PublicProfile?>> fetchPublicProfile(String username) async {
+    try {
+      final clean = username.trim();
+      if (clean.isEmpty) {
+        return const RepoSuccess(null);
+      }
+
+      final snapshot = await firestore
+          .collection(profilesCollection)
+          .where('username', isEqualTo: clean)
+          .limit(1)
+          .get()
+          .timeout(const Duration(seconds: 10));
+
+      if (snapshot.docs.isEmpty) {
+        return const RepoSuccess(null);
+      }
+
+      final data = snapshot.docs.first.data();
+      return RepoSuccess(PublicProfile.fromJson(data));
+    } catch (e) {
+      return RepoFailure(
+        FirebaseErrorMapper.map(
+          e,
+          defaultMessage: 'Gagal memuat profil publik pemain',
+        ),
+        e,
+      );
+    }
   }
 }

@@ -59,13 +59,7 @@ class MilestoneChestNode extends ConsumerWidget {
               color: AppTheme.darkBorder,
               width: AppTokens.borderWidthDefault,
             ),
-            boxShadow: const [
-              BoxShadow(
-                color: AppTheme.darkBorder,
-                offset: Offset(0, 4),
-                blurRadius: 0,
-              ),
-            ],
+            boxShadow: ChunkyShadow.wood(AppTheme.colorWoodDark),
           ),
           child: Stack(
             clipBehavior: Clip.none,

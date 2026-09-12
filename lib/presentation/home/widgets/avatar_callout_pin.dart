@@ -76,13 +76,7 @@ class _AvatarCalloutPinState extends State<AvatarCalloutPin>
                   color: AppTheme.darkBorder,
                   width: AppTokens.borderWidthDefault,
                 ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: AppTheme.darkBorder,
-                    offset: Offset(0, 3),
-                    blurRadius: 0,
-                  ),
-                ],
+                boxShadow: ChunkyShadow.wood(AppTheme.colorWoodDark),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

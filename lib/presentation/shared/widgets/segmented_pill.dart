@@ -13,9 +13,9 @@ class SegmentedPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppTheme.colorVanillaCard,
+        color: AppTheme.colorWoodPlank,
         borderRadius: BorderRadius.circular(AppTokens.radiusButton),
-        border: Border.all(color: AppTheme.darkBorder, width: AppTokens.borderWidthDefault),
+        border: Border.all(color: AppTheme.colorWoodMedium, width: AppTokens.borderWidthDefault),
       ),
       child: Row(
         children: List.generate(labels.length, (i) {
