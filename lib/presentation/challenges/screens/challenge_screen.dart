@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,34 +68,41 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen> {
   Widget build(BuildContext context) {
     final completionAsync = ref.watch(dailyChallengeCompletionProvider);
 
-    return Scaffold(
-      backgroundColor: AppTheme.colorSandyCanvas,
-      body: Stack(
-        children: [
-          // Latar Belakang Scenic highPass_canvas
-          Positioned.fill(
-            child: Image.asset(
-              AppAssets.highPassCanvasBackground,
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          context.go('/');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.colorSandyCanvas,
+        body: Stack(
+          children: [
+            // Latar Belakang Scenic highPass_canvas
+            Positioned.fill(
+              child: Image.asset(
+                AppAssets.highPassCanvasBackground,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+              ),
             ),
-          ),
 
-          // Warm Cozy Scrim agar kontras dan keterbacaan tetap terjaga ramah mata
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppTheme.colorSandyCanvas.withValues(alpha: 0.85),
-                    AppTheme.colorSandyCanvas.withValues(alpha: 0.92),
-                  ],
+            // Warm Cozy Scrim tipis agar kanvas pedesaan terlihat jelas dan estetik
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppTheme.colorSandyCanvas.withValues(alpha: 0.15),
+                      AppTheme.colorSandyCanvas.withValues(alpha: 0.35),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
           // Konten Utama
           SafeArea(
@@ -189,8 +196,9 @@ class _ChallengeScreenState extends ConsumerState<ChallengeScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   /// Kartu Utama Tantangan Harian dengan varian WoodBoard.
   Widget _buildDailyCard(

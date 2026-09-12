@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -219,9 +219,9 @@ class DailyChallengeBriefingDialog extends ConsumerWidget {
             height: 16,
           ),
           _buildRuleRow(
-            assetIcon: AppAssets.icChallengeCoins,
-            title: 'Bonus Koin Emas',
-            subtitle: 'Selesaikan untuk klaim hadiah harian',
+            assetIcon: AppAssets.icChallengeStar,
+            title: 'Papan Peringkat Global',
+            subtitle: 'Buktikan kemampuanmu di puncak kohor band',
           ),
         ],
       ),

@@ -50,6 +50,7 @@ class LeaderboardPodium extends StatelessWidget {
                     rankOrdinal: 2,
                     rankColor: const Color(0xFF5A5A5A),
                     rankBgColor: const Color(0xFFE0E0E0),
+                    pedestalColor: AppTheme.colorPastelSky,
                     onTap: () => onPlayerTap(rank2),
                   )
                 : const SizedBox.shrink(),
@@ -68,6 +69,7 @@ class LeaderboardPodium extends StatelessWidget {
               hasCrown: true,
               rankColor: const Color(0xFF8C5F00),
               rankBgColor: const Color(0xFFFFD54F),
+              pedestalColor: AppTheme.colorPastelHoney,
               onTap: () => onPlayerTap(rank1),
             ),
           ),
@@ -85,6 +87,7 @@ class LeaderboardPodium extends StatelessWidget {
                     rankOrdinal: 3,
                     rankColor: const Color(0xFF6D3C14),
                     rankBgColor: const Color(0xFFFFCCBC),
+                    pedestalColor: AppTheme.colorPastelCoral,
                     onTap: () => onPlayerTap(rank3),
                   )
                 : const SizedBox.shrink(),
@@ -104,6 +107,7 @@ class _PodiumColumn extends StatelessWidget {
     required this.rankOrdinal,
     required this.rankColor,
     required this.rankBgColor,
+    required this.pedestalColor,
     required this.onTap,
     this.hasCrown = false,
   });
@@ -115,6 +119,7 @@ class _PodiumColumn extends StatelessWidget {
   final int rankOrdinal;
   final Color rankColor;
   final Color rankBgColor;
+  final Color pedestalColor;
   final VoidCallback onTap;
   final bool hasCrown;
 
@@ -250,12 +255,12 @@ class _PodiumColumn extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Balok Pilar Kayu Bertingkat (Woodwork Step Pedestal)
+          // Balok Pilar Kayu Bertingkat Pastel (Woodwork Step Pedestal)
           Container(
             height: pedestalHeight,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppTheme.colorWoodPlank,
+              color: pedestalColor,
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(16),
               ),
